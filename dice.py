@@ -13,6 +13,9 @@ class Die(object):
         self.sides = sides
 
     def roll(self):
+        """
+        roll the die
+        """
         return random.randint(1, self.sides)
 
 
@@ -27,6 +30,12 @@ class Dice(object):
 
     @staticmethod
     def from_string(string):
+        """
+        create dice from a string in the form:
+        <amount>d<sides>
+        for example:
+        '3d6' creates a group with 3 six-sided dice
+        """
         instance = Dice()
         parts = string.lower().split("d")
         if len(parts) != 2:
@@ -41,12 +50,21 @@ class Dice(object):
         return instance
 
     def add_die(self, die):
+        """
+        add a die to the dice group
+        """
         self.dice.append(die)
 
     def remove_die(self, die):
+        """
+        remove a die from the dice group
+        """
         self.dice.remove(die)
 
     def roll(self):
+        """
+        roll the dice group
+        """
         roll_sum = 0
         for die in self.dice:
             roll_sum += die.roll()
@@ -54,6 +72,13 @@ class Dice(object):
 
 
 def roll(dice_sting):
+    """
+    rolls dice that are represented by a string in the form:
+    <amount>d<sides>[<+/-><value>]
+    for example:
+    '3d6' rolls a group with 3 six-sided dice
+    '2d10+5' rolls two ten sided die and adds 5 to the result
+    """
     if "+" in dice_sting:
         parts = dice_sting.replace(" ", "").split("+")
         return Dice.from_string(parts[0]).roll() + int(parts[1])
