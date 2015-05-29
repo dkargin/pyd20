@@ -52,14 +52,20 @@
             "Survival", "Swim"
         ],
         "class_feats"   : [
-            "..."
+            "Weapon and Armor Proficiency", "Fast Movement", "Illiteracy",
+            "Rage", "Uncanny Dodge", "Trap Sense", "Improved Uncanny Dodge",
+            "Damage Reduction", "Greater Rage", "Indomitable Will", "Tireless Rage",
+            "Mighty Rage"
+        ],
+        "ex_feats"      : [
+            "Fast Movement", "Rage", "Uncanny Dodge", "Trap Sense", "Improved Uncanny Dodge",
+            "Damage Reduction", "Greater Rage", "Indomitable Will", "Tireless Rage",
+            "Mighty Rage"
         ],
         "alignments_possible" : [
             ["Neutral", "Chaotic"],
             ["Good", "Neutral", "Evil"]
         ],
-        "special" : [
-            ["Fast Movement", "illiteracy", "Rage"]
-        ]
+        "special" : []
     },
 ]
