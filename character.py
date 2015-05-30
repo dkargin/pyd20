@@ -50,20 +50,20 @@ class Class(object):
 
     @staticmethod
     def load(class_name):
-        classes = json.loads(open(Class.CLASS_DATA).read())
+        classes = json.loads(open(Class.CLASS_DATA).read())["classes"]
         class_data = None
         for c in classes:
             if c["class_name"].lower() == class_name.lower():
                 class_data = c
                 break
         instance = Class()
-        instance._name = class_data["class_data"]
+        instance._name = class_data["class_name"]
         instance._hit_die = Dice.from_string(class_data["hit_die"])
         instance._attack_bonus_type = class_data["attack_bonus_type"]
         instance._skill_modifier = class_data["skill_modifier"]
-        instance._fotitude_bonus_type = class_data["fotitude_bonus_type"]
-        instance._will_bonus_type = class_data["will_bonus_type"]
-        instance._reflex_save_bonus_type = class_data["reflex_save_bonus_type"]
+        instance._fotitude_save_bonus_type = class_data["fotitude_bonus_type"]
+        instance._will_save_bonus_type = class_data["will_bonus_type"]
+        instance._reflex_save_bonus_type = class_data["reflex_bonus_type"]
         instance._class_skills = class_data["class_skills"]
         instance._class_feats = class_data["class_feats"]
         instance._ex_feats = class_data["ex_feats"]
@@ -97,7 +97,7 @@ class Class(object):
 
 
 def available_classes():
-    classes = json.loads(open(Class.CLASS_DATA).read())
+    classes = json.loads(open(Class.CLASS_DATA).read())["classes"]
     class_names = list()
     for c in classes:
         class_names.append(c["class_name"])

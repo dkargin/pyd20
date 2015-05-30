@@ -1,11 +1,11 @@
-[
+{ "classes" : [
     {
         "class_name" : "Sorcerer",
-        "hit_die"    : "d4",
+        "hit_die"    : "d4"
     },
     {
         "class_name" : "Wizard",
-        "hit_die"    : "d4",
+        "hit_die"    : "d4"
     },
     {
         "class_name"            : "Bard",
@@ -72,31 +72,31 @@
     },
     {
         "class_name" : "Rogue",
-        "hit_die"    : "d6",
+        "hit_die"    : "d6"
     },
     {
         "class_name" : "Cleric",
-        "hit_die"    : "d8",
+        "hit_die"    : "d8"
     },
     {
         "class_name" : "Druid",
-        "hit_die"    : "d8",
+        "hit_die"    : "d8"
     },
     {
         "class_name" : "Monk",
-        "hit_die"    : "d8",
+        "hit_die"    : "d8"
     },
     {
         "class_name" : "Ranger",
-        "hit_die"    : "d8",
+        "hit_die"    : "d8"
     },
     {
         "class_name" : "Fighter",
-        "hit_die"    : "d10",
+        "hit_die"    : "d10"
     },
     {
         "class_name" : "Paladin",
-        "hit_die"    : "d10",
+        "hit_die"    : "d10"
     },
     {
         "class_name"            : "Barbarian",
@@ -188,4 +188,4 @@
             ]
         ]
     }
-]
+]}
