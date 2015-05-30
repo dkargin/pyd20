@@ -8,8 +8,67 @@
         "hit_die"    : "d4",
     },
     {
-        "class_name" : "Bard",
-        "hit_die"    : "d6",
+        "class_name"            : "Bard",
+        "hit_die"               : "d6",
+        "skill_modifier"        : 6,
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "good",
+        "will_bonus_type"       : "good",
+        "class_skills"          : [
+            "Appraise", "Balance", "Bluff", "Climb", "Concentration", "Craft", "Decipher Script", "Diplomacy", "Disguise", "Escape Artist", "Gather Information", "Hide", "Jump", "Knowledge", "Listen", "Move Silently", "Perform", "Profession", "Sense Motive", "Sleight of Hand", "Speak Language", "Spellcraft", "Swim", "Tumble", "Use Magic Device"
+        ],
+        "class_feats" : [
+            "Spells", "Bardic Knowledge", "Bardic Music", "Countersong", "Fascinate", "Inspire Courage", "Inspire Competence", "Inspire Greatness", "Inspire Heroics", "Suggestion", "Song of Freedom", "Mass Suggestion"
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Bardic Music", 1], ["Bardic Knowledge", 1], ["Countersong", 1], 
+                ["Fascinate", 1], ["Inspire Courage", 1]
+            ],
+            [],
+            [
+                ["Inspire Competence", 1]
+            ],
+            [],
+            [],
+            [
+                ["Suggestion", 1]
+            ],
+            [],
+            [
+                ["Inspire Courage", 2]
+            ],
+            [
+                ["Inspire Greatness", 1]
+            ],
+            [],
+            [],
+            [
+                ["Song of Freedom", 4]
+            ],
+            [],
+            [
+                ["Inspire Courage", 3]
+            ],
+            [
+                ["Inspire Heroics", 1]
+            ],
+            [],
+            [],
+            [
+                ["Mass Suggestion", 1]
+            ],
+            [],
+            [
+                ["Inspire Courage", 4]
+            ]
+        ]
     },
     {
         "class_name" : "Rogue",
@@ -40,32 +99,93 @@
         "hit_die"    : "d10",
     },
     {
-        "class_name"    : "Barbarian",
-        "hit_die"       : "d12",
-        "skill_modifier": 4,
-        "attack_bonus"  : "good",
-        "fotitude_bonus": "good",
-        "reflex_bonus"  : "poor",
-        "will_bonus"    : "poor",
-        "class_skills"  : [
+        "class_name"            : "Barbarian",
+        "hit_die"               : "d12",
+        "skill_modifier"        : 4,
+        "attack_bonus_type"     : "good",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "poor",
+        "class_skills"          : [
             "Climb", "Craft", "Handle Animal", "Intimidate", "Jump", "Listen", "Ride",
             "Survival", "Swim"
         ],
-        "class_feats"   : [
-            "Weapon and Armor Proficiency", "Fast Movement", "Illiteracy",
+        "class_feats" : [
+            "Fast Movement", "Illiteracy",
             "Rage", "Uncanny Dodge", "Trap Sense", "Improved Uncanny Dodge",
             "Damage Reduction", "Greater Rage", "Indomitable Will", "Tireless Rage",
             "Mighty Rage"
         ],
-        "ex_feats"      : [
+        "ex_feats" : [
             "Fast Movement", "Rage", "Uncanny Dodge", "Trap Sense", "Improved Uncanny Dodge",
             "Damage Reduction", "Greater Rage", "Indomitable Will", "Tireless Rage",
             "Mighty Rage"
         ],
-        "alignments_possible" : [
+        "possible_alignments" : [
             ["Neutral", "Chaotic"],
             ["Good", "Neutral", "Evil"]
         ],
-        "special" : []
-    },
+        "special" : [
+            [
+                ["Fast Movement", 1], ["Illiteracy", 1], ["Rage", 1]
+            ],
+            [
+                ["Uncanny Dodge", 1]
+            ],
+            [
+                ["Trap Sense", 1]
+            ],
+            [
+                ["Rage", 2]
+            ],
+            [
+                ["Uncanny Dodge", 2]
+            ],
+            [
+                ["Trap Sense", 2]
+            ],
+            [
+                ["Damage Reduction", 1]
+            ],
+            [
+                ["Rage", 3]
+            ],
+            [
+                ["Trap Sense", 3]
+            ],
+            [
+                ["Damage Reduction", 2]
+            ],
+            [
+                ["Greater Rage", 1]
+            ],
+            [
+                ["Rage", 4], ["Trap Sense", 4]
+            ],
+            [
+                ["Damage Reduction", 3]
+            ],
+            [
+                ["Indomitable Will", 1]
+            ],
+            [
+                ["Trap Sense", 5]
+            ],
+            [
+                ["Damage Reduction", 4], ["Rage", 5]
+            ],
+            [
+                ["Tireless Rage", 1]
+            ],
+            [
+                ["Trap Sense", 6]
+            ],
+            [
+                ["Damage Reduction", 5]
+            ],
+            [
+                ["Mighty Rage", 1], ["Rage", 6]
+            ]
+        ]
+    }
 ]
