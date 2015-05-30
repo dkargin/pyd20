@@ -31,7 +31,8 @@ class Class(object):
     """
     implements a class
     """
-    CLASS_DATA = "data/clsses.json"
+
+    CLASS_DATA = "data/classes.json"
 
     def __init__(self):
         self._hit_die = None
