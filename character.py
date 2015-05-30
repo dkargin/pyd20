@@ -93,3 +93,11 @@ class Class(object):
         if int_modifier < 0:
             int_modifier = 0
         return (self._skill_modifier + int_modifier)
+
+
+def available_classes():
+    classes = json.loads(open(Class.CLASS_DATA).read())
+    class_names = list()
+    for c in classes:
+        class_names.append(c["class_name"])
+    return class_names
