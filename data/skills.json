@@ -1,0 +1,229 @@
+{ "skills" : [
+    
+    {
+        "name" : "Appraise",
+        "ability" : "intelligence",
+        "untrained" : true
+    },
+    {
+        "name" : "Balance",
+        "ability" : "dexterity",
+        "untrained" : true
+    },
+    {
+        "name" : "Bluff",
+        "ability" : "charisma",
+        "untrained" : true
+    },
+    {
+        "name" : "Climb",
+        "ability" : "strength",
+        "untrained" : true
+    },
+    {
+        "name" : "Concentration",
+        "ability" : "constitution",
+        "untrained" : true
+    },
+    {
+        "name" : "Craft",
+        "ability" : "intelligence",
+        "untrained" : true
+    },
+    {
+        "name" : "Decipher Script",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Diplomacy",
+        "ability" : "charisma",
+        "untrained" : true
+    },
+    {
+        "name" : "Disable Device",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Disguise",
+        "ability" : "charisma",
+        "untrained" : true
+    },
+    {
+        "name" : "Escape Artist",
+        "ability" : "dexterity",
+        "untrained" : true
+    },
+    {
+        "name" : "Forgery",
+        "ability" : "intelligence",
+        "untrained" : true
+    },
+    {
+        "name" : "Gather Information",
+        "ability" : "charisma",
+        "untrained" : true
+    },
+    {
+        "name" : "Handle Animal",
+        "ability" : "charisma",
+        "untrained" : false
+    },
+    {
+        "name" : "Heal",
+        "ability" : "wisdom",
+        "untrained" : true
+    },
+    {
+        "name" : "Hide",
+        "ability" : "dexterity",
+        "untrained" : true
+    },
+    {
+        "name" : "Intimidate",
+        "ability" : "charisma",
+        "untrained" : true
+    },
+    {
+        "name" : "Jump",
+        "ability" : "strength",
+        "untrained" : true
+    },
+    {
+        "name" : "Knowledge (arcana)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (architecture and engineering)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (dungeoneering)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (geography)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (history)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (local)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (nature)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (nobility and royalty)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (religion)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Knowledge (the planes)",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Listen",
+        "ability" : "wisdom",
+        "untrained" : true
+    },
+    {
+        "name" : "Move Silently",
+        "ability" : "dexterity",
+        "untrained" : true
+    },
+    {
+        "name" : "Open Lock",
+        "ability" : "dexterity",
+        "untrained" : false
+    },
+    {
+        "name" : "Perform",
+        "ability" : "charisma",
+        "untrained" : true
+    },
+    {
+        "name" : "Profession",
+        "ability" : "wisdom",
+        "untrained" : false
+    },
+    {
+        "name" : "Ride",
+        "ability" : "dexterity",
+        "untrained" : true
+    },
+    {
+        "name" : "Search",
+        "ability" : "intelligence",
+        "untrained" : true
+    },
+    {
+        "name" : "Sense Motive",
+        "ability" : "wisdom",
+        "untrained" : true
+    },
+    {
+        "name" : "Sleight of Hand",
+        "ability" : "dexterity",
+        "untrained" : false
+    },
+    {
+        "name" : "Speak Language",
+        "ability" : "none",
+        "untrained" : false
+    },
+    {
+        "name" : "Spellcraft",
+        "ability" : "intelligence",
+        "untrained" : false
+    },
+    {
+        "name" : "Spot",
+        "ability" : "wisdom",
+        "untrained" : true
+    },
+    {
+        "name" : "Survival",
+        "ability" : "wisdom",
+        "untrained" : true
+    },
+    {
+        "name" : "Swim",
+        "ability" : "strength",
+        "untrained" : true
+    },
+    {
+        "name" : "Tumble",
+        "ability" : "dexterity",
+        "untrained" : false
+    },
+    {
+        "name" : "Use Magic Device",
+        "ability" : "charisma",
+        "untrained" : false
+    },
+    {
+        "name" : "Use Rope",
+        "ability" : "dexterity",
+        "untrained" : true
+    }
+    
+]}

@@ -1,11 +1,13 @@
 { "classes" : [
     {
-        "class_name" : "Sorcerer",
-        "hit_die"    : "d4"
+        "class_name"            : "Sorcerer",
+        "hit_die"               : "d4",
+        "skill_modifier"        : 2,
     },
     {
-        "class_name" : "Wizard",
-        "hit_die"    : "d4"
+        "class_name"            : "Wizard",
+        "hit_die"               : "d4",
+        "skill_modifier"        : 2,
     },
     {
         "class_name"            : "Bard",
@@ -71,32 +73,156 @@
         ]
     },
     {
-        "class_name" : "Rogue",
-        "hit_die"    : "d6"
+        "class_name"            : "Rogue",
+        "hit_die"               : "d6",
+        "skill_modifier"        : 8,
     },
     {
-        "class_name" : "Cleric",
-        "hit_die"    : "d8"
+        "class_name"            : "Cleric",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 2,
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "class_skills"          : [],
+        "class_feats" : [
+            "Aura", "Spells", "Deity, Domains, and Domain Spells", "Spontaneous Casting", "Chaotic, Evil, Good, and Lawful Spells", "Turn or Rebuke Undead", "Bonus Languages"
+        ],
+        "ex_feats" : [
+            "Aura", "Deity, Domains, and Domain Spells", "Spontaneous Casting", "Chaotic, Evil, Good, and Lawful Spells", "Turn or Rebuke Undead", "Bonus Languages"
+        ],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Turn or rebuke undead", 1]
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
     },
     {
-        "class_name" : "Druid",
-        "hit_die"    : "d8"
+        "class_name"            : "Druid",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 4,
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "class_skills"          : [
+            "Concentration", "Craft", "Diplomacy", "Handle Animal", "Heal", "Knowledge", "Listen", "Profession", "Ride", "Spellcraft", "Spot", "Survival", "Swim"
+        ],
+        "class_feats" : [
+            "Spontaneous Casting", "Chaotic, Evil, Good, and Lawful Spells", "Bonus Languages", "Animal Companion", "Nature Sense", "Wild Empathy", "Woodland Stride", "Trackless Step"
+        ],
+        "ex_feats" : [
+            "Animal Companion", "Nature Sense", "Wild Empathy", "Woodland Stride", "Trackless Step"
+        ],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Animal Companion", 1], ["Nature Sense", 1], ["Wild Empathy", 1]
+            ],
+            [
+                ["Woodland Stride", 1]
+            ],
+            [
+                ["Trackless Step", 1]
+            ],
+            [
+                ["Resist Nature's Lure", 1]
+            ],
+            [
+                ["Wild Shape", 1]
+            ],
+            [
+                ["Wild Shape", 2]
+            ],
+            [
+                ["Wild Shape", 3]
+            ],
+            [
+                ["Wild Shape (Large)", 1]
+            ],
+            [
+                ["Venom Immunity", 1]
+            ],
+            [
+                ["Wild Shape", 4]
+            ],
+            [
+                ["Wild Shape (Tiny)", 1]
+            ],
+            [
+                ["Wild Shape (Plant)", 1]
+            ],
+            [
+                ["A Thousand Faces", 1]
+            ],
+            [
+                ["Wild Shape", 5]
+            ],
+            [
+                ["Timeless Body", 1],
+                ["Wild Shape (Huge)", 1]
+            ],
+            [
+                ["Wild Shape (Elemental)", 1]
+            ],
+            [],
+            [
+                ["Wild Shape", 6],
+                ["Wild Shape (Elemental)", 2]
+            ],
+            [],
+            [
+                ["Wild Shape (Elemental)", 3],
+                ["Wild Shape (Huge Elemental)", 1]
+            ]
+        ]
     },
     {
-        "class_name" : "Monk",
-        "hit_die"    : "d8"
+        "class_name"            : "Monk",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 4,
     },
     {
-        "class_name" : "Ranger",
-        "hit_die"    : "d8"
+        "class_name"            : "Ranger",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 6,
     },
     {
-        "class_name" : "Fighter",
-        "hit_die"    : "d10"
+        "class_name"            : "Fighter",
+        "hit_die"               : "d10",
+        "skill_modifier"        : 2,
     },
     {
-        "class_name" : "Paladin",
-        "hit_die"    : "d10"
+        "class_name"            : "Paladin",
+        "hit_die"               : "d10",
+        "skill_modifier"        : 2,
     },
     {
         "class_name"            : "Barbarian",
