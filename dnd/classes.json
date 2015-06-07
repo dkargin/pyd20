@@ -1,0 +1,637 @@
+{ "classes" : [
+    {
+        "class_name"            : "Sorcerer",
+        "hit_die"               : "d4",
+        "skill_modifier"        : 2,
+        "attack_bonus_type"     : "poor",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "young",
+        "class_skills"          : [
+            "Bluff", "Concentration", "Craft", "Knowledge", "Profession", "Spellcraft"
+        ],
+        "class_feats" : [
+            "Familiar"
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Summon Familiar", 1]
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "class_name"            : "Wizard",
+        "hit_die"               : "d4",
+        "skill_modifier"        : 2,
+        "attack_bonus_type"     : "poor",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "old",
+        "class_skills"          : [
+            "Concentration", "Craft", "Decipher Script", "Knowledge", "Profession", "Spellcraft"
+        ],
+        "class_feats" : [
+            "Bonus Languages", "Familiar", "Scribe Scroll", "Bonus Feats", "Spellbooks"
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Summon Familiar", 1], ["Scribe Scroll", 1]
+            ],
+            [],
+            [],
+            [],
+            [
+                ["Bonus Feat", 1]
+            ],
+            [],
+            [],
+            [],
+            [],
+            [
+                ["Bonus Feat", 2]
+            ],
+            [],
+            [],
+            [],
+            [],
+            [
+                ["Bonus Feat", 3]
+            ],
+            [],
+            [],
+            [],
+            [],
+            [
+                ["Bonus Feat", 4]
+            ]
+        ]
+    },
+    {
+        "class_name"            : "Bard",
+        "hit_die"               : "d6",
+        "skill_modifier"        : 6,
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "good",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "medium",
+        "class_skills"          : [
+            "Appraise", "Balance", "Bluff", "Climb", "Concentration", "Craft", "Decipher Script", "Diplomacy", "Disguise", "Escape Artist", "Gather Information", "Hide", "Jump", "Knowledge", "Listen", "Move Silently", "Perform", "Profession", "Sense Motive", "Sleight of Hand", "Speak Language", "Spellcraft", "Swim", "Tumble", "Use Magic Device"
+        ],
+        "class_feats" : [
+            "Spells", "Bardic Knowledge", "Bardic Music", "Countersong", "Fascinate", "Inspire Courage", "Inspire Competence", "Inspire Greatness", "Inspire Heroics", "Suggestion", "Song of Freedom", "Mass Suggestion"
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Bardic Music", 1], ["Bardic Knowledge", 1], ["Countersong", 1], 
+                ["Fascinate", 1], ["Inspire Courage", 1]
+            ],
+            [],
+            [
+                ["Inspire Competence", 1]
+            ],
+            [],
+            [],
+            [
+                ["Suggestion", 1]
+            ],
+            [],
+            [
+                ["Inspire Courage", 2]
+            ],
+            [
+                ["Inspire Greatness", 1]
+            ],
+            [],
+            [],
+            [
+                ["Song of Freedom", 4]
+            ],
+            [],
+            [
+                ["Inspire Courage", 3]
+            ],
+            [
+                ["Inspire Heroics", 1]
+            ],
+            [],
+            [],
+            [
+                ["Mass Suggestion", 1]
+            ],
+            [],
+            [
+                ["Inspire Courage", 4]
+            ]
+        ]
+    },
+    {
+        "class_name"            : "Rogue",
+        "hit_die"               : "d6",
+        "skill_modifier"        : 8,
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "good",
+        "will_bonus_type"       : "poor",
+        "starting_age_type"     : "young",
+        "class_skills"          : [
+            "Appraise", "Balance", "Bluff", "Climb", "Craft", "Decipher Script", "Diplomacy", "Disable Device", "Disguise", "Escape Artist", "Forgery", "Gather Information", "Hide", "Intimidate", "Jump", "Knowledge", "Listen", "Move Silently", "Open Lock", "Perform", "Profession", "Search", "Sense Motive", "Sleight of Hand", "Spot", "Swim", "Tumble", "Use Magic Device", "Use Rope"
+        ],
+        "class_feats" : [
+            "Sneak Attack", "Trapfinding", "Evasion", "Trap Sense", "Uncanny Dodge", "Improved Uncanny Dodge", "Special Abilities", "Crippling Strike", "Defensive Roll", "Improved Evasion", "Opportunist", "Skill Mastery", "Slippery Mind", "Bonus Feat"
+        ],
+        "ex_feats" : [
+            "Crippling Strike", "Defensive Roll", "Improved Evasion", "Opportunist", "Skill Mastery", "Slippery Mind", "Evasion", "Trap Sense", "Uncanny Dodge", "Improved Uncanny Dodge"
+        ],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Sneak Attack", 1], ["Trapfinding", 1]
+            ],
+            [
+                ["Evasion", 1]
+            ],
+            [
+                ["Sneak Attack", 2], ["Trap Sense", 1]
+            ],
+            [
+                ["Uncanny Dodge", 1]
+            ],
+            [
+                ["Sneak Attack", 3]
+            ],
+            [
+                ["Trap Sense", 2]
+            ],
+            [
+                ["Sneak Attack", 4]
+            ],
+            [
+                ["Improved Uncanny Dodge", 1]
+            ],
+            [
+                ["Sneak Attack", 5], ["Trap Sense", 3]
+            ],
+            [
+                ["Special Ability", 1]
+            ],
+            [
+                ["Sneak Attack", 6]
+            ],
+            [
+                ["Trap Sense", 4]
+            ],
+            [
+                ["Sneak Attack", 7], ["Special Ability", 2]
+            ],
+            [],
+            [
+                ["Sneak Attack", 8], ["Trap Sense", 5]
+            ],
+            [
+                ["Special Ability", 3]
+            ],
+            [
+                ["Sneak Attack", 9]
+            ],
+            [
+                ["Trap Sense", 6]
+            ],
+            [
+                ["Sneak Attack", 10], ["Special Ability", 3]
+            ],
+            []
+        ]
+    },
+    {
+        "class_name"            : "Cleric",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 2,
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "class_skills"          : [],
+        "starting_age_type"     : "old",
+        "class_feats" : [
+            "Aura", "Spells", "Deity, Domains, and Domain Spells", "Spontaneous Casting", "Chaotic, Evil, Good, and Lawful Spells", "Turn or Rebuke Undead", "Bonus Languages"
+        ],
+        "ex_feats" : [
+            "Aura", "Deity, Domains, and Domain Spells", "Spontaneous Casting", "Chaotic, Evil, Good, and Lawful Spells", "Turn or Rebuke Undead", "Bonus Languages"
+        ],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Turn or rebuke undead", 1]
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "class_name"            : "Druid",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 4,
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "old",
+        "class_skills"          : [
+            "Concentration", "Craft", "Diplomacy", "Handle Animal", "Heal", "Knowledge", "Listen", "Profession", "Ride", "Spellcraft", "Spot", "Survival", "Swim"
+        ],
+        "class_feats" : [
+            "Spontaneous Casting", "Chaotic, Evil, Good, and Lawful Spells", "Bonus Languages", "Animal Companion", "Nature Sense", "Wild Empathy", "Woodland Stride", "Trackless Step"
+        ],
+        "ex_feats" : [
+            "Animal Companion", "Nature Sense", "Wild Empathy", "Woodland Stride", "Trackless Step"
+        ],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Animal Companion", 1], ["Nature Sense", 1], ["Wild Empathy", 1]
+            ],
+            [
+                ["Woodland Stride", 1]
+            ],
+            [
+                ["Trackless Step", 1]
+            ],
+            [
+                ["Resist Nature's Lure", 1]
+            ],
+            [
+                ["Wild Shape", 1]
+            ],
+            [
+                ["Wild Shape", 2]
+            ],
+            [
+                ["Wild Shape", 3]
+            ],
+            [
+                ["Wild Shape (Large)", 1]
+            ],
+            [
+                ["Venom Immunity", 1]
+            ],
+            [
+                ["Wild Shape", 4]
+            ],
+            [
+                ["Wild Shape (Tiny)", 1]
+            ],
+            [
+                ["Wild Shape (Plant)", 1]
+            ],
+            [
+                ["A Thousand Faces", 1]
+            ],
+            [
+                ["Wild Shape", 5]
+            ],
+            [
+                ["Timeless Body", 1],
+                ["Wild Shape (Huge)", 1]
+            ],
+            [
+                ["Wild Shape (Elemental)", 1]
+            ],
+            [],
+            [
+                ["Wild Shape", 6],
+                ["Wild Shape (Elemental)", 2]
+            ],
+            [],
+            [
+                ["Wild Shape (Elemental)", 3],
+                ["Wild Shape (Huge Elemental)", 1]
+            ]
+        ]
+    },
+    {
+        "class_name"            : "Monk",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 4,
+        "attack_bonus_type"     : "poor",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "old",
+        "class_skills"          : [
+            "THIS CLASS IS NOT FINISHED YET"
+        ],
+        "class_feats" : [
+
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "class_name"            : "Ranger",
+        "hit_die"               : "d8",
+        "skill_modifier"        : 6,
+        "attack_bonus_type"     : "poor",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "medium",
+        "class_skills"          : [
+            "THIS CLASS IS NOT FINISHED YET"
+        ],
+        "class_feats" : [
+
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "class_name"            : "Fighter",
+        "hit_die"               : "d10",
+        "skill_modifier"        : 2,
+        "attack_bonus_type"     : "poor",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "medium",
+        "class_skills"          : [
+            "THIS CLASS IS NOT FINISHED YET"
+        ],
+        "class_feats" : [
+
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "class_name"            : "Paladin",
+        "hit_die"               : "d10",
+        "skill_modifier"        : 2,
+        "attack_bonus_type"     : "poor",
+        "fotitude_bonus_type"   : "poor",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "good",
+        "starting_age_type"     : "medium",
+        "class_skills"          : [
+            "THIS CLASS IS NOT FINISHED YET"
+        ],
+        "class_feats" : [
+
+        ],
+        "ex_feats" : [],
+        "possible_alignments" : [
+            ["Lawful", "Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "class_name"            : "Barbarian",
+        "hit_die"               : "d12",
+        "skill_modifier"        : 4,
+        "attack_bonus_type"     : "good",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "poor",
+        "will_bonus_type"       : "poor",
+        "starting_age_type"     : "young",
+        "class_skills"          : [
+            "Climb", "Craft", "Handle Animal", "Intimidate", "Jump", "Listen", "Ride",
+            "Survival", "Swim"
+        ],
+        "class_feats" : [
+            "Fast Movement", "Illiteracy",
+            "Rage", "Uncanny Dodge", "Trap Sense", "Improved Uncanny Dodge",
+            "Damage Reduction", "Greater Rage", "Indomitable Will", "Tireless Rage",
+            "Mighty Rage"
+        ],
+        "ex_feats" : [
+            "Fast Movement", "Rage", "Uncanny Dodge", "Trap Sense", "Improved Uncanny Dodge",
+            "Damage Reduction", "Greater Rage", "Indomitable Will", "Tireless Rage",
+            "Mighty Rage"
+        ],
+        "possible_alignments" : [
+            ["Neutral", "Chaotic"],
+            ["Good", "Neutral", "Evil"]
+        ],
+        "special" : [
+            [
+                ["Fast Movement", 1], ["Illiteracy", 1], ["Rage", 1]
+            ],
+            [
+                ["Uncanny Dodge", 1]
+            ],
+            [
+                ["Trap Sense", 1]
+            ],
+            [
+                ["Rage", 2]
+            ],
+            [
+                ["Uncanny Dodge", 2]
+            ],
+            [
+                ["Trap Sense", 2]
+            ],
+            [
+                ["Damage Reduction", 1]
+            ],
+            [
+                ["Rage", 3]
+            ],
+            [
+                ["Trap Sense", 3]
+            ],
+            [
+                ["Damage Reduction", 2]
+            ],
+            [
+                ["Greater Rage", 1]
+            ],
+            [
+                ["Rage", 4], ["Trap Sense", 4]
+            ],
+            [
+                ["Damage Reduction", 3]
+            ],
+            [
+                ["Indomitable Will", 1]
+            ],
+            [
+                ["Trap Sense", 5]
+            ],
+            [
+                ["Damage Reduction", 4], ["Rage", 5]
+            ],
+            [
+                ["Tireless Rage", 1]
+            ],
+            [
+                ["Trap Sense", 6]
+            ],
+            [
+                ["Damage Reduction", 5]
+            ],
+            [
+                ["Mighty Rage", 1], ["Rage", 6]
+            ]
+        ]
+    }
+]}

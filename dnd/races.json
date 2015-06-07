@@ -1,0 +1,185 @@
+{ "races" : [
+    
+    {
+        "name" : "Human",
+        "adulthood" : 15,
+        "starting_age_young" : "1d4",
+        "starting_age_medium" : "1d6",
+        "starting_age_old" : "2d6",
+        "middle_age" : 35,
+        "old_age" : 53,
+        "venerable_age" : 70,
+        "maximum_age" : "2d20",
+        "body" : {
+            "male" : {
+                "base_weight" : 120,
+                "base_height" : 4.8333,
+                "weight_modifier" : "2d4",
+                "height_modifier" : "2d10"
+            },
+            "female" : {
+                "base_weight" : 85,
+                "base_height" : 4.8333,
+                "weight_modifier" : "2d4",
+                "height_modifier" : "2d10"
+            }    
+        }
+    },
+
+    {
+        "name" : "Dwarf",
+        "adulthood" : 40,
+        "starting_age_young" : "3d6",
+        "starting_age_medium" : "5d6",
+        "starting_age_old" : "7d6",
+        "middle_age" : 125,
+        "old_age" : 188,
+        "venerable_age" : 250,
+        "maximum_age" : "2d100",
+        "body" : {
+            "male" : {
+                "base_weight" : 130,
+                "base_height" : 3.75,
+                "weight_modifier" : "2d6",
+                "height_modifier" : "2d4"
+            },
+            "female" : {
+                "base_weight" : 100,
+                "base_height" : 3.5833,
+                "weight_modifier" : "2d6",
+                "height_modifier" : "2d4"
+            }    
+        }
+    },
+
+    {
+        "name" : "Elf",
+        "adulthood" : 110,
+        "starting_age_young" : "4d6",
+        "starting_age_medium" : "6d6",
+        "starting_age_old" : "10d6",
+        "middle_age" : 175,
+        "old_age" : 263,
+        "venerable_age" : 350,
+        "maximum_age" : "4d100",
+        "body" : {
+            "male" : {
+                "base_weight" : 85,
+                "base_height" : 4.4166,
+                "weight_modifier" : "1d6",
+                "height_modifier" : "2d6"
+            },
+            "female" : {
+                "base_weight" : 80,
+                "base_height" : 4.4166,
+                "weight_modifier" : "1d6",
+                "height_modifier" : "2d6"
+            }    
+        }
+    },
+
+    {
+        "name" : "Gnome",
+        "adulthood" : 40,
+        "starting_age_young" : "4d6",
+        "starting_age_medium" : "6d6",
+        "starting_age_old" : "9d6",
+        "middle_age" : 100,
+        "old_age" : 150,
+        "venerable_age" : 200,
+        "maximum_age" : "3d100",
+        "body" : {
+            "male" : {
+                "base_weight" : 40,
+                "base_height" : 3.0,
+                "weight_modifier" : "1d1",
+                "height_modifier" : "2d4"
+            },
+            "female" : {
+                "base_weight" : 35,
+                "base_height" : 2.8333,
+                "weight_modifier" : "1d1",
+                "height_modifier" : "2d4"
+            }    
+        }
+    },
+
+    {
+        "name" : "Half-Elf",
+        "adulthood" : 20,
+        "starting_age_young" : "1d6",
+        "starting_age_medium" : "2d6",
+        "starting_age_old" : "3d6",
+        "middle_age" : 62,
+        "old_age" : 93,
+        "venerable_age" : 125,
+        "maximum_age" : "3d20",
+        "body" : {
+            "male" : {
+                "base_weight" : 100,
+                "base_height" : 4.5833,
+                "weight_modifier" : "2d4",
+                "height_modifier" : "2d8"
+            },
+            "female" : {
+                "base_weight" : 80,
+                "base_height" : 4.4166,
+                "weight_modifier" : "2d4",
+                "height_modifier" : "2d8"
+            }    
+        }
+    },
+
+    {
+        "name" : "Half-Orc",
+        "adulthood" : 14,
+        "starting_age_young" : "1d4",
+        "starting_age_medium" : "1d6",
+        "starting_age_old" : "2d6",
+        "middle_age" : 30,
+        "old_age" : 45,
+        "venerable_age" : 60,
+        "maximum_age" : "2d10",
+        "body" : {
+            "male" : {
+                "base_weight" : 150,
+                "base_height" : 4.8333,
+                "weight_modifier" : "2d6",
+                "height_modifier" : "2d12"
+            },
+            "female" : {
+                "base_weight" : 110,
+                "base_height" : 4.4166,
+                "weight_modifier" : "2d6",
+                "height_modifier" : "2d12"
+            }    
+        }
+    },
+
+    {
+        "name" : "Halfling",
+        "adulthood" : 20,
+        "starting_age_young" : "2d4",
+        "starting_age_medium" : "3d6",
+        "starting_age_old" : "4d6",
+        "middle_age" : 50,
+        "old_age" : 75,
+        "venerable_age" : 100,
+        "maximum_age" : "5d20",
+        "body" : {
+            "male" : {
+                "base_weight" : 30,
+                "base_height" : 2.6666,
+                "weight_modifier" : "1d1",
+                "height_modifier" : "2d4"
+            },
+            "female" : {
+                "base_weight" : 25,
+                "base_height" : 2.5,
+                "weight_modifier" : "1d1",
+                "height_modifier" : "2d4"
+            }    
+        }
+    }
+
+]}
