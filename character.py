@@ -53,6 +53,8 @@ class Character(object):
         self._race = None
         self._gender = None
         self._age = 0
+        self._skill_points = 0
+        self._feat_skill_points = 0
         self.__ABILITIY_MODIFIER = {
             "constitution": self.constitution_mofifier,
             "con": self.constitution_mofifier,
@@ -67,6 +69,16 @@ class Character(object):
             "wisdom": self.wisdom_mofifier,
             "wis": self.wisdom_mofifier
         }
+
+    def maximum_skill_points(self):
+        skill_points = 0
+        for level in range(1, self.current_level() + 1):
+            skill_points += (self._class._skill_modifier + self.intellect_mofifier())
+            if level == 1:
+                skill_points *= 4
+                if skill_points < 4:
+                    skill_points = 4
+        return skill_points
 
     def set_race(self, race):
         self._race = race
