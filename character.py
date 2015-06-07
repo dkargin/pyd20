@@ -26,10 +26,6 @@ def relative_path():
 
 class Character(object):
 
-    """
-    implements a character
-    """
-
     __AGE_MODIFIER = {
         "young": 0,
         "middle": 1,
@@ -186,10 +182,6 @@ class Character(object):
 
 
 class Class(object):
-
-    """
-    implements a class
-    """
 
     __ALL_CLASSES = list()
 
