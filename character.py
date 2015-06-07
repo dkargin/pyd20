@@ -132,13 +132,13 @@ class Character(object):
 
     def can_learn_skill(self, skill_name):
         current_skill_level = 0
-        skill = self.__skill_by_name(skill_name)
+        skill = self.__skill_with_name(skill_name)
         current_skill_level = skill.level
         if self._class.is_class_skill(skill_name):
-            max_skill_level = core.class_skill_max_ranks(self._level)
+            max_skill_level = core.class_skill_max_ranks(self.current_level())
             needed_points = 1
         else:
-            max_skill_level = core.cross_class_skill_max_ranks(self._level)
+            max_skill_level = core.cross_class_skill_max_ranks(self.current_level())
             needed_points = 2
         return current_skill_level < max_skill_level and self._skill_points > needed_points
 
@@ -146,8 +146,22 @@ class Character(object):
         skill = self.__skill_with_name(skill_name)
         return d20.roll() + skill.level + self.ability_modifier(skill.ability)
 
-    def has_trained_skill(self, skill_name):
+    def has_learned_skill(self, skill_name):
         return self.__skill_with_name(skill_name).level > 0
+
+    def learn_skill(self, skill_name, times=1):
+        if not self.can_learn_skill(skill_name):
+            return
+        if self._class.is_class_skill(skill_name):
+            needed_points = 1
+        else:
+            needed_points = 2
+        self._skill_points -= needed_points
+        if not self.has_learned_skill(skill_name):
+            self._skills.append(self.__skill_with_name(skill_name))
+        self.__skill_with_name(skill_name).level += 1
+        if times > 1:
+            return self.learn_skill(skill_name, times - 1)
 
     def starting_age(self):
         dice = self._race.starting_age_dice(self._class._starting_age_type)
@@ -162,12 +176,6 @@ class Character(object):
             return "old"
         return "venerable"
 
-    def __skill_with_name(self, skill_name):
-        for skill in self._skills:
-            if skill.name.lower() == skill_name.lower():
-                return skill
-        return Skill.with_name(skill_name)
-
     def roll_height(self):
         return self._race.height(self._gender)
 
@@ -179,6 +187,12 @@ class Character(object):
 
     def weight(self):
         return core.unit_weight * self._weight
+
+    def __skill_with_name(self, skill_name):
+        for skill in self._skills:
+            if skill.name.lower() == skill_name.lower():
+                return skill
+        return Skill.with_name(skill_name)
 
 
 class Class(object):
@@ -343,6 +357,12 @@ class Skill(object):
         self.level = level
         self.ability = ability
         self.untrained = False
+
+    def __str__(self):
+        return self.name + ": " + str(self.level)
+
+    def __repr__(self):
+        return "<" + self.__str__() + ">"
 
     @staticmethod
     def available_skills():
