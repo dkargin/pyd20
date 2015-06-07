@@ -140,9 +140,11 @@ class Character(object):
         current_skill_level = skill.level
         if self._class.is_class_skill(skill_name):
             max_skill_level = core.class_skill_max_ranks(self._level)
+            needed_points = 1
         else:
             max_skill_level = core.cross_class_skill_max_ranks(self._level)
-        return current_skill_level < max_skill_level
+            needed_points = 2
+        return current_skill_level < max_skill_level and self._skill_points > needed_points
 
     def use_skill(self, skill_name):
         skill = self.__skill_with_name(skill_name)
