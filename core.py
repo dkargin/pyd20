@@ -2,6 +2,15 @@
 # -*- coding: utf-8 -*-
 import math
 
+UNIT_LENGTH_FEET = 1.0
+UNIT_LENGTH_METER = 0.3048
+
+UNIT_WEIGHT_POUND = 1.0
+UNIT_WEIGHT_KILOGRAM = 0.45359237
+
+unit_length = UNIT_LENGTH_FEET
+unit_weight = UNIT_WEIGHT_POUND
+
 
 def ability_modifier(value):
     """
