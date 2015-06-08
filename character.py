@@ -51,6 +51,7 @@ class Character(object):
         self._age = 0
         self._skill_points = 0
         self._feat_skill_points = 0
+        self._ability_skill_points = 0
         self.__ABILITIY_MODIFIER = {
             "constitution": self.constitution_mofifier,
             "con": self.constitution_mofifier,
@@ -65,6 +66,26 @@ class Character(object):
             "wisdom": self.wisdom_mofifier,
             "wis": self.wisdom_mofifier
         }
+
+    def __repr__(self):
+        return "<" + self._name + " " + str(self._race) + " " + str(self._class) + " Level " + str(self.current_level()) + ">"
+
+    def improve_ability(self, abiltiy):
+        if self._ability_skill_points < 1:
+            return
+        if abiltiy == "constitution":
+            self._constitution += 1
+        if abiltiy == "charisma":
+            self._charisma += 1
+        if abiltiy == "dexterity":
+            self._dexterity += 1
+        if abiltiy == "intellect":
+            self._intellect += 1
+        if abiltiy == "strength":
+            self._strength += 1
+        if abiltiy == "wisdom":
+            self._wisdom += 1
+        self._ability_skill_points -= 1
 
     def maximum_skill_points(self):
         skill_points = 0
@@ -213,6 +234,9 @@ class Class(object):
         self._ex_feats = list()
         self._special = list()
 
+    def __repr__(self):
+        return "<" + self._name + ">"
+
     @staticmethod
     def load(data_path):
         data_file = relative_path() + "/" + data_path
@@ -298,6 +322,9 @@ class Race(object):
         self._starting_age_old = 0
         self._height_modifier_roll = None
 
+    def __repr__(self):
+        return "<" + self._name + ">"
+
     @staticmethod
     def load(data_path):
         data_file = relative_path() + "/" + data_path
@@ -358,11 +385,8 @@ class Skill(object):
         self.ability = ability
         self.untrained = False
 
-    def __str__(self):
-        return self.name + ": " + str(self.level)
-
     def __repr__(self):
-        return "<" + self.__str__() + ">"
+        return "<" + self.name + " Level " + str(self.level) + ">"
 
     @staticmethod
     def available_skills():
