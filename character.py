@@ -180,6 +180,12 @@ class Character(object):
             needed_points = 2
         return current_skill_level < max_skill_level and self._skill_points > needed_points
 
+    def can_learn_feat(self, feat_name):
+        feat = Feat.with_name(feat_name)
+        if feat is None:
+            return False
+        return feat.has_prequisties(self) and self._feat_skill_points > 0
+
     def use_skill(self, skill_name):
         skill = self.__skill_with_name(skill_name)
         return d20.roll() + skill.level + self.ability_modifier(skill.ability)
@@ -200,6 +206,12 @@ class Character(object):
         self.__skill_with_name(skill_name).level += 1
         if times > 1:
             return self.learn_skill(skill_name, times - 1)
+
+    def learn_feat(self, feat_name):
+        if not self.can_learn_feat(feat_name):
+            return
+        self._feat_skill_points -= 1
+        self._feats.append(Feat.with_name(feat_name))
 
     def starting_age(self):
         dice = self._race.starting_age_dice(self._class._starting_age_type)
