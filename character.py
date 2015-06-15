@@ -66,6 +66,20 @@ class Character(object):
             "wisdom": self.wisdom_mofifier,
             "wis": self.wisdom_mofifier
         }
+        self.__ABILITES = {
+            "constitution": self.constitution,
+            "con": self.constitution,
+            "charisma": self.charisma,
+            "cha": self.charisma,
+            "dexterity": self.dexterity,
+            "dex": self.dexterity,
+            "intellect": self.intellect,
+            "int": self.intellect,
+            "strength": self.strength,
+            "str": self.strength,
+            "wisdom": self.wisdom,
+            "wis": self.wisdom
+        }
 
     def __repr__(self):
         return "<" + self._name + " " + str(self._race) + " " + str(self._class) + " Level " + str(self.current_level()) + ">"
@@ -102,6 +116,9 @@ class Character(object):
 
     def set_class(self, class_type):
         self._class = class_type
+
+    def ability(self, abiilty_name):
+        return self.__ABILITES[abiilty_name]()
 
     def constitution(self):
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
@@ -208,6 +225,12 @@ class Character(object):
 
     def weight(self):
         return core.unit_weight * self._weight
+
+    def has_feat(self, feat_name):
+        for feat in self._feats:
+            if feat.name.lower() == feat_name.lower():
+                return True
+        return False
 
     def __skill_with_name(self, skill_name):
         for skill in self._skills:
@@ -373,6 +396,74 @@ class Race(object):
             return self._starting_age_medium
         if age_type == "old":
             return self._starting_age_old
+
+
+class Feat(object):
+
+    __ALL_FEATS = list()
+
+    def __init__(self, name=None, prequisites=list(), benefit=None):
+        self.name = name
+        self.prequisites = prequisites
+        self.benefit = benefit
+
+    def __repr__(self):
+        return "<" + self.name + ">"
+
+    def has_prequisties(self, character):
+        for prequisite in self.prequisites:
+            if self.__check_prequisite(prequisite, character) == False:
+                return False
+        return True
+
+    def __check_prequisite(self, prequisite, character):
+        if prequisite.startswith("Ability"):
+            prequisite = prequisite.split(":")[1].split(" ")
+            if prequisite[0] == '':
+                prequisite = prequisite[1:]
+            ability = prequisite[0]
+            value = int(prequisite[1])
+            return character.ability(ability) >= value
+        if prequisite.startswith("Skill"):
+            prequisite = prequisite.split(":")[1].split(" ")
+            if prequisite[0] == '':
+                prequisite = prequisite[1:]
+            skill_name = prequisite[0]
+            return character.has_learned_skill(skill_name)
+        if prequisite.startswith("Property"):
+            prequisite = prequisite.split(":")[1].split(" ")
+            if prequisite[0] == '':
+                prequisite = prequisite[1:]
+            if prequisite[0] == "Level":
+                level = int(prequisite[1])
+                # TODO: check for class level
+                return character.level() >= level
+            if prequisite[0] == "Base":  # attack bonus
+                attack_bonus = int(prequisite[len(prequisite-1)].replace("+", ""))
+                return character.attack_bonus() >= attack_bonus
+        return character.has_feat(prequisite)
+
+    @staticmethod
+    def available_feats():
+        feat_names = list()
+        for feat in Feat.__ALL_FEATS:
+            feat_names.append(feat.name)
+        return feat_names
+
+    @staticmethod
+    def with_name(feat_name):
+        for feat in Feat.__ALL_FEATS:
+            if feat.name.lower() == feat_name.lower():
+                return feat
+        return None
+
+    @staticmethod
+    def load(data_path):
+        data_file = relative_path() + "/" + data_path
+        feats = json.loads(open(data_file).read())["feats"]
+        Feat.__ALL_FEATS = list()
+        for feat in feats:
+            Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prequisites"], feat["benefit"]))
 
 
 class Skill(object):

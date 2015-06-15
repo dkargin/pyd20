@@ -1,0 +1,663 @@
+{ "feats" : [
+    
+    {
+        "name" : "Acrobatic",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Jump and Tumble checks"
+    },
+
+    {
+        "name" : "Agile",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Balance and Escape Artist checks"
+    },
+
+    {
+        "name" : "Alertness",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Listen and Spot checks"
+    },
+
+    {
+        "name" : "Animal Affinity",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Handle Animal and Ride checks"
+    },
+
+    {
+        "name" : "Armor Proficiency (light)",
+        "prequisites": [],
+        "benefit" : "No armor check penalty on attack rolls"
+    },
+
+    {
+        "name" : "Armor Proficiency (medium)",
+        "prequisites": ["Armor Proficiency (light)"],
+        "benefit" : "No armor check penalty on attack rolls"
+    },
+
+    {
+        "name" : "Armor Proficiency (heavy)",
+        "prequisites": ["Armor Proficiency (medium)"],
+        "benefit" : "No armor check penalty on attack rolls"
+    },
+
+    {
+        "name" : "Athletic",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Climb and Swim checks"
+    },
+
+    {
+        "name" : "Augment Summoning",
+        "prequisites" : ["Spell Focus (conjuration)"],
+        "benefit" : "Summoned creatures gain +4 Str, +4 Con"
+    },
+
+    {
+        "name" : "Blind-Fight",
+        "prequisites" : [],
+        "benefit" : "Reroll miss chance for concealment"
+    },
+
+    {
+        "name" : "Combat Casting",
+        "prequisites" : [],
+        "benefit" : "+4 bonus on Concentration checks for defensive casting"
+    },
+
+    {
+        "name" : "Combat Expertise",
+        "prequisites" : ["Ability: Int 13"],
+        "benefit" : "Trade attack bonus for AC (max 5 points)"
+    },
+
+    {
+        "name" : "Improved Disarm",
+        "prequisites" : ["Combat Expertise"],
+        "benefit" : "+4 bonus on disarm attempts; no attack of opportunity"
+    },
+
+    {
+        "name" : "Improved Feint",
+        "prequisites" : ["Combat Expertise"],
+        "benefit" : "Feint in combat as move action"
+    },
+
+    {
+        "name" : "Improved Trip",
+        "prequisites" : ["Combat Expertise"],
+        "benefit" : "+4 bonus on trip attempts; no attack of opportunity"
+    },
+
+    {
+        "name" : "Whirlwind Attack",
+        "prequisites": ["Ability: Dex 13", "Combat Expertise", "Dodge", "Mobility", "Spring Attack", "Property: Base attack bonus +4"],
+        "benefit" : "One melee attack against each opponent within reach"
+    },
+
+    {
+        "name" : "Combat Reflexes",
+        "prequisites" : [],
+        "benefit" : "Additional attacks of opportunity"
+    },
+
+    {
+        "name" : "Deceitful",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Disguise and Forgery checks"
+    },
+
+    {
+        "name" : "Deft Hands",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Sleight of Hand and Use Rope checks"
+    },
+
+    {
+        "name" : "Diligent",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Appraise and Decipher Script checks"
+    },
+
+    {
+        "name" : "Dodge",
+        "prequisites" : ["Ability: Dex 13"],
+        "benefit" : "+1 dodge bonus to AC against selected target"
+    },
+
+    {
+        "name" : "Mobility",
+        "prequisites" : ["Dodge"],
+        "benefit" : "+4 dodge bonus to AC against some attacks of opportunity"
+    },
+
+    {
+        "name" : "Spring Attack",
+        "prequisites" : ["Mobility", "Property: Base attack bonus +4"],
+        "benefit" : "Move before and after melee attack"
+    },
+
+    {
+        "name" : "Endurance",
+        "prequisites" : [],
+        "benefit" : "+4 bonus on checks or saves to resist nonlethal damage"
+    },
+
+    {
+        "name" : "Diehard",
+        "prequisites" : ["Endurance"],
+        "benefit" : "Remain conscious at –1 to –9 hp"
+    },
+
+    {
+        "name" : "Eschew Materials",
+        "prequisites" : [],
+        "benefit" : "Cast spells without material components"
+    },
+
+    {
+        "name" : "Exotic Weapon Proficiency",
+        "prequisites" : ["Property: Base attack bonus +1"],
+        "benefit" : "No penalty on attacks with specific exotic weapon"
+    },
+
+    {
+        "name" : "Extra Turning",
+        "prequisites" : ["Skill: Rebuke Creature"],
+        "benefit" : "Can turn or rebuke 4 more times per day"
+    },
+
+    {
+        "name" : "Great Fortitude",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Fortitude saves"
+    },
+
+    {
+        "name" : "Improved Counterspell",
+        "prequisites" : [],
+        "benefit" : "Counterspell with spell of same school"
+    },
+
+    {
+        "name" : "Improved Critical",
+        "prequisites" : ["Weapon Proficiency", "Property: Base attack bonus +8"],
+        "benefit" : "Double threat range of weapon"
+    },
+
+    {
+        "name" : "Improved Initiative",
+        "prequisites" : [],
+        "benefit" : "+4 bonus on initiative checks"
+    },
+
+    {
+        "name" : "Improved Turning",
+        "prequisites" : ["Skill: Rebuke Creature"],
+        "benefit" : "+1 level for turning checks"
+    },
+
+    {
+        "name" : "Improved Unarmed Strike",
+        "prequisites" : [],
+        "benefit" : "Considered armed even when unarmed"
+    },
+
+    {
+        "name" : "Improved Grapple",
+        "prequisites" : ["Improved Unarmed Strike", "Ability: Dex 13"],
+        "benefit" : "+4 bonus on grapple checks; no attack of opportunity"
+    },
+
+    {
+        "name" : "Deflect Arrows",
+        "prequisites" : ["Improved Unarmed Strike", "Ability: Dex 13"],
+        "benefit" : "Deflect one ranged attack per round"
+    },
+
+    {
+        "name" : "Snatch Arrows",
+        "prequisites" : ["Improved Unarmed Strike", "Deflect Arrows", "Ability: Dex 13"],
+        "benefit" : "Catch a deflected ranged attack"
+    },
+
+    {
+        "name" : "Stunning Fist",
+        "prequisites" : ["Improved Unarmed Strike", "Ability: Dex 13", "Ability: Wis 13", "Property: Base attack bonus +8"],
+        "benefit" : "Stun opponent with unarmed strike"
+    },
+
+    {
+        "name" : "Investigator",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Gather Information and Search checks"
+    },
+
+    {
+        "name" : "Iron Will",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Will saves"
+    },
+
+    {
+        "name" : "Leadership",
+        "prequisites" : ["Property: Level 6"],
+        "benefit" : "Attract cohort and followers"
+    },
+
+    {
+        "name" : "Lightning Reflexes",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Reflex saves"
+    },
+
+    {
+        "name" : "Magical Aptitude",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Spellcraft and Use Magic Device checks"
+    },
+
+    {
+        "name" : "Martial Weapon Proficiency",
+        "prequisites" : [],
+        "benefit" : "No penalty on attacks with specific martial weapon"
+    },
+
+    {
+        "name" : "Mounted Combat",
+        "prequisites" : ["Skill: Ride"],
+        "benefit" : "Negate hits on mount with Ride check"
+    },
+
+    {
+        "name" : "Mounted Archery",
+        "prequisites" : ["Mounted Combat"],
+        "benefit" : "Half penalty for ranged attacks while mounted"
+    },
+
+    {
+        "name" : "Ride-By Attack",
+        "prequisites" : ["Mounted Combat"],
+        "benefit" : "Move before and after a mounted charge"
+    },
+
+    {
+        "name" : "Spirited Charge",
+        "prequisites" : ["Mounted Combat", "Ride-By Attack"],
+        "benefit" : "Double damage with mounted charge"
+    },
+
+    {
+        "name" : "Trample",
+        "prequisites" : ["Mounted Combat"],
+        "benefit" : "Target cannot avoid mounted overrun"
+    },
+
+    {
+        "name" : "Natural Spell",
+        "prequisites" : ["Skill: Wild Shape", "Ability: Wis 13"],
+        "benefit" : "Cast spells while in wild shape"
+    },
+
+    {
+        "name" : "Negotiator",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Diplomacy and Sense Motive checks"
+    },
+
+    {
+        "name" : "Nimble Fingers",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Disable Device and Open Lock checks"
+    },
+
+    {
+        "name" : "Persuasive",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Bluff checks and Intimidate checks"        
+    },
+
+    {
+        "name" : "Point Blank Shot",
+        "prequisites" : [],
+        "benefit" : "+1 bonus on ranged attack and damage within 30 ft."
+    },
+
+    {
+        "name" : "Far Shot",
+        "prequisites" : ["Point Blank Shot"],
+        "benefit" : "Increase range increment by 50% or 100%"
+    },
+
+    {
+        "name" : "Precise Shot",
+        "prequisites" : ["Point Blank Shot"],
+        "benefit" : "No –4 penalty for shooting into melee"
+    },
+
+    {
+        "name" : "Rapid Shot",
+        "prequisites" : ["Point Blank Shot", "Ability: Dex 13"],
+        "benefit" : "One extra ranged attack each round"
+    },
+
+    {
+        "name" : "Manyshot",
+        "prequisites" : ["Rapid Shot", "Ability: Dex 17", "Property: Base attack bonus +6"],
+        "benefit" : "Shoot two or more arrows simultaneously"
+    },
+
+    {
+        "name" : "Shot on the Run",
+        "prequisites" : ["Point Blank Shot", "Ability: Dex 13", "Mobility", "Property: Base attack bonus +4"],
+        "benefit" : "Move before and after ranged attack"
+    },
+
+    {
+        "name" : "Improved Precise Shot",
+        "prequisites" : ["Precise Shot", "Ability: Dex 19", "Property: Base attack bonus +11"],
+        "benefit" : "Ignore less than total cover/concealment on ranged attack"
+    },
+
+    {
+        "name" : "Power Attack",
+        "prequisites" : ["Ability: Str 13"],
+        "benefit" : "Trade attack bonus for damage (up to base attack bonus)"
+    },
+
+    {
+        "name" : "Cleave",
+        "prequisites" : ["Power Attack"],
+        "benefit" : "Extra melee attack after dropping target"
+    },
+
+    {
+        "name" : "Great Cleave",
+        "prequisites" : ["Cleave", "Property: Base attack bonus +4"],
+        "benefit" : "No limit to cleave attacks each round"
+    },
+
+    {
+        "name" : "Improved Bull Rush",
+        "prequisites" : ["Power Attack"],
+        "benefit" : "+4 bonus on bull rush attempts; no attack of opportunity"
+    },
+
+    {
+        "name" : "Improved Overrun",
+        "prequisites" : ["Power Attack"],
+        "benefit" : "+4 bonus on overrun attempts; no attack of opportunity"
+    },
+
+    {
+        "name" : "Improved Sunder",
+        "prequisites" : ["Power Attack"],
+        "benefit" : "+4 bonus on sunder attempts; no attack of opportunity"
+    },
+
+    {
+        "name" : "Quick Draw",
+        "prequisites" : ["Property: Base attack bonus +1"],
+        "benefit" : "Draw weapon as free weapon"
+    },
+
+    {
+        "name" : "Rapid Reload",
+        "prequisites" : ["Weapon Proficiency (Crossbow)"],
+        "benefit" : "Reload crossbow more quickly"
+    },
+
+    {
+        "name" : "Run",
+        "prequisites" : [],
+        "benefit" : "Run 5 times normal speed, +4 bonus on Jump checks Made after a running start"
+    },
+
+    {
+        "name" : "Self-Sufficient",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Heal and Survival checks"
+    },
+
+    {
+        "name" : "Shield Proficiency",
+        "prequisites" : [],
+        "benefit" : "No armor check penalty on attack rolls"
+    },
+
+    {
+        "name" : "Improved Shield Bash",
+        "prequisites" : ["Shield Proficiency"],
+        "benefit" : "Retain shield bonus to AC when shield bashing"
+    },
+
+    {
+        "name" : "Tower Shield Proficiency",
+        "prequisites" : ["Shield Proficiency"],
+        "benefit" : "No armor check penalty on attack rolls"
+    },
+
+    {
+        "name" : "Simple Weapon Proficiency",
+        "prequisites" : [],
+        "benefit" : "No –4 penalty on attack rolls with simple weapons"
+    },
+
+    {
+        "name" : "Skill Focus",
+        "prequisites" : [],
+        "benefit" : "+3 bonus on checks with selected skill"
+    },
+
+    {
+        "name" : "Spell Focus",
+        "prequisites" : [],
+        "benefit" : "+1 bonus on save DCs against specific school of magic"
+    },
+
+    {
+        "name" : "Greater Spell Focus",
+        "prequisites" : ["Spell Focus"],
+        "benefit" : "+1 bonus on save DCs against specific school of magic"
+    },
+
+    {
+        "name" : "Spell Mastery",
+        "prequisites" : ["Property: Level 1 (Wizard)"],
+        "benefit" : "Can prepare some spells without spellbook"
+    },
+
+    {
+        "name" : "Spell Penetration",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on caster level checks to defeat spell resistance"
+    },
+
+    {
+        "name" : "Spell Penetration",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on caster level checks to defeat spell resistance"
+    },
+
+    {
+        "name" : "Greater Spell Penetration",
+        "prequisites" : ["Spell Penetration"],
+        "benefit" : "+4 to caster level checks to defeat spell resistance"
+    },
+
+    {
+        "name" : "Stealthy",
+        "prequisites" : [],
+        "benefit" : "+2 bonus on Hide and Move Silently checks"
+    },
+
+    {
+        "name" : "Toughness",
+        "prequisites" : [],
+        "benefit" : "+3 hit points"
+    },
+
+    {
+        "name" : "Track",
+        "prequisites" : [],
+        "benefit" : "Use Survival skill to track"
+    },
+
+    {
+        "name" : "Two-Weapon Fighting",
+        "prequisites" : ["Ability: Dex 15"],
+        "benefit" : "Reduce two-weapon fighting penalties by 2"
+    },
+
+    {
+        "name" : "Two-Weapon Defense",
+        "prequisites" : ["Two-Weapon Fighting"],
+        "benefit" : "Off-hand weapon grants +1 shield bonus to AC"
+    },
+
+    {
+        "name" : "Improved Two-Weapon Fighting",
+        "prequisites" : ["Ability: Dex 17", "Two-Weapon Fighting", "Property: Base attack bonus +6"],
+        "benefit" : "Gain second off-hand attack"
+    },
+
+    {
+        "name" : "Greater Two-Weapon Fighting",
+        "prequisites" : ["Ability: Dex 19", "Improved Two-Weapon Fighting", "Property: Base attack bonus +11"],
+        "benefit" : "Gain third off-hand attack"
+    },
+
+    {
+        "name" : "Weapon Finesse",
+        "prequisites" : ["Weapon Proficiency", "Property: Base attack bonus +11"],
+        "benefit" : "Use Dex modifier instead of Str modifier on attack rolls"
+    },
+
+    {
+        "name" : "Weapon Focus",
+        "prequisites" : ["Weapon Proficiency", "Property: Base attack bonus +1"],
+        "benefit" : "+1 bonus on attack rolls with selected weapon"
+    },
+
+    {
+        "name" : "Weapon Specialization",
+        "prequisites" : ["Weapon Focus", "Property: Level 4 (Fighter)"],
+        "benefit" : "+2 bonus on attack rolls with selected weapon"
+    },
+
+    {
+        "name" : "Greater Weapon Focus",
+        "prequisites" : ["Weapon Focus", "Property: Level 8 (Fighter)"],
+        "benefit" : "+2 bonus on attack rolls with selected weapon"
+    },
+
+    {
+        "name" : "Greater Weapon Specialization",
+        "prequisites" : ["Weapon Specialization", "Greater Weapon Focus", "Proficiency: Level 12 (Fighter)"],
+        "benefit" : "+4 bonus on damage rolls with selected weapo"
+    },
+
+    {
+        "name" : "Brew Potion",
+        "prequisites" : ["Property: Level 3 (Spellcaster)"],
+        "benefit" : "Create magic potions"
+    },
+
+    {
+        "name" : "Craft Magic Arms and Armor",
+        "prequisites" : ["Property: Level 5 (Spellcaster)"],
+        "benefit" : "Create magic weapons, armor, and shields"
+    },
+
+    {
+        "name" : "Craft Rod",
+        "prequisites" : ["Property: Level 9 (Spellcaster)"],
+        "benefit" : "Create magic rods"
+    },
+
+    {
+        "name" : "Create Staff",
+        "prequisites" : ["Property: Level 12 (Spellcaster)"],
+        "benefit" : "Create magic staffs"
+    },
+
+    {
+        "name" : "Craft Wand",
+        "prequisites" : ["Property: Level 5 (Spellcaster)"],
+        "benefit" : "Create magic wands"
+    },
+    
+    {
+        "name" : "Craft Wondrous Item",
+        "prequisites" : ["Property: Level 3 (Spellcaster)"],
+        "benefit" : "Create magic wondrous items"
+    },
+
+    {
+        "name" : "Forge Ring",
+        "prequisites" : ["Property: Level 12 (Spellcaster)"],
+        "benefit" : "Create magic rings"
+    },
+
+    {
+        "name" : "Scribe Scroll",
+        "prequisites" : ["Property: Level 1 (Spellcaster)"],
+        "benefit" : "Create magic scrolls"
+    },
+
+    {
+        "name" : "Empower Spell",
+        "prequisites" : [],
+        "benefit" : "Increase spell’s variable, numeric effects by 50%"
+    },
+
+    {
+        "name" : "Enlarge Spell",
+        "prequisites" : [],
+        "benefit" : "Double spell’s range"
+    },
+
+    {
+        "name" : "Extend Spell",
+        "prequisites" : [],
+        "benefit" : "Extend Spell"
+    },
+
+    {
+        "name" : "Heighten Spell",
+        "prequisites" : [],
+        "benefit" : "Cast spells as higher level"
+    },
+
+    {
+        "name" : "Maximize Spell",
+        "prequisites" : [],
+        "benefit" : "Maximize spell’s variable, numeric effects"
+    },
+
+    {
+        "name" : "Quicken Spell",
+        "prequisites" : [],
+        "benefit" : "Cast spells as free action"
+    },
+
+    {
+        "name" : "Silent Spell",
+        "prequisites" : [],
+        "benefit" : "Cast spells without verbal components"        
+    },
+
+    {
+        "name" : "Still Spell",
+        "prequisites" : [],
+        "benefit" : "Cast spells without somatic components"
+    },
+
+    {
+        "name" : "Widen Spell",
+        "prequisites" : [],
+        "benefit" : "Double spell’s area"
+    }
+
+]}

@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from pyd20.character import Class, Skill, Race
+from pyd20.character import *
 
 Class.load("dnd/classes.json")
 Skill.load("dnd/skills.json")
 Race.load("dnd/races.json")
+Feat.load("dnd/feats.json")
 
 # Classes
 Barbarian = Class.with_name('barbarian')
