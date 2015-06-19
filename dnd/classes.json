@@ -381,37 +381,79 @@
         "will_bonus_type"       : "good",
         "starting_age_type"     : "old",
         "class_skills"          : [
-            "THIS CLASS IS NOT FINISHED YET"
+            "Balance", "Climb", "Concentration", "Craft", "Diplomacy", "Escape Artist", "Hide", "Jump", "Knowledge (arcana)", "Knowledge (religion)", "Listen", "Move Silently", "Perform", "Profession", "Sense Motive", "Spot", "Swim", "Tumble"
         ],
         "class_feats" : [
-
+            "Weapon and Armor Proficiency", "AC Bonus", "Flurry of Blows", "Unarmed Strike", "Bonus Feat", "Evasion", "Fast Movement", "Ki Strike", "Slow Fall", "Purity of Body", "Wholeness of Body", "Improved Evasion", "Diamond Body", "Abundant Step", "Diamond Soul", "Quivering Palm", "Timeless Body", "Tongue of the Sun and Moon", "Empty Body", "Perfect Self"
         ],
-        "ex_feats" : [],
+        "ex_feats" : [
+            "Evasion", "Fast Movement", "Slow Fall", "Purity of Body", "Improved Evasion", "Diamond Soul", "Timeless Body", "Tongue of the Sun and Moon"
+        ],
         "possible_alignments" : [
-            ["Lawful", "Neutral", "Chaotic"],
+            ["Lawful"],
             ["Good", "Neutral", "Evil"]
         ],
         "special" : [
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            []
+            [
+                ["Bonus Feat", 1], ["Flurry of Blows", 1], ["Unarmed Strike", 1]
+            ],
+            [
+                ["Bonus Feat", 2], ["Evasion", 1]
+            ],
+            [
+                ["Still Mind", 1]
+            ],
+            [
+                ["Ki Strike", 1], ["Slow Fall", 1]
+            ],
+            [
+                ["Purity of Body", 1]
+            ],
+            [
+                ["Bonus Feat", 3], ["Slow Fall", 2]
+            ],
+            [
+                ["Wholeness of Body", 1]
+            ],
+            [
+                ["Slow Fall", 3]
+            ],
+            [
+                ["Improved Evasion", 1]
+            ],
+            [
+                ["Ki Strike", 2], ["Slow Fall", 4]
+            ],
+            [
+                ["Diamond Body", 1], ["Flurry of Blows", 2]
+            ],
+            [
+                ["Abundant Step", 1], ["Slow Fall", 5]
+            ],
+            [
+                ["Diamond Soul", 1]
+            ],
+            [
+                ["Slow Fall", 5]
+            ],
+            [
+                ["Quivering Palm", 1]
+            ],
+            [
+                ["Ki Strike", 3], ["Slow Fall", 6]
+            ],
+            [
+                ["Timeless Body", 1], ["Tongue of the Sun and Moon", 1]
+            ],
+            [
+                ["Slow Fall", 7]
+            ],
+            [
+                ["Empty Body", 1]
+            ],
+            [
+                ["Perfect Self", 1], ["Slow Fall", 8]
+            ]
         ]
     },
     {

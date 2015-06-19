@@ -82,7 +82,7 @@ class Character(object):
         }
 
     def __repr__(self):
-        return "<" + self._name + " " + str(self._race) + " " + str(self._classes) + " Level " + str(self.current_level()) + ">"
+        return "<" + self._name + " " + str(self._race) + " Level " + str(self.current_level()) + " " + str(self._classes) + ">"
 
     def improve_ability(self, abiltiy):
         if self._ability_skill_points < 1:
