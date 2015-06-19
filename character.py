@@ -49,7 +49,7 @@ class Character(object):
         self._race = None
         self._gender = None
         self._age = 0
-        self._feat_skill_points = 0
+        self._feat_skill_points = 1
         self._ability_skill_points = 0
         self._level_points = 1
         self.__ABILITIY_MODIFIER = {
@@ -106,6 +106,8 @@ class Character(object):
         self._experience += experience
         delta_level = self.current_level() - level_before
         self._level_points += delta_level
+        self._feat_skill_points += int(self.current_level()/3) - int(level_before/3)
+        self._ability_skill_points += int(self.current_level()/4) - int(level_before/4)
 
     def set_race(self, race):
         self._race = race
