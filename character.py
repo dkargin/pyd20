@@ -275,7 +275,7 @@ class Class(object):
     @staticmethod
     def load(data_path):
         data_file = relative_path() + "/" + data_path
-        classes = json.loads(open(data_file).read())["classes"]
+        classes = json.loads(open(data_file, encoding="utf-8").read())["classes"]
         Class.__ALL_CLASSES = list()
         for class_data in classes:
             instance = Class()
@@ -304,7 +304,7 @@ class Class(object):
     @staticmethod
     def available_classes():
         data_file = relative_path() + "/" + Class.CLASS_DATA
-        classes = json.loads(open(data_file).read())["classes"]
+        classes = json.loads(open(data_file, encoding="utf-8").read())["classes"]
         class_names = list()
         for c in classes:
             class_names.append(c["class_name"])
@@ -363,7 +363,7 @@ class Race(object):
     @staticmethod
     def load(data_path):
         data_file = relative_path() + "/" + data_path
-        races = json.loads(open(data_file).read())["races"]
+        races = json.loads(open(data_file, encoding="utf-8").read())["races"]
         Race.__ALL_RACES = list()
         for race in races:
             instance = Race()
@@ -472,7 +472,7 @@ class Feat(object):
     @staticmethod
     def load(data_path):
         data_file = relative_path() + "/" + data_path
-        feats = json.loads(open(data_file).read())["feats"]
+        feats = json.loads(open(data_file, encoding="utf-8").read())["feats"]
         Feat.__ALL_FEATS = list()
         for feat in feats:
             Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prequisites"], feat["benefit"]))
@@ -508,7 +508,7 @@ class Skill(object):
     @staticmethod
     def load(data_path):
         data_file = relative_path() + "/" + data_path
-        skills = json.loads(open(data_file).read())["skills"]
+        skills = json.loads(open(data_file, encoding="utf-8").read())["skills"]
         Skill.__ALL_SKILLS = list()
         for skill in skills:
             Skill.__ALL_SKILLS.append(Skill(skill["name"], 0, skill["ability"], skill["untrained"]))
