@@ -45,13 +45,13 @@ class Character(object):
         self._alignment = [None, None]
         self._skills = list()
         self._feats = list()
-        self._class = None
+        self._classes = list()
         self._race = None
         self._gender = None
         self._age = 0
-        self._skill_points = 0
         self._feat_skill_points = 0
         self._ability_skill_points = 0
+        self._level_points = 1
         self.__ABILITIY_MODIFIER = {
             "constitution": self.constitution_mofifier,
             "con": self.constitution_mofifier,
@@ -82,7 +82,7 @@ class Character(object):
         }
 
     def __repr__(self):
-        return "<" + self._name + " " + str(self._race) + " " + str(self._class) + " Level " + str(self.current_level()) + ">"
+        return "<" + self._name + " " + str(self._race) + " " + str(self._classes) + " Level " + str(self.current_level()) + ">"
 
     def improve_ability(self, abiltiy):
         if self._ability_skill_points < 1:
@@ -101,21 +101,31 @@ class Character(object):
             self._wisdom += 1
         self._ability_skill_points -= 1
 
-    def maximum_skill_points(self):
-        skill_points = 0
-        for level in range(1, self.current_level() + 1):
-            skill_points += (self._class._skill_modifier + self.intellect_mofifier())
-            if level == 1:
-                skill_points *= 4
-                if skill_points < 4:
-                    skill_points = 4
-        return skill_points
+    def add_experience(self, experience):
+        level_before = self.current_level()
+        self._experience += experience
+        delta_level = self.current_level() - level_before
+        self._level_points += delta_level
 
     def set_race(self, race):
         self._race = race
 
-    def set_class(self, class_type):
-        self._class = class_type
+    def add_class_level(self, class_type):
+        if self._level_points == 0:
+            return
+        if not self.has_class(class_type):
+            self._classes.append(class_type)
+        self._level_points -= 1
+        self.class_with_name(class_type._name).level_up(self)
+
+    def class_with_name(self, class_name):
+        for class_ in self._classes:
+            if class_._name == class_name:
+                return class_
+        return None
+
+    def has_class(self, class_type):
+        return class_type in self._classes
 
     def ability(self, abiilty_name):
         return self.__ABILITES[abiilty_name]()
@@ -169,16 +179,10 @@ class Character(object):
         return core.current_level(self._experience)
 
     def can_learn_skill(self, skill_name):
-        current_skill_level = 0
-        skill = self.__skill_with_name(skill_name)
-        current_skill_level = skill.level
-        if self._class.is_class_skill(skill_name):
-            max_skill_level = core.class_skill_max_ranks(self.current_level())
-            needed_points = 1
-        else:
-            max_skill_level = core.cross_class_skill_max_ranks(self.current_level())
-            needed_points = 2
-        return current_skill_level < max_skill_level and self._skill_points > needed_points
+        for class_ in self._classes:
+            if class_.can_learn_skill(skill_name, self):
+                return True
+        return False
 
     def can_learn_feat(self, feat_name):
         feat = Feat.with_name(feat_name)
@@ -187,25 +191,25 @@ class Character(object):
         return feat.has_prequisties(self) and self._feat_skill_points > 0
 
     def use_skill(self, skill_name):
-        skill = self.__skill_with_name(skill_name)
+        skill = self.skill_with_name(skill_name)
         return d20.roll() + skill.level + self.ability_modifier(skill.ability)
 
     def has_learned_skill(self, skill_name):
-        return self.__skill_with_name(skill_name).level > 0
+        return self.skill_with_name(skill_name).level > 0
 
     def learn_skill(self, skill_name, times=1):
-        if not self.can_learn_skill(skill_name):
+        if times == 0:
             return
-        if self._class.is_class_skill(skill_name):
-            needed_points = 1
-        else:
-            needed_points = 2
-        self._skill_points -= needed_points
-        if not self.has_learned_skill(skill_name):
-            self._skills.append(self.__skill_with_name(skill_name))
-        self.__skill_with_name(skill_name).level += 1
-        if times > 1:
-            return self.learn_skill(skill_name, times - 1)
+        lowest_cost_class = None
+        for class_ in self._classes:
+            if class_.can_learn_skill(skill_name, self):
+                if class_.is_class_skill(skill_name):
+                    lowest_cost_class = class_
+                else:
+                    if lowest_cost_class is None:
+                        lowest_cost_class = class_
+        class_.learn_skill(skill_name, self)
+        self.learn_skill(skill_name, times - 1)
 
     def learn_feat(self, feat_name):
         if not self.can_learn_feat(feat_name):
@@ -213,8 +217,8 @@ class Character(object):
         self._feat_skill_points -= 1
         self._feats.append(Feat.with_name(feat_name))
 
-    def starting_age(self):
-        dice = self._race.starting_age_dice(self._class._starting_age_type)
+    def starting_age(self, starting_age_type):
+        dice = self._race.starting_age_dice(starting_age_type)
         return self._race._adulthood + dice.roll()
 
     def relative_age(self):
@@ -244,7 +248,10 @@ class Character(object):
                 return True
         return False
 
-    def __skill_with_name(self, skill_name):
+    def __level_up(self):
+        self.__increase_skill_points()
+
+    def skill_with_name(self, skill_name):
         for skill in self._skills:
             if skill.name.lower() == skill_name.lower():
                 return skill
@@ -263,6 +270,9 @@ class Class(object):
         self._reflex_save_bonus_type = None
         self._skill_modifier = None
         self._name = None
+        self._experience = None
+        self._skill_points = 0
+        self._level = 0
         self._possible_alignments = list()
         self._class_skills = list()
         self._class_feats = list()
@@ -270,7 +280,40 @@ class Class(object):
         self._special = list()
 
     def __repr__(self):
-        return "<" + self._name + ">"
+        return "<" + self._name + " Level " + str(self._level) + ">"
+
+    def level_up(self, character):
+        self._level += 1
+        self.__increase_skill_points(character)
+
+    def current_level(self):
+        return self._level
+
+    def learn_skill(self, skill_name, character, times=1):
+        if not self.can_learn_skill(skill_name, character):
+            return
+        if self.is_class_skill(skill_name):
+            needed_points = 1
+        else:
+            needed_points = 2
+        self._skill_points -= needed_points
+        if not character.has_learned_skill(skill_name):
+            character._skills.append(character.skill_with_name(skill_name))
+        character.skill_with_name(skill_name).level += 1
+        if times > 1:
+            return self.learn_skill(skill_name, character, times - 1)
+
+    def can_learn_skill(self, skill_name, character):
+        current_skill_level = 0
+        skill = character.skill_with_name(skill_name)
+        current_skill_level = skill.level
+        if self.is_class_skill(skill_name):
+            max_skill_level = core.class_skill_max_ranks(self.current_level())
+            needed_points = 1
+        else:
+            max_skill_level = core.cross_class_skill_max_ranks(self.current_level())
+            needed_points = 2
+        return current_skill_level < max_skill_level and self._skill_points > needed_points
 
     @staticmethod
     def load(data_path):
@@ -339,6 +382,14 @@ class Class(object):
             if skill.lower() == skill_name.lower():
                 return True
         return False
+
+    def __increase_skill_points(self, character):
+        skill_points = (self._skill_modifier + character.intellect_mofifier())
+        if self._level == 1:
+            skill_points *= 4
+            if skill_points < 4:
+                skill_points = 4
+        self._skill_points += skill_points
 
 
 class Race(object):
