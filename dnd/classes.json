@@ -375,9 +375,9 @@
         "class_name"            : "Monk",
         "hit_die"               : "d8",
         "skill_modifier"        : 4,
-        "attack_bonus_type"     : "poor",
-        "fotitude_bonus_type"   : "poor",
-        "reflex_bonus_type"     : "poor",
+        "attack_bonus_type"     : "average",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "good",
         "will_bonus_type"       : "good",
         "starting_age_type"     : "old",
         "class_skills"          : [
@@ -460,43 +460,75 @@
         "class_name"            : "Ranger",
         "hit_die"               : "d8",
         "skill_modifier"        : 6,
-        "attack_bonus_type"     : "poor",
-        "fotitude_bonus_type"   : "poor",
-        "reflex_bonus_type"     : "poor",
-        "will_bonus_type"       : "good",
+        "attack_bonus_type"     : "good",
+        "fotitude_bonus_type"   : "good",
+        "reflex_bonus_type"     : "good",
+        "will_bonus_type"       : "poor",
         "starting_age_type"     : "medium",
         "class_skills"          : [
-            "THIS CLASS IS NOT FINISHED YET"
+            "Climb", "Concentration", "Craft", "Handle Animal", "Heal", "Hide", "Jump", "Knowledge (dungeoneering)", "Knowledge (geography)", "Knowledge (nature)", "Listen", "Move Silently", "Profession", "Ride", "Search", "Spot", "Survival", "Swim", "Use Rope"
         ],
         "class_feats" : [
-
+            "Weapon and Armor Proficiency", "Favored Enemy", "Track", "Wild Empathy", "Combat Style", "Endurance", "Animal Companion", "Spells", "Improved Combat Style", "Woodland Stride", "Swift Tracker", "Evasion", "Combat Style Mastery", "Camouflage", "Hide in Plain Sight"
         ],
-        "ex_feats" : [],
+        "ex_feats" : [
+            "Favored Enemy", "Wild Empathy", "Combat Style", "Animal Companion", "Improved Combat Style", "Woodland Stride", "Swift Tracker", "Evasion", "Combat Style Mastery", "Camouflage", "Hide in Plain Sight"
+        ],
         "possible_alignments" : [
             ["Lawful", "Neutral", "Chaotic"],
             ["Good", "Neutral", "Evil"]
         ],
         "special" : [
+            [
+                ["Favored Enemy", 1], ["Track", 1], ["Wild Empathy", 1]
+            ],
+            [
+                ["Combat Style", 1]
+            ],
+            [
+                ["Endurance", 1]
+            ],
+            [
+                ["Animal Companion", 1]
+            ],
+            [
+                ["Favored Enemy", 2]
+            ],
+            [
+                ["Combat Style", 2]
+            ],
+            [
+                ["Woodland Stride", 1]
+            ],
+            [
+                ["Swift Tracker", 1]
+            ],
+            [
+                ["Evasion", 1]
+            ],
+            [
+                ["Favored Enemy", 3]
+            ],
+            [
+                ["Combat Style", 3]
+            ],
+            [],
+            [
+                ["Camouflage", 1]
+            ],
+            [],
+            [
+                ["Favored Enemy", 4]
+            ],
+            [],
+            [
+                ["Hide in Plain Sight", 1]
+            ],
             [],
             [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            []
+            [
+                ["Favored Enemy", 5]
+            ]
         ]
     },
     {
