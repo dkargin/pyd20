@@ -535,16 +535,16 @@
         "class_name"            : "Fighter",
         "hit_die"               : "d10",
         "skill_modifier"        : 2,
-        "attack_bonus_type"     : "poor",
-        "fotitude_bonus_type"   : "poor",
+        "attack_bonus_type"     : "good",
+        "fotitude_bonus_type"   : "good",
         "reflex_bonus_type"     : "poor",
-        "will_bonus_type"       : "good",
+        "will_bonus_type"       : "poor",
         "starting_age_type"     : "medium",
         "class_skills"          : [
-            "THIS CLASS IS NOT FINISHED YET"
+            "Climb", "Craft", "Handle Animal", "Intimidate", "Jump", "Ride", "Swim"
         ],
         "class_feats" : [
-
+            "Weapon and Armor Proficiency", "Bonus Feat"
         ],
         "ex_feats" : [],
         "possible_alignments" : [
@@ -552,26 +552,48 @@
             ["Good", "Neutral", "Evil"]
         ],
         "special" : [
+            [
+                ["Bonus Feat", 1]
+            ],
+            [
+                ["Bonus Feat", 2]
+            ],
             [],
+            [
+                ["Bonus Feat", 3]
+            ],
             [],
+            [
+                ["Bonus Feat", 4]
+            ],
             [],
+            [
+                ["Bonus Feat", 5]
+            ],
             [],
+            [
+                ["Bonus Feat", 6]
+            ],
             [],
+            [
+                ["Bonus Feat", 7]
+            ],
             [],
+            [
+                ["Bonus Feat", 8]
+            ],
             [],
+            [
+                ["Bonus Feat", 9]
+            ],
             [],
+            [
+                ["Bonus Feat", 10]
+            ],
             [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            []
+            [
+                ["Bonus Feat", 11]
+            ]
         ]
     },
     {
