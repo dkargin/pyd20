@@ -600,43 +600,69 @@
         "class_name"            : "Paladin",
         "hit_die"               : "d10",
         "skill_modifier"        : 2,
-        "attack_bonus_type"     : "poor",
-        "fotitude_bonus_type"   : "poor",
+        "attack_bonus_type"     : "good",
+        "fotitude_bonus_type"   : "good",
         "reflex_bonus_type"     : "poor",
-        "will_bonus_type"       : "good",
+        "will_bonus_type"       : "poor",
         "starting_age_type"     : "medium",
         "class_skills"          : [
-            "THIS CLASS IS NOT FINISHED YET"
+            "Concentration", "Craft", "Diplomacy", "Handle Animal", "Heal", "Knowledge (nobility and royalty)", "Knowledge (religion)", "Profession", "Ride", "Sense Motive (Wis)"
         ],
         "class_feats" : [
-
+            "Weapon and Armor Proficiency", "Aura of Good", "Detect Evil", "Smite Evil", "Divine Grace", "Lay on Hands", "Aura of Courage", "Divine Health", "Turn Undead", "Spells", "Special Mount", "Remove Disease", "Code of Conduct", "Associates"
         ],
-        "ex_feats" : [],
+        "ex_feats" : [
+            "Aura of Good", "Divine Health"
+        ],
         "possible_alignments" : [
             ["Lawful", "Neutral", "Chaotic"],
             ["Good", "Neutral", "Evil"]
         ],
         "special" : [
+            [
+                ["Aura of Good", 1], ["Detect Evil", 1], ["Smite Evil", 1]
+            ],
+            [
+                ["Divine Grace", 1], ["Lay on Hands", 1]
+            ],
+            [
+                ["Aura of courage", 1], ["Divine Health", 1]
+            ],
+            [
+                ["Turn Undead", 1]
+            ],
+            [
+                ["Smite Evil", 2], ["Special Mount", 1]
+            ],
+            [
+                ["Remove Disease", 1]
+            ],
             [],
             [],
+            [
+                ["Remove Disease", 2]
+            ],
+            [
+                ["Smite Evil", 3]
+            ],
+            [],
+            [
+                ["Remove Disease", 3]
+            ],
             [],
             [],
+            [
+                ["Remove Disease", 4], ["Smite Evil", 4]
+            ],
             [],
             [],
+            [
+                ["Remove Disease", 5]
+            ],
             [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            []
+            [
+                ["Smite Evil", 5]
+            ]
         ]
     },
     {

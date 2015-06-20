@@ -17,6 +17,8 @@ sorcerer = Class.with_name('sorcerer')
 wizard = Class.with_name('wizard')
 rogue = Class.with_name('rogue')
 monk = Class.with_name('monk')
+paladin = Class.with_name('paladin')
+fighter = Class.with_name('fighter')
 
 # Races
 human = Race.with_name('human')
