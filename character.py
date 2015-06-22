@@ -52,6 +52,10 @@ class Character(object):
         self._feat_skill_points = 1
         self._ability_skill_points = 0
         self._level_points = 1
+        self._hit_points = {
+            "current": 0,
+            "maximum": 0
+        }
         self.__ABILITIY_MODIFIER = {
             "constitution": self.constitution_mofifier,
             "con": self.constitution_mofifier,
@@ -84,6 +88,12 @@ class Character(object):
     def __repr__(self):
         return "<" + self._name + " " + str(self._race) + " Level " + str(self.current_level()) + " " + str(self._classes) + ">"
 
+    def hit_points(self):
+        return self._hit_points["current"]
+
+    def max_hit_points(self):
+        return self._hit_points["maximum"]
+
     def improve_ability(self, abiltiy):
         if self._ability_skill_points < 1:
             return
@@ -112,13 +122,16 @@ class Character(object):
     def set_race(self, race):
         self._race = race
 
-    def add_class_level(self, class_type):
+    def add_class_level(self, class_type, times=1):
+        if times == 0:
+            return
         if self._level_points == 0:
             return
         if not self.has_class(class_type):
             self._classes.append(class_type)
         self._level_points -= 1
         self.class_with_name(class_type._name).level_up(self)
+        self.add_class_level(class_type, times - 1)
 
     def class_with_name(self, class_name):
         for class_ in self._classes:
@@ -244,8 +257,15 @@ class Character(object):
     def weight(self):
         return core.unit_weight * self._weight
 
+    def feats(self):
+        feats = list()
+        feats += self._feats
+        for class_ in self._classes:
+            feats += class_.feats()
+        return feats
+
     def has_feat(self, feat_name):
-        for feat in self._feats:
+        for feat in self.feats():
             if feat.name.lower() == feat_name.lower():
                 return True
         return False
@@ -287,6 +307,7 @@ class Class(object):
     def level_up(self, character):
         self._level += 1
         self.__increase_skill_points(character)
+        self.__increase_health(character)
 
     def current_level(self):
         return self._level
@@ -385,13 +406,36 @@ class Class(object):
                 return True
         return False
 
+    def feats(self):
+        feats = list()
+        for level in range(0, self.current_level()):
+            for class_feat in self._special[level]:
+                contains_feat = False
+                for feat in feats:
+                    if class_feat[0] == feat.name:
+                        contains_feat = True
+                        feat.level = class_feat[1]
+                        break
+                if contains_feat is False:
+                    feats.append(ClassFeat(class_feat[0]))
+        return feats
+
     def __increase_skill_points(self, character):
         skill_points = (self._skill_modifier + character.intellect_mofifier())
-        if self._level == 1:
+        # only the first class gets the initial skill bonus
+        if self._level == 1 and len(character._classes) == 1:
             skill_points *= 4
             if skill_points < 4:
                 skill_points = 4
         self._skill_points += skill_points
+
+    def __increase_health(self, character):
+        const_mod = character.constitution_mofifier()
+        if const_mod < 0:
+            const_mod = 0
+        hp_bonus = self._hit_die.roll() + const_mod
+        character._hit_points["maximum"] += hp_bonus
+        character._hit_points["current"] += hp_bonus
 
 
 class Race(object):
@@ -529,6 +573,13 @@ class Feat(object):
         Feat.__ALL_FEATS = list()
         for feat in feats:
             Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prequisites"], feat["benefit"]))
+
+
+class ClassFeat(Feat):
+
+    def __init__(self, name=None, level=1):
+        super().__init__(name)
+        self.level = level
 
 
 class Skill(object):

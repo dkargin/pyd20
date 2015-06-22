@@ -13,7 +13,8 @@
     {
         "name" : "Bluff",
         "ability" : "charisma",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Diplomacy", "Disguise", "Intimidate", "Sleight of Hand" ]
     },
     {
         "name" : "Climb",
@@ -28,12 +29,14 @@
     {
         "name" : "Craft",
         "ability" : "intelligence",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Appraise" ]
     },
     {
         "name" : "Decipher Script",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Use Magic Device" ]
     },
     {
         "name" : "Diplomacy",
@@ -53,7 +56,8 @@
     {
         "name" : "Escape Artist",
         "ability" : "dexterity",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Use Rope" ]
     },
     {
         "name" : "Forgery",
@@ -68,7 +72,8 @@
     {
         "name" : "Handle Animal",
         "ability" : "charisma",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Handle Animal" ]
     },
     {
         "name" : "Heal",
@@ -88,27 +93,32 @@
     {
         "name" : "Jump",
         "ability" : "strength",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Tumble" ]
     },
     {
         "name" : "Knowledge (arcana)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Spellcraft" ]
     },
     {
         "name" : "Knowledge (architecture and engineering)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Search" ]
     },
     {
         "name" : "Knowledge (dungeoneering)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Survival" ]
     },
     {
         "name" : "Knowledge (geography)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Survival" ]
     },
     {
         "name" : "Knowledge (history)",
@@ -118,27 +128,32 @@
     {
         "name" : "Knowledge (local)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Gather Information" ]
     },
     {
         "name" : "Knowledge (nature)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Survival" ]
     },
     {
         "name" : "Knowledge (nobility and royalty)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Diplomacy" ]
     },
     {
         "name" : "Knowledge (religion)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Turn Undead", "Rebuke Undead" ]
     },
     {
         "name" : "Knowledge (the planes)",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Survival" ]
     },
     {
         "name" : "Listen",
@@ -173,12 +188,14 @@
     {
         "name" : "Search",
         "ability" : "intelligence",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Survival" ]
     },
     {
         "name" : "Sense Motive",
         "ability" : "wisdom",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Diplomacy" ]
     },
     {
         "name" : "Sleight of Hand",
@@ -193,7 +210,8 @@
     {
         "name" : "Spellcraft",
         "ability" : "intelligence",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Use Magic Device" ]
     },
     {
         "name" : "Spot",
@@ -203,7 +221,8 @@
     {
         "name" : "Survival",
         "ability" : "wisdom",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Knowledge (nature)" ]
     },
     {
         "name" : "Swim",
@@ -213,17 +232,20 @@
     {
         "name" : "Tumble",
         "ability" : "dexterity",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Balance", "Jump" ]
     },
     {
         "name" : "Use Magic Device",
         "ability" : "charisma",
-        "untrained" : false
+        "untrained" : false,
+        "synergies" : [ "Spellcraft" ]
     },
     {
         "name" : "Use Rope",
         "ability" : "dexterity",
-        "untrained" : true
+        "untrained" : true,
+        "synergies" : [ "Climb", "Escape Artist" ]
     }
     
 ]}
