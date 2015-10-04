@@ -46,6 +46,7 @@ def attack_bonus(level, type='good'):
     valid type values are: 'good', 'average' and 'poor'
     """
     bonus = list()
+    base_bonus = 0
     if type == 'good':
         base_bonus = level
     if type == 'average':

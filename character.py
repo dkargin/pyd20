@@ -3,10 +3,11 @@
 
 import json
 import os
-from pyd20.dice import Dice, d20
-import pyd20.core as core
+import core
 
 # constants for alignment
+from dice import d20, Dice
+
 ALIGNMENT_GOOD = "Good"
 ALIGNMENT_NEUTRAL = "Neutral"
 ALIGNMENT_EVIL = "Evil"
@@ -41,7 +42,7 @@ class Character(object):
         self._strength = 0
         self._wisdom = 0
         self._experience = 0
-        self._name = None
+        self._name = ""
         self._alignment = [None, None]
         self._skills = list()
         self._feats = list()
@@ -398,7 +399,7 @@ class Class(object):
     def skill_points(self, int_modifier):
         if int_modifier < 0:
             int_modifier = 0
-        return (self._skill_modifier + int_modifier)
+        return self._skill_modifier + int_modifier
 
     def is_class_skill(self, skill_name):
         for skill in self._class_skills:
@@ -511,17 +512,17 @@ class Feat(object):
 
     __ALL_FEATS = list()
 
-    def __init__(self, name=None, prequisites=list(), benefit=None):
+    def __init__(self, name=None, prerequisites=list(), benefit=None):
         self.name = name
-        self.prequisites = prequisites
+        self.prerequisites = prerequisites
         self.benefit = benefit
 
     def __repr__(self):
         return "<" + self.name + ">"
 
     def has_prequisties(self, character):
-        for prequisite in self.prequisites:
-            if self.__check_prequisite(prequisite, character) == False:
+        for prerequisite in self.prerequisites:
+            if not self.__check_prequisite(prerequisite, character):
                 return False
         return True
 
@@ -572,7 +573,7 @@ class Feat(object):
         feats = json.loads(open(data_file, encoding="utf-8").read())["feats"]
         Feat.__ALL_FEATS = list()
         for feat in feats:
-            Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prequisites"], feat["benefit"]))
+            Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prerequisites"], feat["benefit"]))
 
 
 class ClassFeat(Feat):

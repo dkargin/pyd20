@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import pyd20.core as core
+import core
 
 
 class Grid(object):
@@ -14,41 +14,49 @@ class Grid(object):
 
     @staticmethod
     def create_with_dimension(width, height, tilesize=1.0):
+        """
+        creates a rectangular grid with the given width and height
+        """
+
         grid = Grid()
         for x in range(1, width + 1):
             for y in range(1, height + 1):
                 grid._add_empty_tile(x, y)
-        return grid
         grid.set_tilesize(tilesize)
+        return grid
 
     def path_between_tiles(self, start_tile, dest_tile):
         """
         implements pathfinding using A*
         """
 
-        openlist = PriorityQueue([start_tile])
-        closedlist = []
+        open_list = PriorityQueue([start_tile])
+        closed_list = []
+
         for tile in self._grid:
             tile.reset_g()
 
+        def h(start, end):
+            return abs(start._x - end._x) + abs(start._y - end._y)
+
         def expand_tile(tile):
             for successor in self.get_adjacent_tiles(tile):
-                if successor in closedlist:
+                if successor in closed_list:
                     continue
                 tentative_g = tile._g + self._size
-                if successor in openlist and tentative_g >= successor._g:
+                if successor in open_list and tentative_g >= successor._g:
                     continue
                 successor._predecessor = tile
                 successor._g = tentative_g
-                f = tentative_g + self._h(successor, dest_tile)
-                if successor in openlist:
-                    openlist.update_priority(successor, f)
+                f = tentative_g + h(successor, dest_tile)
+                if successor in open_list:
+                    open_list.update_priority(successor, f)
                 else:
-                    openlist.append(successor, f)
+                    open_list.append(successor, f)
             pass
 
-        while len(openlist) > 0:
-            current_tile = openlist.pop()
+        while len(open_list) > 0:
+            current_tile = open_list.pop()
             if current_tile == dest_tile:
                 path = Path(self)
                 current_tile = dest_tile
@@ -58,7 +66,7 @@ class Grid(object):
                     current_tile = current_tile._predecessor
                 path.reverse()
                 return path
-            closedlist.append(current_tile)
+            closed_list.append(current_tile)
             expand_tile(current_tile)
         return None
 
@@ -139,7 +147,7 @@ class Path(object):
 
     def length(self):
         length = 0
-        for tile in self._path:
+        for _ in self._path:
             length += self._grid.get_tilesize()
         return length
 
@@ -193,7 +201,7 @@ class PriorityQueue(object):
         self._iter_current = 0
         return self
 
-    def append(self, element, priority=0):
+    def append(self, element, priority=0.0):
         self._list.append({
             "item":  element,
             "priority": priority,
