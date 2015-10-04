@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
-from pyd20.character import *
+from character import *
 
 Class.load("dnd/classes.json")
 Skill.load("dnd/skills.json")
