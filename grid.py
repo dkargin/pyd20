@@ -8,7 +8,7 @@ class Grid(object):
     """Implements a movable grid."""
 
     def __init__(self):
-        self._grid = []
+        self.__grid = []
         self._size = 1.0
         self.set_tilesize(1.0)
 
@@ -21,7 +21,7 @@ class Grid(object):
         grid = Grid()
         for x in range(1, width + 1):
             for y in range(1, height + 1):
-                grid._add_empty_tile(x, y)
+                grid.add_empty_tile(x, y)
         grid.set_tilesize(tilesize)
         return grid
 
@@ -33,11 +33,11 @@ class Grid(object):
         open_list = PriorityQueue([start_tile])
         closed_list = []
 
-        for tile in self._grid:
+        for tile in self.__grid:
             tile.reset_g()
 
         def h(start, end):
-            return abs(start._x - end._x) + abs(start._y - end._y)
+            return abs(start.x - end.x) + abs(start.y - end.y)
 
         def expand_tile(tile):
             for successor in self.get_adjacent_tiles(tile):
@@ -76,23 +76,25 @@ class Grid(object):
     def get_tilesize(self):
         return self._size * core.unit_length
 
-    def _add_empty_tile(self, x, y):
+    def add_empty_tile(self, x, y):
         tile = Tile(x, y)
-        self._grid.append(tile)
+        self.__grid.append(tile)
 
-    def _remove_tile(self, x, y):
-        for tile in self._grid:
-            if tile._x == x and tile._y == y:
-                self._grid.remove(tile)
+    def remove_tile(self, x, y):
+        for tile in self.__grid:
+            if tile.x == x and tile.y == y:
+                self.__grid.remove(tile)
                 return
 
-    def _get_tile(self, x, y):
-        for tile in self._grid:
-            if tile._x == x and tile._y == y:
+    def get_tile(self, x, y):
+        for tile in self.__grid:
+            if tile.x == x and tile.y == y:
                 return tile
         return None
 
-    def _get_adjacent_tiles(self, x, y):
+    def get_adjacent_tiles(self, tile):
+        x = tile.x
+        y = tile.y
         xs = [x-1, x, x+1]
         ys = [y-1, y, y+1]
         adjacent_tiles = []
@@ -100,20 +102,13 @@ class Grid(object):
             for ty in ys:
                 if tx == x and ty == y:
                     continue
-                tile = self._get_tile(tx, ty)
+                tile = self.get_tile(tx, ty)
                 if tile is not None:
                     adjacent_tiles.append(tile)
         return adjacent_tiles
 
-    def get_adjacent_tiles(self, tile):
-        return self._get_adjacent_tiles(tile._x, tile._y)
-
-    def _get_tiles(self):
-        return self._grid
-
-    def _h(self, start, end):
-        # using euclidean distance as heuristic
-        return abs(start._x - end._x) + abs(start._y - end._y)
+    def get_tiles(self):
+        return self.__grid
 
 
 class Path(object):
@@ -121,38 +116,38 @@ class Path(object):
     """Implements a path through several grid tiles"""
 
     def __init__(self, grid):
-        self._path = []
-        self._grid = grid
-        self._iter_current = 0
+        self.__path = []
+        self.__grid = grid
+        self.__iter_current = 0
 
     def append(self, tile):
-        self._path.append(tile)
+        self.__path.append(tile)
 
     def reverse(self):
-        self._path.reverse()
+        self.__path.reverse()
 
     def remove(self, tile):
-        self._path.remove(tile)
+        self.__path.remove(tile)
 
     def __iter__(self):
-        self._iter_current = 0
+        self.__iter_current = 0
         return self
 
     def __next__(self):
-        if self._iter_current >= len(self._path):
+        if self.__iter_current >= len(self.__path):
             raise StopIteration
-        next_item = self._path[self._iter_current]
-        self._iter_current += 0
+        next_item = self.__path[self.__iter_current]
+        self.__iter_current += 0
         return next_item
 
     def length(self):
         length = 0
-        for _ in self._path:
-            length += self._grid.get_tilesize()
+        for _ in self.__path:
+            length += self.__grid.get_tilesize()
         return length
 
     def __repr__(self):
-        return self._path.__repr__()
+        return self.__path.__repr__()
 
 
 class Tile(object):
@@ -160,8 +155,8 @@ class Tile(object):
     """Implements a tile on a Grid."""
 
     def __init__(self, x, y):
-        self._x = x
-        self._y = y
+        self.x = x
+        self.y = y
         self._g = 0
         self._successor = None
         self._predecessor = None
@@ -183,7 +178,7 @@ class Tile(object):
         self._occupation.remove(thing)
 
     def __repr__(self):
-        return "<Tile " + str(self._x) + "x" + str(self._y) + " " + str(self._occupation) + ">"
+        return "<Tile " + str(self.x) + "x" + str(self.y) + " " + str(self._occupation) + ">"
 
 
 class PriorityQueue(object):
@@ -191,29 +186,29 @@ class PriorityQueue(object):
     """implements a priority queue"""
 
     def __init__(self, a_list=None):
-        self._list = []
-        self._iter_current = 0
+        self.__list = []
+        self.__iter_current = 0
         if a_list is not None:
             for i in a_list:
                 self.append(i)
 
     def __iter__(self):
-        self._iter_current = 0
+        self.__iter_current = 0
         return self
 
     def append(self, element, priority=0.0):
-        self._list.append({
+        self.__list.append({
             "item":  element,
             "priority": priority,
-            "id": len(self._list)
+            "id": len(self.__list)
         })
         self.__sort()
 
     def pop(self):
-        return self._list.pop()["item"]
+        return self.__list.pop()["item"]
 
     def update_priority(self, element, priority, mode="all"):
-        for i in self._list:
+        for i in self.__list:
             if i["item"] is element:
                 i["priority"] = priority
                 if mode != "all":
@@ -221,23 +216,23 @@ class PriorityQueue(object):
         self.__sort()
 
     def __next__(self):
-        if self._iter_current >= len(self._list):
+        if self.__iter_current >= len(self.__list):
             raise StopIteration
-        next_item = self._list[self._iter_current]
-        self._iter_current += 1
+        next_item = self.__list[self.__iter_current]
+        self.__iter_current += 1
         return next_item["item"]
 
     def __repr__(self):
         l = []
-        for i in self._list:
+        for i in self.__list:
             l.append(i["item"])
         return l.__repr__()
 
     def __sort(self):
         l = []
-        while len(l) != len(self._list):
+        while len(l) != len(self.__list):
             highest_prio = None
-            for i in self._list:
+            for i in self.__list:
                 if i in l:
                     continue
                 if highest_prio is None:
@@ -246,7 +241,7 @@ class PriorityQueue(object):
                 if i["priority"] > highest_prio["priority"]:
                     highest_prio = i
             l.append(highest_prio)
-        self._list = l
+        self.__list = l
 
     def __len__(self):
-        return len(self._list)
+        return len(self.__list)
