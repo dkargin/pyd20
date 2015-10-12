@@ -19,8 +19,11 @@ GENDER_MALE = "male"
 GENDER_FEMALE = "female"
 
 
-# auxiliary function
 def relative_path():
+    """
+    auxiliary function to retrieve the relative path to the current script
+    :returns str
+    """
     path = os.path.realpath(__file__)
     if "nt" in os.name:
         parts = path.split("\\")
@@ -31,6 +34,30 @@ def relative_path():
 
 
 class Character(object):
+
+    """
+    :type _constitution: int
+    :type _charisma: int
+    :type _dexterity: int
+    :type _intellect: int
+    :type _strength: int
+    :type _wisdom: int
+    :type _experience: int
+    :type _name: str
+    :type _alignment: str[]
+    :type _skills: Skill[]
+    :type _feats: Feat[]
+    :type _classes: Class[]
+    :type _race: Race
+    :type _gender: str
+    :type _age: int
+    :type _feat_skill_points: int
+    :type _weight: int
+    :type _height: int
+    :type _ability_skill_points: int
+    :type _level_points: int
+    :type _hit_points: dict
+    """
 
     __AGE_MODIFIER = {
         "young": 0,
@@ -56,6 +83,8 @@ class Character(object):
         self._gender = None
         self._age = 0
         self._feat_skill_points = 1
+        self._weight = 0
+        self._height = 0
         self._ability_skill_points = 0
         self._level_points = 1
         self._hit_points = {
@@ -95,12 +124,28 @@ class Character(object):
         return "<" + self._name + " " + str(self._race) + " Level " + str(self.current_level()) + " " + str(self._classes) + ">"
 
     def hit_points(self):
+        """
+        returns the current hit points
+
+        :returns int
+        """
         return self._hit_points["current"]
 
     def max_hit_points(self):
+        """
+        returns the maximum hit points
+
+        :returns int
+        """
         return self._hit_points["maximum"]
 
     def improve_ability(self, abiltiy):
+        """
+        Improves the ability using available skill points. If no ability skill points are available,
+        this has no effect.
+
+        :param str abiltiy: The ability to improve
+        """
         if self._ability_skill_points < 1:
             return
         if abiltiy == "constitution":
@@ -118,6 +163,11 @@ class Character(object):
         self._ability_skill_points -= 1
 
     def add_experience(self, experience):
+        """
+        adds experience points, and levels up if enough xp is gained
+
+        :param int experience: Amount of xp to add
+        """
         level_before = self.current_level()
         self._experience += experience
         delta_level = self.current_level() - level_before
@@ -126,9 +176,20 @@ class Character(object):
         self._ability_skill_points += int(self.current_level()/4) - int(level_before/4)
 
     def set_race(self, race):
+        """
+        Sets the race
+
+        :param Race race: The race to set
+        """
         self._race = race
 
     def add_class_level(self, class_type, times=1):
+        """
+        Adds a level to a class if enough level points are available.
+
+        :param Class class_type: The class type to level up
+        :param int times: Amount of levels to add.
+        """
         if times == 0:
             return
         if self._level_points == 0:
@@ -140,85 +201,205 @@ class Character(object):
         self.add_class_level(class_type, times - 1)
 
     def class_with_name(self, class_name):
+        """
+        returns the class with the given name if the character has it
+
+        :param str class_name: The name of the class
+        :returns Class | None
+        """
         for class_ in self._classes:
             if class_._name == class_name:
                 return class_
         return None
 
     def has_class(self, class_type):
+        """
+        checks whether the character has a class of a specific type or not
+
+        :param Class class_type: The name of the class
+        :returns bool
+        """
         return class_type in self._classes
 
-    def ability(self, abiilty_name):
-        return self.__ABILITES[abiilty_name]()
+    def ability(self, abilty_name):
+        """
+        returns the value of the ability with the given name
+
+        :param str abilty_name: The name of the ability
+        :returns int
+        """
+        return self.__ABILITES[abilty_name]()
 
     def constitution(self):
+        """
+        returns the constitution
+
+        :returns int
+        """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._constitution - age_modifier
 
     def charisma(self):
+        """
+        returns the charisma
+
+        :returns int
+        """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._charisma + age_modifier
 
     def dexterity(self):
+        """
+        returns the dexterity
+
+        :returns int
+        """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._dexterity - age_modifier
 
     def intellect(self):
+        """
+        returns the intellect
+
+        :returns int
+        """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._intellect + age_modifier
 
     def strength(self):
+        """
+        returns the strength
+
+        :returns int
+        """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._strength - age_modifier
 
     def wisdom(self):
+        """
+        returns the wisdom
+
+        :returns int
+        """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._wisdom + age_modifier
 
     def constitution_mofifier(self):
+        """
+        returns the constitution modifier
+
+        :returns int
+        """
         return core.ability_modifier(self.constitution())
 
     def charisma_mofifier(self):
+        """
+        returns the charisma modifier
+
+        :returns int
+        """
         return core.ability_modifier(self.charisma())
 
     def dexterity_mofifier(self):
+        """
+        returns the dexterity modifier
+
+        :returns int
+        """
         return core.ability_modifier(self.dexterity())
 
     def intellect_mofifier(self):
+        """
+        returns the intellect modifier
+
+        :returns int
+        """
         return core.ability_modifier(self.intellect())
 
     def strength_modifier(self):
+        """
+        returns the strength modifier
+
+        :returns int
+        """
         return core.ability_modifier(self.strength())
 
     def wisdom_mofifier(self):
+        """
+        returns the wisdom modifier
+
+        :returns int
+        """
         return core.ability_modifier(self.wisdom())
 
     def ability_modifier(self, ability):
+        """
+        returns the modifier for a specific ability
+
+        :param str ability: The name of the ability
+        :returns int
+        """
         return self.__ABILITIY_MODIFIER[ability]()
 
     def current_level(self):
+        """
+        returns the current level
+
+        :returns int
+        """
         return core.current_level(self._experience)
 
     def can_learn_skill(self, skill_name):
+        """
+        checks whether a skill can be learned
+
+        :param str skill_name: The name of the skill
+        :returns bool
+        """
         for class_ in self._classes:
             if class_.can_learn_skill(skill_name, self):
                 return True
         return False
 
     def can_learn_feat(self, feat_name):
+        """
+        checks whether a feat can be learned
+
+        :param str feat_name: The name of the skill
+        :returns bool
+        """
         feat = Feat.with_name(feat_name)
         if feat is None:
             return False
         return feat.has_prequisties(self) and self._feat_skill_points > 0
 
     def use_skill(self, skill_name):
+        """
+        Rolls the skill
+        d20 + current level of the skill + ability modifier of the skill
+
+        :param str skill_name: The name of the skill
+        :returns int
+        """
         skill = self.skill_with_name(skill_name)
         return d20.roll() + skill.level + self.ability_modifier(skill.ability)
 
     def has_learned_skill(self, skill_name):
+        """
+        checks whether a skill has been learned
+
+        :param str skill_name: The name of the skill
+        :returns bool
+        """
         return self.skill_with_name(skill_name).level > 0
 
     def learn_skill(self, skill_name, times=1):
+        """
+        learns a skill
+
+        :param str skill_name: The name of the skill
+        :param int times: Amount of levels to add to the skill
+        """
         if times == 0:
             return
         lowest_cost_class = None
@@ -233,16 +414,32 @@ class Character(object):
         self.learn_skill(skill_name, times - 1)
 
     def learn_feat(self, feat_name):
+        """
+        learns a feat
+
+        :param str feat_name: The name of the feat
+        """
         if not self.can_learn_feat(feat_name):
             return
         self._feat_skill_points -= 1
         self._feats.append(Feat.with_name(feat_name))
 
     def starting_age(self, starting_age_type):
+        """
+        Calculates the adulthood starting age depending on the type of starting age
+
+        :param str starting_age_type: The type of starting age
+        """
         dice = self._race.starting_age_dice(starting_age_type)
         return self._race._adulthood + dice.roll()
 
     def relative_age(self):
+        """
+        Returns the relative age of the character. A 14 years old human would be relatively "young".
+        possible results are "young", "middle", "old" and "venerable".
+
+        :returns str
+        """
         if self._age < self._race._middle_age:
             return "young"
         if self._age <= self._race._old_age:
@@ -252,18 +449,43 @@ class Character(object):
         return "venerable"
 
     def roll_height(self):
+        """
+        Rolls the height depending on the gender and race of this character
+
+        :returns float
+        """
         return self._race.height(self._gender)
 
     def roll_weight(self):
+        """
+        Rolls the weight depending on the gender and race of this character
+
+        :returns float
+        """
         return self._race.weight(self._gender)
 
     def height(self):
+        """
+        Returns the height of the character in the current unit.
+
+        :returns float
+        """
         return core.unit_length * self._height
 
     def weight(self):
+        """
+        Returns the weight of the character in the current unit.
+
+        :returns float
+        """
         return core.unit_weight * self._weight
 
     def feats(self):
+        """
+        Returns all learned feats
+
+        :returns Feat[]
+        """
         feats = list()
         feats += self._feats
         for class_ in self._classes:
@@ -271,12 +493,24 @@ class Character(object):
         return feats
 
     def has_feat(self, feat_name):
+        """
+        Checks whether a feat has been learned
+
+        :param str feat_name: The name of the feat
+        :returns bool
+        """
         for feat in self.feats():
             if feat.name.lower() == feat_name.lower():
                 return True
         return False
 
     def skill_with_name(self, skill_name):
+        """
+        Returns a learned skill with the given name or None if the skill can not be found
+
+        :param str skill_name: The name of the skill
+        :returns Skill
+        """
         for skill in self._skills:
             if skill.name.lower() == skill_name.lower():
                 return skill
@@ -284,6 +518,24 @@ class Character(object):
 
 
 class Class(object):
+
+    """
+    :type _hit_die: Die
+    :type _attack_bonus_type: str
+    :type _will_save_bonus_type: str
+    :type _fortitude_save_bonus_type: str
+    :type _reflex_save_bonus_type: str
+    :type _skill_modifier: int
+    :type _name: str
+    :type _experience: int
+    :type _skill_points: int
+    :type _level: int
+    :type _possible_alignments: str[]
+    :type _class_skills: Skill[]
+    :type _class_feats: ClassFeat[]
+    :type _ex_feats: Feat[]
+    :type _special: str
+    """
 
     __ALL_CLASSES = list()
 
@@ -303,9 +555,6 @@ class Class(object):
         self._class_feats = list()
         self._ex_feats = list()
         self._special = list()
-
-    def __repr__(self):
-        return "<" + self._name + " Level " + str(self._level) + ">"
 
     def level_up(self, character):
         self._level += 1
@@ -438,7 +687,24 @@ class Class(object):
         character._hit_points["current"] += hp_bonus
 
 
+    def __repr__(self):
+        return "<" + self._name + " Level " + str(self._level) + ">"
+
 class Race(object):
+
+    """
+    :type _name: str
+    :type _middle_age: int
+    :type _old_age: int
+    :type _venerable_age: int
+    :type _maximum_age: int
+    :type _adulthood: int
+    :type _starting_age_young: int
+    :type _starting_age_medium: int
+    :type _starting_age_old: int
+    :type _height_modifier_roll: int
+    :type _body: dict
+    """
 
     __ALL_RACES = list()
 
@@ -452,7 +718,7 @@ class Race(object):
         self._starting_age_young = 0
         self._starting_age_medium = 0
         self._starting_age_old = 0
-        self._height_modifier_roll = None
+        self._height_modifier_roll = 0
         self._body = dict()
 
     def __repr__(self):
@@ -509,6 +775,12 @@ class Race(object):
 
 
 class Feat(object):
+
+    """
+    :type name: str
+    :type prerequisites: list
+    :type benefit: str
+    """
 
     __ALL_FEATS = list()
 
@@ -585,13 +857,20 @@ class ClassFeat(Feat):
 
 class Skill(object):
 
+    """
+    :type name: str
+    :type level: int
+    :type ability: str
+    :type untrained: bool
+    """
+
     __ALL_SKILLS = list()
 
     def __init__(self, name=None, level=0, ability=None, untrained=False):
         self.name = name
         self.level = level
         self.ability = ability
-        self.untrained = False
+        self.untrained = untrained
 
     def __repr__(self):
         return "<" + self.name + " Level " + str(self.level) + ">"

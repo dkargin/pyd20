@@ -7,6 +7,8 @@ class Die(object):
 
     """
     implements a die
+
+    :type sides: int
     """
 
     def __init__(self, sides):
@@ -23,6 +25,8 @@ class Dice(object):
 
     """
     implements multiple dice
+
+    :type dice: Die[]
     """
 
     def __init__(self):
@@ -35,6 +39,8 @@ class Dice(object):
         <amount>d<sides>
         for example:
         '3d6' creates a group with 3 six-sided dice
+
+        :returns Dice
         """
         instance = Dice()
         parts = string.lower().split("d")
@@ -64,6 +70,8 @@ class Dice(object):
     def roll(self):
         """
         roll the dice group
+
+        :returns int
         """
         roll_sum = 0
         for die in self.dice:
@@ -78,6 +86,8 @@ def roll(dice_sting):
     for example:
     '3d6' rolls a group with 3 six-sided dice
     '2d10+5' rolls two ten sided die and adds 5 to the result
+
+    :returns int result of the roll
     """
     if "+" in dice_sting:
         parts = dice_sting.replace(" ", "").split("+")

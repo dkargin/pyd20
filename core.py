@@ -15,6 +15,8 @@ unit_weight = UNIT_WEIGHT_POUND
 def ability_modifier(value):
     """
     calculates the ability modifier
+
+    :returns int
     """
     if value % 2 != 0:
         value -= 1
@@ -24,6 +26,8 @@ def ability_modifier(value):
 def bonus_spells(value):
     """
     calculates the bonues spells available per ability score
+
+    :returns int
     """
     modifier = ability_modifier(value)
     bonus_spells = list()
@@ -44,6 +48,8 @@ def attack_bonus(level, type='good'):
     """
     calculates the attack bonus for a given level and bonus type
     valid type values are: 'good', 'average' and 'poor'
+
+    :returns int
     """
     bonus = list()
     base_bonus = 0
@@ -65,6 +71,8 @@ def save_bonus(level, type='good'):
     """
     calculates the save bonus for a given level and bonus type
     valid type values are: 'good', and 'poor'
+
+    :returns int
     """
     if type == 'good':
         return int(level/2) + 2
@@ -76,6 +84,8 @@ def save_bonus(level, type='good'):
 def needed_xp(level):
     """
     calculates the xp needed to level up to a specific level
+
+    :returns int
     """
     return 500 * math.pow(level, 2) - 500 * level
 
@@ -83,6 +93,8 @@ def needed_xp(level):
 def level_progress(xp):
     """
     calculates the current level progress
+
+    :returns int
     """
     float_level = (1 + math.sqrt(xp / 125 + 1)) / 2
     return float_level - int(float_level)
@@ -91,6 +103,8 @@ def level_progress(xp):
 def current_level(xp):
     """
     calculates the level for the current xp
+
+    :returns int
     """
     return int((1 + math.sqrt(xp / 125 + 1)) / 2)
 
@@ -98,6 +112,8 @@ def current_level(xp):
 def class_skill_max_ranks(level):
     """
     calculates the max ranks in a class skill
+
+    :returns int
     """
     return level + 3
 
@@ -105,6 +121,8 @@ def class_skill_max_ranks(level):
 def cross_class_skill_max_ranks(level):
     """
     calculates the max ranks in a cross class skill
+
+    :returns int
     """
     return (level + 3) / 2
 
@@ -112,6 +130,8 @@ def cross_class_skill_max_ranks(level):
 def new_feat_available(level):
     """
     returns True if a new feat is available on the given level
+
+    :returns bool
     """
     if level == 1:
         return True
@@ -121,5 +141,7 @@ def new_feat_available(level):
 def increase_ability_scores(level):
     """
     returns True if the ability scores may be increased
+
+    :returns bool
     """
     return level % 4 == 0

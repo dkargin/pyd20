@@ -5,7 +5,12 @@ import core
 
 class Grid(object):
 
-    """Implements a movable grid."""
+    """
+    Implements a battle grid.
+
+    :type _size: int
+    :type __grid: Tile[]
+    """
 
     def __init__(self):
         self.__grid = []
@@ -16,6 +21,8 @@ class Grid(object):
     def create_with_dimension(width, height, tilesize=1.0):
         """
         creates a rectangular grid with the given width and height
+
+        :returns Grid
         """
 
         grid = Grid()
@@ -28,6 +35,8 @@ class Grid(object):
     def path_between_tiles(self, start_tile, dest_tile):
         """
         implements pathfinding using A*
+
+        :returns Path
         """
 
         open_list = PriorityQueue([start_tile])
@@ -71,28 +80,63 @@ class Grid(object):
         return None
 
     def set_tilesize(self, size):
+        """
+        sets the tilesize in the current unit
+
+        :param int size: the new tilesize
+        """
         self._size = size / core.unit_length
 
     def get_tilesize(self):
+        """
+        returns the tilesize in the current unit
+
+        :returns int
+        """
         return self._size * core.unit_length
 
     def add_empty_tile(self, x, y):
+        """
+        insert an empty tile into the grid at the specified position
+
+        :param int x: the x coordinate of the tile
+        :param int y: the y coordinate of the tile
+        """
         tile = Tile(x, y)
         self.__grid.append(tile)
 
     def remove_tile(self, x, y):
+        """
+        removes the tile at position x/y
+
+        :param int x: the x coordinate of the tile
+        :param int y: the y coordinate of the tile
+        """
         for tile in self.__grid:
             if tile.x == x and tile.y == y:
                 self.__grid.remove(tile)
                 return
 
     def get_tile(self, x, y):
+        """
+        returns the tile at position x/y
+
+        :param int x: the x coordinate of the tile
+        :param int y: the y coordinate of the tile
+        :returns Tile
+        """
         for tile in self.__grid:
             if tile.x == x and tile.y == y:
                 return tile
         return None
 
     def get_adjacent_tiles(self, tile):
+        """
+        returns tiles that are adjacent to the tile
+
+        :param Tile tile: the tile
+        :returns Tile[]
+        """
         x = tile.x
         y = tile.y
         xs = [x-1, x, x+1]
@@ -113,7 +157,13 @@ class Grid(object):
 
 class Path(object):
 
-    """Implements a path through several grid tiles"""
+    """
+    Implements a path through several grid tiles
+
+    :type __path: Tile[]
+    :type __grid: Grid
+    :type __iter_current: int
+    """
 
     def __init__(self, grid):
         self.__path = []
@@ -121,13 +171,37 @@ class Path(object):
         self.__iter_current = 0
 
     def append(self, tile):
+        """
+        append tile to the path
+
+        :param Tile tile: the tile to append
+        """
         self.__path.append(tile)
 
     def reverse(self):
+        """
+        reverse the path
+        """
         self.__path.reverse()
 
     def remove(self, tile):
+        """
+        remove a tile from the path
+
+        :param Tile tile: the tile to remove
+        """
         self.__path.remove(tile)
+
+    def length(self):
+        """
+        returns the length of the path in the current unit
+
+        :returns float
+        """
+        length = 0
+        for _ in self.__path:
+            length += self.__grid.get_tilesize()
+        return length
 
     def __iter__(self):
         self.__iter_current = 0
@@ -140,19 +214,22 @@ class Path(object):
         self.__iter_current += 0
         return next_item
 
-    def length(self):
-        length = 0
-        for _ in self.__path:
-            length += self.__grid.get_tilesize()
-        return length
-
     def __repr__(self):
         return self.__path.__repr__()
 
 
 class Tile(object):
 
-    """Implements a tile on a Grid."""
+    """
+    Implements a tile on a Grid.
+
+    :type x: int
+    :type y: int
+    :type _g: int
+    :type _successor: Tile | None
+    :type _predecessor: Tile | None
+    :type _occupation: list
+    """
 
     def __init__(self, x, y):
         self.x = x
@@ -162,28 +239,57 @@ class Tile(object):
         self._predecessor = None
         self._occupation = []
 
-    def reset_g(self):
-        self._g = 0
-
     def is_empty(self):
+        """
+        returns whether the Tile is occupied or not
+
+        :returns bool
+        """
         return len(self._occupation) == 0
 
     def is_on_tile(self, thing):
+        """
+        returns whether the thing occupies this tile or not
+
+        :param thing: the thing to check
+        :returns bool
+        """
         return thing in self._occupation
 
     def add_occupation(self, thing):
+        """
+        make a thing occupy this tile. Multiple occupations are possible.
+
+        :param thing: the thing to occupy this tile
+        """
         self._occupation.append(thing)
 
     def remove_occupation(self, thing):
+        """
+        end a things occupation of this tile.
+
+        :param thing: the thing to free from this tile
+        """
         self._occupation.remove(thing)
 
     def __repr__(self):
         return "<Tile " + str(self.x) + "x" + str(self.y) + " " + str(self._occupation) + ">"
 
+    def reset_g(self):
+        """
+        auxiliary method used for pathfinding. resets calculated g value
+        """
+        self._g = 0
+
 
 class PriorityQueue(object):
 
-    """implements a priority queue"""
+    """
+    implements a priority queue. This class is primarily used as an auxiliary class for the pathfinding
+
+    :type __list: list
+    :type __iter_current: int
+    """
 
     def __init__(self, a_list=None):
         self.__list = []
@@ -197,6 +303,12 @@ class PriorityQueue(object):
         return self
 
     def append(self, element, priority=0.0):
+        """
+        append an element to the list
+
+        :param element: The element to append
+        :param priority: The priority of the element
+        """
         self.__list.append({
             "item":  element,
             "priority": priority,
@@ -205,9 +317,23 @@ class PriorityQueue(object):
         self.__sort()
 
     def pop(self):
+        """
+        removes and returns the element with the highest priority
+
+        :returns any
+        """
         return self.__list.pop()["item"]
 
     def update_priority(self, element, priority, mode="all"):
+        """
+        updates the priority of an item in the queue. if an element has multiple occurrences in the queue,
+        the priority of the elements is updated depending on the mode. "all" changes the priority of all
+        elements in the queue, "first" changes only the first occurrence. "all" is the default behaviour.
+
+        :param element: The element to change the priority for
+        :param int priority: The priority value
+        :param str mode: The update-mode. Possible values are: "all" (default), "first"
+        """
         for i in self.__list:
             if i["item"] is element:
                 i["priority"] = priority
