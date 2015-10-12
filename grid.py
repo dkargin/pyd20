@@ -48,14 +48,14 @@ class Grid(object):
         def h(start, end):
             return abs(start.x - end.x) + abs(start.y - end.y)
 
-        def expand_tile(tile):
-            for successor in self.get_adjacent_tiles(tile):
+        def expand_tile(tile_to_expand):
+            for successor in self.get_adjacent_tiles(tile_to_expand):
                 if successor in closed_list:
                     continue
-                tentative_g = tile._g + self._size
+                tentative_g = tile_to_expand._g + self._size
                 if successor in open_list and tentative_g >= successor._g:
                     continue
-                successor._predecessor = tile
+                successor._predecessor = tile_to_expand
                 successor._g = tentative_g
                 f = tentative_g + h(successor, dest_tile)
                 if successor in open_list:
@@ -83,7 +83,7 @@ class Grid(object):
         """
         sets the tilesize in the current unit
 
-        :param int size: the new tilesize
+        :param float size: the new tilesize
         """
         self._size = size / core.unit_length
 
