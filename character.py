@@ -38,7 +38,7 @@ class Character(object):
         "venerable": 3
     }
 
-    def __init__(self):
+    def __init__(self, name=""):
         self._constitution = 0
         self._charisma = 0
         self._dexterity = 0
@@ -46,7 +46,7 @@ class Character(object):
         self._strength = 0
         self._wisdom = 0
         self._experience = 0
-        self._name = ""
+        self._name = name
         self._alignment = [None, None]
         self._skills = list()
         self._feats = list()
