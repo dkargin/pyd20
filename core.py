@@ -11,6 +11,54 @@ UNIT_WEIGHT_KILOGRAM = 0.45359237
 unit_length = UNIT_LENGTH_FEET
 unit_weight = UNIT_WEIGHT_POUND
 
+SIZE_CATEGORIES = {
+    "fine": {
+        "height": [0, 0.5],
+        "width":  [0, 1/8],
+        "ac_modifier": 8
+    },
+    "diminutive": {
+        "height": [0.5, 1],
+        "width":  [1/8, 1],
+        "ac_modifier": 4
+    },
+    "tiny": {
+        "height": [1, 2],
+        "width":  [1, 8],
+        "ac_modifier": 2
+    },
+    "small": {
+        "height": [2, 4],
+        "width":  [8, 60],
+        "ac_modifier": 1
+    },
+    "medium": {
+        "height": [4, 8],
+        "width":  [60, 500],
+        "ac_modifier": 0
+    },
+    "large": {
+        "height": [8, 16],
+        "width":  [500, 2000],
+        "ac_modifier": -1
+    },
+    "huge": {
+        "height": [16, 32],
+        "width":  [2000, 16000],
+        "ac_modifier": -2
+    },
+    "gargantuan": {
+        "height": [32, 64],
+        "width":  [16000, 125000],
+        "ac_modifier": -4
+    },
+    "colossal": {
+        "height": [64, 9999],
+        "width":  [125000, 999999999],
+        "ac_modifier": -8
+    }
+}
+
 
 def ability_modifier(value):
     """
@@ -145,3 +193,28 @@ def increase_ability_scores(level):
     :rtype: bool
     """
     return level % 4 == 0
+
+
+def size_category(height):
+    """
+    returns the size category for the specified height in feet
+
+    :param float height: The height
+    :return: str
+    """
+    result_category = None
+    for category in SIZE_CATEGORIES:
+        min_height = SIZE_CATEGORIES[category]["height"][0]
+        if(height > min_height):
+            result_category = category
+    return result_category
+
+
+def ac_size_modifier(height):
+    """
+    calculates the armor class size modifier for the specified height
+
+    :param float height: The height in feet
+    :return: int
+    """
+    return SIZE_CATEGORIES[size_category(height)]["ac_modifier"]

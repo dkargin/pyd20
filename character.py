@@ -516,6 +516,32 @@ class Character(object):
                 return skill
         return Skill.with_name(skill_name)
 
+    def armor_class(self):
+        """
+        Calculates the current armor class
+
+        :rtype: int
+        """
+        armor_bonus = 0     # TODO: implement equipment
+        shield_bonus = 0    # TODO: implement equipment
+        return 10 + armor_bonus + shield_bonus + core.ac_size_modifier(self._height) + self.dexterity_mofifier()
+
+    def initiative(self):
+        """
+        Calculates the initiative
+
+        :rtype: int
+        """
+        return self.dexterity_mofifier()
+
+    def size_category(self):
+        """
+        Returns the size category
+
+        :rtype: str
+        """
+        return core.size_category(self._height)
+
 
 class Class(object):
 
