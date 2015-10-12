@@ -275,9 +275,6 @@ class Character(object):
                 return True
         return False
 
-    def __level_up(self):
-        self.__increase_skill_points()
-
     def skill_with_name(self, skill_name):
         for skill in self._skills:
             if skill.name.lower() == skill_name.lower():
