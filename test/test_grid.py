@@ -1,8 +1,6 @@
 from unittest import TestCase
 from grid import Grid
 
-__author__ = 'Philipp'
-
 
 class TestGrid(TestCase):
 

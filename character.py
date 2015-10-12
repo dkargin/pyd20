@@ -20,7 +20,11 @@ GENDER_FEMALE = "female"
 
 # auxiliary function
 def relative_path():
-    parts = os.path.realpath(__file__).split("/")
+    path = os.path.realpath(__file__)
+    if "nt" in os.name:
+        parts = path.split("\\")
+    else:
+        parts = path.split("/")
     parts = parts[:len(parts) - 1]
     return "/".join(parts)
 
@@ -350,7 +354,7 @@ class Class(object):
             instance._hit_die = Dice.from_string(class_data["hit_die"])
             instance._attack_bonus_type = class_data["attack_bonus_type"]
             instance._skill_modifier = class_data["skill_modifier"]
-            instance._fotitude_save_bonus_type = class_data["fotitude_bonus_type"]
+            instance._fortitude_save_bonus_type = class_data["fortitude_bonus_type"]
             instance._will_save_bonus_type = class_data["will_bonus_type"]
             instance._reflex_save_bonus_type = class_data["reflex_bonus_type"]
             instance._class_skills = class_data["class_skills"]
