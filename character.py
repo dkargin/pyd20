@@ -228,7 +228,7 @@ class Character(object):
                 else:
                     if lowest_cost_class is None:
                         lowest_cost_class = class_
-        class_.learn_skill(skill_name, self)
+        lowest_cost_class.learn_skill(skill_name, self)
         self.learn_skill(skill_name, times - 1)
 
     def learn_feat(self, feat_name):
