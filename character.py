@@ -22,7 +22,7 @@ GENDER_FEMALE = "female"
 def relative_path():
     """
     auxiliary function to retrieve the relative path to the current script
-    :rtype str
+    :rtype: str
     """
     path = os.path.realpath(__file__)
     if "nt" in os.name:
@@ -127,7 +127,7 @@ class Character(object):
         """
         returns the current hit points
 
-        :rtype int
+        :rtype: int
         """
         return self._hit_points["current"]
 
@@ -135,7 +135,7 @@ class Character(object):
         """
         returns the maximum hit points
 
-        :rtype int
+        :rtype: int
         """
         return self._hit_points["maximum"]
 
@@ -205,7 +205,7 @@ class Character(object):
         returns the class with the given name if the character has it
 
         :param str class_name: The name of the class
-        :rtype Class | None
+        :rtype: Class | None
         """
         for class_ in self._classes:
             if class_._name == class_name:
@@ -217,7 +217,7 @@ class Character(object):
         checks whether the character has a class of a specific type or not
 
         :param Class class_type: The name of the class
-        :rtype bool
+        :rtype: bool
         """
         return class_type in self._classes
 
@@ -226,7 +226,7 @@ class Character(object):
         returns the value of the ability with the given name
 
         :param str abilty_name: The name of the ability
-        :rtype int
+        :rtype: int
         """
         return self.__ABILITES[abilty_name]()
 
@@ -234,7 +234,7 @@ class Character(object):
         """
         returns the constitution
 
-        :rtype int
+        :rtype: int
         """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._constitution - age_modifier
@@ -243,7 +243,7 @@ class Character(object):
         """
         returns the charisma
 
-        :rtype int
+        :rtype: int
         """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._charisma + age_modifier
@@ -252,7 +252,7 @@ class Character(object):
         """
         returns the dexterity
 
-        :rtype int
+        :rtype: int
         """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._dexterity - age_modifier
@@ -261,7 +261,7 @@ class Character(object):
         """
         returns the intellect
 
-        :rtype int
+        :rtype: int
         """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._intellect + age_modifier
@@ -270,7 +270,7 @@ class Character(object):
         """
         returns the strength
 
-        :rtype int
+        :rtype: int
         """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._strength - age_modifier
@@ -279,7 +279,7 @@ class Character(object):
         """
         returns the wisdom
 
-        :rtype int
+        :rtype: int
         """
         age_modifier = self.__AGE_MODIFIER[self.relative_age()]
         return self._wisdom + age_modifier
@@ -288,7 +288,7 @@ class Character(object):
         """
         returns the constitution modifier
 
-        :rtype int
+        :rtype: int
         """
         return core.ability_modifier(self.constitution())
 
@@ -296,7 +296,7 @@ class Character(object):
         """
         returns the charisma modifier
 
-        :rtype int
+        :rtype: int
         """
         return core.ability_modifier(self.charisma())
 
@@ -304,7 +304,7 @@ class Character(object):
         """
         returns the dexterity modifier
 
-        :rtype int
+        :rtype: int
         """
         return core.ability_modifier(self.dexterity())
 
@@ -312,7 +312,7 @@ class Character(object):
         """
         returns the intellect modifier
 
-        :rtype int
+        :rtype: int
         """
         return core.ability_modifier(self.intellect())
 
@@ -320,7 +320,7 @@ class Character(object):
         """
         returns the strength modifier
 
-        :rtype int
+        :rtype: int
         """
         return core.ability_modifier(self.strength())
 
@@ -328,7 +328,7 @@ class Character(object):
         """
         returns the wisdom modifier
 
-        :rtype int
+        :rtype: int
         """
         return core.ability_modifier(self.wisdom())
 
@@ -337,7 +337,7 @@ class Character(object):
         returns the modifier for a specific ability
 
         :param str ability: The name of the ability
-        :rtype int
+        :rtype: int
         """
         return self.__ABILITIY_MODIFIER[ability]()
 
@@ -345,7 +345,7 @@ class Character(object):
         """
         returns the current level
 
-        :rtype int
+        :rtype: int
         """
         return core.current_level(self._experience)
 
@@ -354,7 +354,7 @@ class Character(object):
         checks whether a skill can be learned
 
         :param str skill_name: The name of the skill
-        :rtype bool
+        :rtype: bool
         """
         for class_ in self._classes:
             if class_.can_learn_skill(skill_name, self):
@@ -366,7 +366,7 @@ class Character(object):
         checks whether a feat can be learned
 
         :param str feat_name: The name of the skill
-        :rtype bool
+        :rtype: bool
         """
         feat = Feat.with_name(feat_name)
         if feat is None:
@@ -379,7 +379,7 @@ class Character(object):
         d20 + current level of the skill + ability modifier of the skill
 
         :param str skill_name: The name of the skill
-        :rtype int
+        :rtype: int
         """
         skill = self.skill_with_name(skill_name)
         return d20.roll() + skill.level + self.ability_modifier(skill.ability)
@@ -389,7 +389,7 @@ class Character(object):
         checks whether a skill has been learned
 
         :param str skill_name: The name of the skill
-        :rtype bool
+        :rtype: bool
         """
         return self.skill_with_name(skill_name).level > 0
 
@@ -438,7 +438,7 @@ class Character(object):
         Returns the relative age of the character. A 14 years old human would be relatively "young".
         possible results are "young", "middle", "old" and "venerable".
 
-        :rtype str
+        :rtype: str
         """
         if self._age < self._race._middle_age:
             return "young"
@@ -452,7 +452,7 @@ class Character(object):
         """
         Rolls the height depending on the gender and race of this character
 
-        :rtype float
+        :rtype: float
         """
         return self._race.height(self._gender)
 
@@ -460,7 +460,7 @@ class Character(object):
         """
         Rolls the weight depending on the gender and race of this character
 
-        :rtype float
+        :rtype: float
         """
         return self._race.weight(self._gender)
 
@@ -468,7 +468,7 @@ class Character(object):
         """
         Returns the height of the character in the current unit.
 
-        :rtype float
+        :rtype: float
         """
         return core.unit_length * self._height
 
@@ -476,7 +476,7 @@ class Character(object):
         """
         Returns the weight of the character in the current unit.
 
-        :rtype float
+        :rtype: float
         """
         return core.unit_weight * self._weight
 
@@ -484,7 +484,7 @@ class Character(object):
         """
         Returns all learned feats
 
-        :rtype Feat[]
+        :rtype: Feat[]
         """
         feats = list()
         feats += self._feats
@@ -497,7 +497,7 @@ class Character(object):
         Checks whether a feat has been learned
 
         :param str feat_name: The name of the feat
-        :rtype bool
+        :rtype: bool
         """
         for feat in self.feats():
             if feat.name.lower() == feat_name.lower():
@@ -509,7 +509,7 @@ class Character(object):
         Returns a learned skill with the given name or None if the skill can not be found
 
         :param str skill_name: The name of the skill
-        :rtype Skill
+        :rtype: Skill
         """
         for skill in self._skills:
             if skill.name.lower() == skill_name.lower():
@@ -590,7 +590,7 @@ class Class(object):
         Returns a class with the given name if one is loaded.
 
         :param str class_name: The name of the class
-        :rtype Class | None
+        :rtype: Class | None
         """
         for c in Class.__ALL_CLASSES:
             if c._name.lower() == class_name.lower():
@@ -602,7 +602,7 @@ class Class(object):
         """
         Returns the list of names for all available classes.
 
-        :rtype str[]
+        :rtype: str[]
         """
         class_names = []
         for cls in Class.__ALL_CLASSES:
@@ -623,7 +623,7 @@ class Class(object):
         """
         Returns the current level of this class
 
-        :rtype int
+        :rtype: int
         """
         return self._level
 
@@ -654,7 +654,7 @@ class Class(object):
 
         :param str skill_name: The name of the skill to learn
         :param Character character: The character to check the skill for
-        :rtype bool
+        :rtype: bool
         """
         skill = character.skill_with_name(skill_name)
         current_skill_level = skill.level
@@ -671,7 +671,7 @@ class Class(object):
         Checks whether an alignment is possible for the current class.
 
         :param str alignment: The alignment
-        :rtype bool
+        :rtype: bool
         """
         return alignment[0] in self._possible_alignments[0] and \
             alignment[1] in self._possible_alignments[1]
@@ -681,7 +681,7 @@ class Class(object):
         Calculates the attack bonus for a given level
 
         :param int level: The level
-        :rtype int
+        :rtype: int
         """
         return core.attack_bonus(level, self._attack_bonus_type)
 
@@ -690,7 +690,7 @@ class Class(object):
         Calculates the will save bonus for a given level
 
         :param int level: The level
-        :rtype int
+        :rtype: int
         """
         return core.save_bonus(level, self._will_save_bonus_type)
 
@@ -699,7 +699,7 @@ class Class(object):
         Calculates the fortitude save bonus for a given level
 
         :param int level: The level
-        :rtype int
+        :rtype: int
         """
         return core.save_bonus(level, self._fortitude_save_bonus_type)
 
@@ -708,7 +708,7 @@ class Class(object):
         Calculates the reflex save bonus for a given level
 
         :param int level: The level
-        :rtype int
+        :rtype: int
         """
         return core.save_bonus(level, self._reflex_save_bonus_type)
 
@@ -716,7 +716,7 @@ class Class(object):
         """
         Rolls a hit die
 
-        :rtype int
+        :rtype: int
         """
         return self._hit_die.roll()
 
@@ -725,7 +725,7 @@ class Class(object):
         Calculate the amount of skill points
 
         :param int int_modifier: The int modifier
-        :rtype int
+        :rtype: int
         """
         if int_modifier < 0:
             int_modifier = 0
@@ -736,7 +736,7 @@ class Class(object):
         Checks whether a skill is a class-skill
 
         :param str skill_name: The name of the skill
-        :rtype bool
+        :rtype: bool
         """
         for skill in self._class_skills:
             if skill.lower() == skill_name.lower():
@@ -747,7 +747,7 @@ class Class(object):
         """
         returns the list of available class feats
 
-        :rtype ClassFeat[]
+        :rtype: ClassFeat[]
         """
         feats = list()
         for level in range(0, self.current_level()):
@@ -851,7 +851,7 @@ class Race(object):
         Returns a race with the given name if one is loaded.
 
         :param str race_name: The name of the race
-        :rtype Race | None
+        :rtype: Race | None
         """
         for race in Race.__ALL_RACES:
             if race._name.lower() == race_name.lower():
@@ -863,7 +863,7 @@ class Race(object):
         Calculate a random height in inch for a character
 
         :param str gender: The gender of the character. possible values are "male" and "female".
-        :rtype float
+        :rtype: float
         """
         body = self._body[gender]
         modifier_dice = Dice.from_string(body["height_modifier"])
@@ -875,7 +875,7 @@ class Race(object):
         Calculate a random weight in pounds for a character
 
         :param str gender: The gender of the character. possible values are "male" and "female".
-        :rtype float
+        :rtype: float
         """
         if self._height_modifier_roll is None:
             self.height(gender)
@@ -887,8 +887,10 @@ class Race(object):
         Returns the dice for rolling the starting age depending on the age type.
 
         :param str age_type: The age type. Possible values are "young", "medium" and "old"
-        :rtype Dice
+        :rtype: Dice
         """
+
+        self.starting_age_dice(age_type).roll()
         if age_type == "young":
             return self._starting_age_young
         if age_type == "medium":
@@ -917,7 +919,7 @@ class Feat(object):
         """
         Lists all names of loaded feats.
 
-        :rtype str[]
+        :rtype: str[]
         """
         feat_names = list()
         for feat in Feat.__ALL_FEATS:
@@ -930,7 +932,7 @@ class Feat(object):
         Returns a feat with the given name if one is loaded.
 
         :param str feat_name: The name of the feat
-        :rtype Feat | None
+        :rtype: Feat | None
         """
         for feat in Feat.__ALL_FEATS:
             if feat.name.lower() == feat_name.lower():
@@ -956,7 +958,7 @@ class Feat(object):
         Checks whether the feat has prerequisites
 
         :param Character character: The character using the feat
-        :rtype bool
+        :rtype: bool
         """
         for prerequisite in self.prerequisites:
             if not self.__check_prerequisite(prerequisite, character):
@@ -1026,7 +1028,7 @@ class Skill(object):
         """
         Lists all names of loaded skills.
 
-        :rtype str[]
+        :rtype: str[]
         """
         skill_names = list()
         for skill in Skill.__ALL_SKILLS:
@@ -1039,7 +1041,7 @@ class Skill(object):
         Returns a skill with the given name if one is loaded.
 
         :param str skill_name: The name of the feat
-        :rtype Skill | None
+        :rtype: Skill | None
         """
         for skill in Skill.__ALL_SKILLS:
             if skill.name.lower() == skill_name.lower():
