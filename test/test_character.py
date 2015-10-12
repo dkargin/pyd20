@@ -9,3 +9,5 @@ class CharacterTest(TestCase):
         tenlon.set_race(dwarf)
         tenlon.add_class_level(barbarian)
         print(tenlon)
+
+        print(Class.available_classes())

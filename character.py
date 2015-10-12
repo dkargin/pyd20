@@ -329,7 +329,6 @@ class Class(object):
             return self.learn_skill(skill_name, character, times - 1)
 
     def can_learn_skill(self, skill_name, character):
-        current_skill_level = 0
         skill = character.skill_with_name(skill_name)
         current_skill_level = skill.level
         if self.is_class_skill(skill_name):
@@ -371,16 +370,14 @@ class Class(object):
 
     @staticmethod
     def available_classes():
-        data_file = relative_path() + "/" + Class.CLASS_DATA
-        classes = json.loads(open(data_file, encoding="utf-8").read())["classes"]
-        class_names = list()
-        for c in classes:
-            class_names.append(c["class_name"])
+        class_names = []
+        for cls in Class.__ALL_CLASSES:
+            class_names.append(cls._name)
         return class_names
 
     def is_alignment_possible(self, alignment):
-        return alignment[0] in self.possible_alignments[0] and \
-                alignment[1] in self.possible_alignments[1]
+        return alignment[0] in self._possible_alignments[0] and \
+                alignment[1] in self._possible_alignments[1]
 
     def attack_bonus(self, level):
         return core.attack_bonus(level, self._attack_bonus_type)
