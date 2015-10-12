@@ -4,6 +4,7 @@
 import json
 import os
 import core
+import copy
 
 # constants for alignment
 from dice import d20, Dice
@@ -365,7 +366,7 @@ class Class(object):
     def with_name(class_name):
         for c in Class.__ALL_CLASSES:
             if c._name.lower() == class_name.lower():
-                return c
+                return copy.deepcopy(c)
         return None
 
     @staticmethod
@@ -452,6 +453,7 @@ class Race(object):
         self._starting_age_medium = 0
         self._starting_age_old = 0
         self._height_modifier_roll = None
+        self._body = dict()
 
     def __repr__(self):
         return "<" + self._name + ">"
@@ -482,7 +484,7 @@ class Race(object):
     def with_name(race_name):
         for race in Race.__ALL_RACES:
             if race._name.lower() == race_name.lower():
-                return race
+                return copy.deepcopy(race)
         return None
 
     def height(self, gender):
@@ -562,7 +564,7 @@ class Feat(object):
     def with_name(feat_name):
         for feat in Feat.__ALL_FEATS:
             if feat.name.lower() == feat_name.lower():
-                return feat
+                return copy.deepcopy(feat)
         return None
 
     @staticmethod
@@ -605,7 +607,7 @@ class Skill(object):
     def with_name(skill_name):
         for skill in Skill.__ALL_SKILLS:
             if skill.name.lower() == skill_name.lower():
-                return skill
+                return copy.deepcopy(skill)
         return None
 
     @staticmethod
