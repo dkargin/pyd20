@@ -556,41 +556,14 @@ class Class(object):
         self._ex_feats = list()
         self._special = list()
 
-    def level_up(self, character):
-        self._level += 1
-        self.__increase_skill_points(character)
-        self.__increase_health(character)
-
-    def current_level(self):
-        return self._level
-
-    def learn_skill(self, skill_name, character, times=1):
-        if not self.can_learn_skill(skill_name, character):
-            return
-        if self.is_class_skill(skill_name):
-            needed_points = 1
-        else:
-            needed_points = 2
-        self._skill_points -= needed_points
-        if not character.has_learned_skill(skill_name):
-            character._skills.append(character.skill_with_name(skill_name))
-        character.skill_with_name(skill_name).level += 1
-        if times > 1:
-            return self.learn_skill(skill_name, character, times - 1)
-
-    def can_learn_skill(self, skill_name, character):
-        skill = character.skill_with_name(skill_name)
-        current_skill_level = skill.level
-        if self.is_class_skill(skill_name):
-            max_skill_level = core.class_skill_max_ranks(self.current_level())
-            needed_points = 1
-        else:
-            max_skill_level = core.cross_class_skill_max_ranks(self.current_level())
-            needed_points = 2
-        return current_skill_level < max_skill_level and self._skill_points > needed_points
-
     @staticmethod
     def load(data_path):
+        """
+        Loads classes from a data file. This method should be called when initializing a package that contains
+        game specific class data.
+
+        :param str data_path: The path to the data file in json format, relative to the root package
+        """
         data_file = relative_path() + "/" + data_path
         classes = json.loads(open(data_file, encoding="utf-8").read())["classes"]
         Class.__ALL_CLASSES = list()
@@ -613,6 +586,12 @@ class Class(object):
 
     @staticmethod
     def with_name(class_name):
+        """
+        Returns a class with the given name if one is loaded.
+
+        :param str class_name: The name of the class
+        :returns Class | None
+        """
         for c in Class.__ALL_CLASSES:
             if c._name.lower() == class_name.lower():
                 return copy.deepcopy(c)
@@ -620,42 +599,156 @@ class Class(object):
 
     @staticmethod
     def available_classes():
+        """
+        Returns the list of names for all available classes.
+
+        :returns str[]
+        """
         class_names = []
         for cls in Class.__ALL_CLASSES:
             class_names.append(cls._name)
         return class_names
 
+    def level_up(self, character):
+        """
+        Applies a class level up bonus to a character
+
+        :param Character character: The character to apply the bonus to
+        """
+        self._level += 1
+        self.__increase_skill_points(character)
+        self.__increase_health(character)
+
+    def current_level(self):
+        """
+        Returns the current level of this class
+
+        :returns int
+        """
+        return self._level
+
+    def learn_skill(self, skill_name, character, times=1):
+        """
+        Learns a skill for a character
+
+        :param str skill_name: The name of the skill to learn
+        :param Character character: The character that learns the skill
+        :param int times: Amount of levels to learn
+        """
+        if not self.can_learn_skill(skill_name, character):
+            return
+        if self.is_class_skill(skill_name):
+            needed_points = 1
+        else:
+            needed_points = 2
+        self._skill_points -= needed_points
+        if not character.has_learned_skill(skill_name):
+            character._skills.append(character.skill_with_name(skill_name))
+        character.skill_with_name(skill_name).level += 1
+        if times > 1:
+            return self.learn_skill(skill_name, character, times - 1)
+
+    def can_learn_skill(self, skill_name, character):
+        """
+        Checks whether a skill can be learned
+
+        :param str skill_name: The name of the skill to learn
+        :param Character character: The character to check the skill for
+        :returns bool
+        """
+        skill = character.skill_with_name(skill_name)
+        current_skill_level = skill.level
+        if self.is_class_skill(skill_name):
+            max_skill_level = core.class_skill_max_ranks(self.current_level())
+            needed_points = 1
+        else:
+            max_skill_level = core.cross_class_skill_max_ranks(self.current_level())
+            needed_points = 2
+        return current_skill_level < max_skill_level and self._skill_points > needed_points
+
     def is_alignment_possible(self, alignment):
+        """
+        Checks whether an alignment is possible for the current class.
+
+        :param str alignment: The alignment
+        :returns bool
+        """
         return alignment[0] in self._possible_alignments[0] and \
-                alignment[1] in self._possible_alignments[1]
+            alignment[1] in self._possible_alignments[1]
 
     def attack_bonus(self, level):
+        """
+        Calculates the attack bonus for a given level
+
+        :param int level: The level
+        :returns int
+        """
         return core.attack_bonus(level, self._attack_bonus_type)
 
     def will_save_bonus(self, level):
+        """
+        Calculates the will save bonus for a given level
+
+        :param int level: The level
+        :returns int
+        """
         return core.save_bonus(level, self._will_save_bonus_type)
 
     def fortitude_save_bonus(self, level):
+        """
+        Calculates the fortitude save bonus for a given level
+
+        :param int level: The level
+        :returns int
+        """
         return core.save_bonus(level, self._fortitude_save_bonus_type)
 
     def reflex_save_bonus(self, level):
+        """
+        Calculates the reflex save bonus for a given level
+
+        :param int level: The level
+        :returns int
+        """
         return core.save_bonus(level, self._reflex_save_bonus_type)
 
     def roll_hit_die(self):
+        """
+        Rolls a hit die
+
+        :returns int
+        """
         return self._hit_die.roll()
 
     def skill_points(self, int_modifier):
+        """
+        Calculate the amount of skill points
+
+        :param int int_modifier: The int modifier
+        :returns int
+        """
         if int_modifier < 0:
             int_modifier = 0
         return self._skill_modifier + int_modifier
 
     def is_class_skill(self, skill_name):
+        """
+        Checks whether a skill is a class-skill
+
+        :param str skill_name: The name of the skill
+        :returns bool
+        """
         for skill in self._class_skills:
             if skill.lower() == skill_name.lower():
                 return True
         return False
 
     def feats(self):
+        """
+        returns the list of available class feats
+
+        :returns ClassFeat[]
+        """
         feats = list()
         for level in range(0, self.current_level()):
             for class_feat in self._special[level]:
@@ -686,9 +779,9 @@ class Class(object):
         character._hit_points["maximum"] += hp_bonus
         character._hit_points["current"] += hp_bonus
 
-
     def __repr__(self):
         return "<" + self._name + " Level " + str(self._level) + ">"
+
 
 class Race(object):
 
@@ -726,6 +819,12 @@ class Race(object):
 
     @staticmethod
     def load(data_path):
+        """
+        Loads races from a data file. This method should be called when initializing a package that contains
+        game specific race data.
+
+        :param str data_path: The path to the data file in json format, relative to the root package
+        """
         data_file = relative_path() + "/" + data_path
         races = json.loads(open(data_file, encoding="utf-8").read())["races"]
         Race.__ALL_RACES = list()
@@ -748,24 +847,48 @@ class Race(object):
 
     @staticmethod
     def with_name(race_name):
+        """
+        Returns a race with the given name if one is loaded.
+
+        :param str race_name: The name of the race
+        :returns Race | None
+        """
         for race in Race.__ALL_RACES:
             if race._name.lower() == race_name.lower():
                 return copy.deepcopy(race)
         return None
 
     def height(self, gender):
+        """
+        Calculate a random height in inch for a character
+
+        :param str gender: The gender of the character. possible values are "male" and "female".
+        :returns float
+        """
         body = self._body[gender]
         modifier_dice = Dice.from_string(body["height_modifier"])
         self._height_modifier_roll = modifier_dice.roll()
         return body["base_height"] + (float(self._height_modifier_roll) / 12)  # calculating in inch
 
     def weight(self, gender):
+        """
+        Calculate a random weight in pounds for a character
+
+        :param str gender: The gender of the character. possible values are "male" and "female".
+        :returns float
+        """
         if self._height_modifier_roll is None:
             self.height(gender)
         modifier_dice = Dice.from_string(self._body[gender]["weight_modifier"])
         return self._body[gender]["base_weight"] + (self._height_modifier_roll * modifier_dice.roll())
 
     def starting_age_dice(self, age_type):
+        """
+        Returns the dice for rolling the starting age depending on the age type.
+
+        :param str age_type: The age type. Possible values are "young", "medium" and "old"
+        :returns Dice
+        """
         if age_type == "young":
             return self._starting_age_young
         if age_type == "medium":
@@ -789,8 +912,27 @@ class Feat(object):
         self.prerequisites = prerequisites
         self.benefit = benefit
 
-    def __repr__(self):
-        return "<" + self.name + ">"
+    @staticmethod
+    def available_feats():
+        feat_names = list()
+        for feat in Feat.__ALL_FEATS:
+            feat_names.append(feat.name)
+        return feat_names
+
+    @staticmethod
+    def with_name(feat_name):
+        for feat in Feat.__ALL_FEATS:
+            if feat.name.lower() == feat_name.lower():
+                return copy.deepcopy(feat)
+        return None
+
+    @staticmethod
+    def load(data_path):
+        data_file = relative_path() + "/" + data_path
+        feats = json.loads(open(data_file, encoding="utf-8").read())["feats"]
+        Feat.__ALL_FEATS = list()
+        for feat in feats:
+            Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prerequisites"], feat["benefit"]))
 
     def has_prequisties(self, character):
         for prerequisite in self.prerequisites:
@@ -825,27 +967,8 @@ class Feat(object):
                 return character.attack_bonus() >= attack_bonus
         return character.has_feat(prequisite)
 
-    @staticmethod
-    def available_feats():
-        feat_names = list()
-        for feat in Feat.__ALL_FEATS:
-            feat_names.append(feat.name)
-        return feat_names
-
-    @staticmethod
-    def with_name(feat_name):
-        for feat in Feat.__ALL_FEATS:
-            if feat.name.lower() == feat_name.lower():
-                return copy.deepcopy(feat)
-        return None
-
-    @staticmethod
-    def load(data_path):
-        data_file = relative_path() + "/" + data_path
-        feats = json.loads(open(data_file, encoding="utf-8").read())["feats"]
-        Feat.__ALL_FEATS = list()
-        for feat in feats:
-            Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prerequisites"], feat["benefit"]))
+    def __repr__(self):
+        return "<" + self.name + ">"
 
 
 class ClassFeat(Feat):
