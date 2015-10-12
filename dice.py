@@ -40,7 +40,7 @@ class Dice(object):
         for example:
         '3d6' creates a group with 3 six-sided dice
 
-        :returns Dice
+        :rtype Dice
         """
         instance = Dice()
         parts = string.lower().split("d")
@@ -71,7 +71,7 @@ class Dice(object):
         """
         roll the dice group
 
-        :returns int
+        :rtype int
         """
         roll_sum = 0
         for die in self.dice:
@@ -87,7 +87,7 @@ def roll(dice_sting):
     '3d6' rolls a group with 3 six-sided dice
     '2d10+5' rolls two ten sided die and adds 5 to the result
 
-    :returns int result of the roll
+    :rtype int result of the roll
     """
     if "+" in dice_sting:
         parts = dice_sting.replace(" ", "").split("+")

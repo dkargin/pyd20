@@ -22,7 +22,7 @@ class Grid(object):
         """
         creates a rectangular grid with the given width and height
 
-        :returns Grid
+        :rtype Grid
         """
 
         grid = Grid()
@@ -36,7 +36,7 @@ class Grid(object):
         """
         implements pathfinding using A*
 
-        :returns Path
+        :rtype Path
         """
 
         open_list = PriorityQueue([start_tile])
@@ -91,7 +91,7 @@ class Grid(object):
         """
         returns the tilesize in the current unit
 
-        :returns int
+        :rtype int
         """
         return self._size * core.unit_length
 
@@ -123,7 +123,7 @@ class Grid(object):
 
         :param int x: the x coordinate of the tile
         :param int y: the y coordinate of the tile
-        :returns Tile
+        :rtype Tile
         """
         for tile in self.__grid:
             if tile.x == x and tile.y == y:
@@ -135,7 +135,7 @@ class Grid(object):
         returns tiles that are adjacent to the tile
 
         :param Tile tile: the tile
-        :returns Tile[]
+        :rtype Tile[]
         """
         x = tile.x
         y = tile.y
@@ -196,7 +196,7 @@ class Path(object):
         """
         returns the length of the path in the current unit
 
-        :returns float
+        :rtype float
         """
         length = 0
         for _ in self.__path:
@@ -243,7 +243,7 @@ class Tile(object):
         """
         returns whether the Tile is occupied or not
 
-        :returns bool
+        :rtype bool
         """
         return len(self._occupation) == 0
 
@@ -252,7 +252,7 @@ class Tile(object):
         returns whether the thing occupies this tile or not
 
         :param thing: the thing to check
-        :returns bool
+        :rtype bool
         """
         return thing in self._occupation
 
@@ -320,7 +320,7 @@ class PriorityQueue(object):
         """
         removes and returns the element with the highest priority
 
-        :returns any
+        :rtype any
         """
         return self.__list.pop()["item"]
 
