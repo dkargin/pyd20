@@ -914,6 +914,11 @@ class Feat(object):
 
     @staticmethod
     def available_feats():
+        """
+        Lists all names of loaded feats.
+
+        :returns str[]
+        """
         feat_names = list()
         for feat in Feat.__ALL_FEATS:
             feat_names.append(feat.name)
@@ -921,6 +926,12 @@ class Feat(object):
 
     @staticmethod
     def with_name(feat_name):
+        """
+        Returns a feat with the given name if one is loaded.
+
+        :param str feat_name: The name of the feat
+        :returns Feat | None
+        """
         for feat in Feat.__ALL_FEATS:
             if feat.name.lower() == feat_name.lower():
                 return copy.deepcopy(feat)
@@ -928,19 +939,31 @@ class Feat(object):
 
     @staticmethod
     def load(data_path):
+        """
+        Loads feats from a data file. This method should be called when initializing a package that contains
+        game specific feat data.
+
+        :param str data_path: The path to the data file in json format, relative to the root package
+        """
         data_file = relative_path() + "/" + data_path
         feats = json.loads(open(data_file, encoding="utf-8").read())["feats"]
         Feat.__ALL_FEATS = list()
         for feat in feats:
             Feat.__ALL_FEATS.append(Feat(feat["name"], feat["prerequisites"], feat["benefit"]))
 
-    def has_prequisties(self, character):
+    def has_prerequisites(self, character):
+        """
+        Checks whether the feat has prerequisites
+
+        :param Character character: The character using the feat
+        :returns bool
+        """
         for prerequisite in self.prerequisites:
-            if not self.__check_prequisite(prerequisite, character):
+            if not self.__check_prerequisite(prerequisite, character):
                 return False
         return True
 
-    def __check_prequisite(self, prequisite, character):
+    def __check_prerequisite(self, prequisite, character):
         if prequisite.startswith("Ability"):
             prequisite = prequisite.split(":")[1].split(" ")
             if prequisite[0] == '':
@@ -1000,6 +1023,11 @@ class Skill(object):
 
     @staticmethod
     def available_skills():
+        """
+        Lists all names of loaded skills.
+
+        :returns str[]
+        """
         skill_names = list()
         for skill in Skill.__ALL_SKILLS:
             skill_names.append(skill.name)
@@ -1007,6 +1035,12 @@ class Skill(object):
 
     @staticmethod
     def with_name(skill_name):
+        """
+        Returns a skill with the given name if one is loaded.
+
+        :param str skill_name: The name of the feat
+        :returns Skill | None
+        """
         for skill in Skill.__ALL_SKILLS:
             if skill.name.lower() == skill_name.lower():
                 return copy.deepcopy(skill)
@@ -1014,6 +1048,12 @@ class Skill(object):
 
     @staticmethod
     def load(data_path):
+        """
+        Loads skills from a data file. This method should be called when initializing a package that contains
+        game specific skill data.
+
+        :param str data_path: The path to the data file in json format, relative to the root package
+        """
         data_file = relative_path() + "/" + data_path
         skills = json.loads(open(data_file, encoding="utf-8").read())["skills"]
         Skill.__ALL_SKILLS = list()
