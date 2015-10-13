@@ -538,7 +538,7 @@ class Character(Combatant):
 
         :rtype: int
         """
-        return self.dexterity_mofifier()
+        return d20.roll() + self.dexterity_mofifier()
 
     def size_category(self):
         """
