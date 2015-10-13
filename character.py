@@ -7,7 +7,7 @@ import core
 import copy
 
 # constants for alignment
-from dice import d20, Dice
+from dice import d20, Dice, Die
 
 ALIGNMENT_GOOD = "Good"
 ALIGNMENT_NEUTRAL = "Neutral"
@@ -1025,7 +1025,7 @@ class Feat(object):
 class ClassFeat(Feat):
 
     def __init__(self, name=None, level=1):
-        super().__init__(name)
+        super(ClassFeat, self).__init__(name)
         self.level = level
 
 

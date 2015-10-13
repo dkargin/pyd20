@@ -1,4 +1,4 @@
-import character
+from character import Character
 
 
 class Battle:
@@ -35,13 +35,13 @@ class Combatant:
 
     """
     :type _is_flat_footed: bool
-    :type _entity: character.Character
+    :type _entity: Character
     :type _action_points: int
     """
 
     def __init__(self, entity):
         """
-        :param character.Character entity:
+        :param Character entity:
         """
         self._entity = entity
         self._is_flat_footed = False
