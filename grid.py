@@ -13,6 +13,9 @@ class Grid(object):
     """
 
     def __init__(self):
+        """
+        Creates a Grid object
+        """
         self.__grid = []
         self._size = 1.0
         self.set_tilesize(1.0)
@@ -166,6 +169,11 @@ class Path(object):
     """
 
     def __init__(self, grid):
+        """
+        Creates a Path object.
+
+        :param Grid grid: Reference to the grid of the path
+        """
         self.__path = []
         self.__grid = grid
         self.__iter_current = 0
@@ -232,6 +240,11 @@ class Tile(object):
     """
 
     def __init__(self, x, y):
+        """
+        Creates a Tile object
+        :param int x: The x position of the Tile
+        :param int y: The y position of the Tile
+        """
         self.x = x
         self.y = y
         self._g = 0
@@ -292,6 +305,11 @@ class PriorityQueue(object):
     """
 
     def __init__(self, a_list=None):
+        """
+        Creates a PriorityQueue object. Initial items in the list have priority 0.
+
+        :param list a_list: Initial items in the list.
+        """
         self.__list = []
         self.__iter_current = 0
         if a_list is not None:

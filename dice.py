@@ -12,6 +12,11 @@ class Die(object):
     """
 
     def __init__(self, sides):
+        """
+        Creates a Die object
+
+        :param int sides: The number of sides on the Die
+        """
         self.sides = sides
 
     def roll(self):
@@ -30,6 +35,9 @@ class Dice(object):
     """
 
     def __init__(self):
+        """
+        Creates a Dice object. It models multiple Die objects.
+        """
         self.dice = list()
 
     @staticmethod

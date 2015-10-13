@@ -8,6 +8,7 @@ import copy
 
 # constants for alignment
 from dice import d20, Dice, Die
+from battle import Combatant
 
 ALIGNMENT_GOOD = "Good"
 ALIGNMENT_NEUTRAL = "Neutral"
@@ -33,7 +34,7 @@ def relative_path():
     return "/".join(parts)
 
 
-class Character(object):
+class Character(Combatant):
 
     """
     :type _constitution: int
@@ -67,6 +68,11 @@ class Character(object):
     }
 
     def __init__(self, name=""):
+        """
+        Creates a Character object
+        :param name: The name of the character
+        """
+        Combatant.__init__(self)
         self._constitution = 0
         self._charisma = 0
         self._dexterity = 0
@@ -566,6 +572,9 @@ class Class(object):
     __ALL_CLASSES = list()
 
     def __init__(self):
+        """
+        Creates a Class object
+        """
         self._hit_die = None
         self._attack_bonus_type = None
         self._will_save_bonus_type = None
@@ -828,6 +837,9 @@ class Race(object):
     __ALL_RACES = list()
 
     def __init__(self):
+        """
+        Creates a Race object
+        """
         self._name = None
         self._middle_age = 0
         self._old_age = 0
@@ -936,6 +948,13 @@ class Feat(object):
     __ALL_FEATS = list()
 
     def __init__(self, name=None, prerequisites=list(), benefit=None):
+        """
+        Creates a Feat object
+
+        :param str name: The name of the feat
+        :param str[] prerequisites: Prerequisites of the feat
+        :param str benefit: The benefit of the feat
+        """
         self.name = name
         self.prerequisites = prerequisites
         self.benefit = benefit
@@ -1041,6 +1060,14 @@ class Skill(object):
     __ALL_SKILLS = list()
 
     def __init__(self, name=None, level=0, ability=None, untrained=False):
+        """
+        Creates a Skill instance
+
+        :param str name: The name of the skill
+        :param int level: The level of the skill
+        :param str ability: The ability of the skill
+        :param bool untrained: Whether the skill can be used untrained
+        """
         self.name = name
         self.level = level
         self.ability = ability
