@@ -1,3 +1,6 @@
+from grid import PriorityQueue
+
+
 class Battle(object):
 
     """
@@ -14,8 +17,7 @@ class Battle(object):
         :param Grid grid: The grid the battle takes place on
         """
         self._grid = grid
-        self._combatants = []
-        pass
+        self._combatants = PriorityQueue()
 
     def add_combatant(self, combatant, x, y):
         """
@@ -31,7 +33,7 @@ class Battle(object):
         if position is None:
             return
         position.add_occupation(combatant)
-        self._combatants.append(combatant)
+        self._combatants.append(combatant, combatant.current_initiative())
 
     def next_round(self):
         """
@@ -40,6 +42,7 @@ class Battle(object):
         """
         for combatant in self._combatants:
             combatant.reset_round()
+            self._combatants.update_priority(combatant, combatant.current_initiative())
 
 
 class Combatant(object):
@@ -47,6 +50,7 @@ class Combatant(object):
     """
     :type _is_flat_footed: bool
     :type _action_points: int
+    :type _current_initiative: int
     """
 
     def __init__(self):
@@ -55,6 +59,7 @@ class Combatant(object):
         """
         self._is_flat_footed = False
         self._action_points = 3
+        self._current_initiative = self.initiative()
 
     def reset_round(self):
         """
@@ -62,6 +67,14 @@ class Combatant(object):
         """
         self._is_flat_footed = False
         self._action_points = 3
+        self._current_initiative = self.initiative()
+
+    def current_initiative(self):
+        """
+        Returns the last rolled initiative
+        :rtype: int
+        """
+        return self._current_initiative
 
     def initiative(self):
         """
