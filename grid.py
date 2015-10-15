@@ -6,7 +6,8 @@ import core
 class Grid(object):
 
     """
-    Implements a battle grid.
+    Implements a battle grid. [The grid] consists of a grid of 1-inch squares.
+    Each of these squares represents a 5-foot square in the game world (D&D 3.5 Players Handbook, p.133).
 
     :type _size: int
     :type __grid: Tile[]
@@ -17,8 +18,8 @@ class Grid(object):
         Creates a Grid object
         """
         self.__grid = []
-        self._size = 1.0
-        self.set_tilesize(1.0)
+        self._size = 5.0
+        self.set_tilesize(5.0)
 
     @staticmethod
     def create_with_dimension(width, height, tilesize=1.0):
