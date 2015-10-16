@@ -1,14 +1,10 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 import json
 import os
 import core
 import copy
 
-# constants for alignment
 from dice import d20, Dice, Die
-from battle import Combatant
+from battle.battle import Combatant
 
 ALIGNMENT_GOOD = "Good"
 ALIGNMENT_NEUTRAL = "Neutral"

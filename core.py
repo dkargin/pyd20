@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
 import math
 
 UNIT_LENGTH_FEET = 1.0

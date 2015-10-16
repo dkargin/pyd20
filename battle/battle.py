@@ -1,4 +1,5 @@
 from grid import PriorityQueue
+from actions import *
 
 
 class Battle(object):
@@ -43,6 +44,14 @@ class Battle(object):
         for combatant in self._combatants:
             combatant.reset_round()
             self._combatants.update_priority(combatant, combatant.current_initiative())
+        for combatant in self._combatants:
+            action = BattleAction()
+            while not isinstance(action, EndTurnAction):
+                action = combatant.next_action(self)
+                if not action.can_execute(combatant):
+                    continue
+                combatant.remove_action_points(action.action_point_cost())
+                action.execute()
 
 
 class Combatant(object):
@@ -82,5 +91,64 @@ class Combatant(object):
         the initiative value of the combatant
 
         :rtype: int
+        """
+        pass
+
+    def next_action(self, battle):
+        """
+        Should be implemented in subclasses. This method should return
+        the next action until no action points are left. If no points
+        are left, then an EndTurnAction should be returned.
+
+        :param Battle battle: A reference to the battle taking place
+        :rtype: BattleAction
+        """
+        return EndTurnAction()
+
+    def current_action_points(self):
+        """
+        Returns the current action points.
+
+        :rtype: int
+        """
+        return self._action_points
+
+    def remove_action_points(self, amount):
+        """
+        Removes a specific amount of action points.
+        """
+        self._action_points -= amount
+
+
+class BattleAction(object):
+    """
+    Models an action in a battle. This includes all actions that can
+    possibly taken during a battle including, but not limited to:
+    Moving, Attacking and using an Ability, Skill or Trait.
+    """
+
+    def __init__(self):
+        pass
+
+    def action_point_cost(self):
+        """
+        Should be implemented in subclasses. This method should
+        return the amount of action points this action costs to
+        execute.
+        :rtype: int
+        """
+        return 0
+
+    def can_execute(self, combatant):
+        """
+        Checks whether a combatant can execute an anction or not
+        :param Combatant combatant: The combatant
+        :rtype: bool
+        """
+        return combatant.current_action_points() >= self.action_point_cost()
+
+    def execute(self):
+        """
+        Should be implemented in subclasses.
         """
         pass
