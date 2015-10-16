@@ -101,6 +101,7 @@ class Character(Combatant):
             "dexterity": self.dexterity_mofifier,
             "dex": self.dexterity_mofifier,
             "intellect": self.intellect_mofifier,
+            "intelligence": self.intellect_mofifier,
             "int": self.intellect_mofifier,
             "strength": self.strength_modifier,
             "str": self.strength_modifier,
@@ -115,6 +116,7 @@ class Character(Combatant):
             "dexterity": self.dexterity,
             "dex": self.dexterity,
             "intellect": self.intellect,
+            "intelligence": self.intellect,
             "int": self.intellect,
             "strength": self.strength,
             "str": self.strength,
@@ -197,10 +199,15 @@ class Character(Combatant):
         if self._level_points == 0:
             return
         if not self.has_class(class_type):
-            self._classes.append(class_type)
+            self._classes.append(copy.deepcopy(class_type))
         self._level_points -= 1
         self.class_with_name(class_type._name).level_up(self)
         self.add_class_level(class_type, times - 1)
+
+        # removes empty dummy classes
+        for cls in self._classes:
+            if cls.current_level() == 0:
+                self._classes.remove(cls)
 
     def class_with_name(self, class_name):
         """
@@ -230,7 +237,7 @@ class Character(Combatant):
         :param str abilty_name: The name of the ability
         :rtype: int
         """
-        return self.__ABILITES[abilty_name]()
+        return self.__ABILITES[abilty_name.lower()]()
 
     def constitution(self):
         """
@@ -341,7 +348,9 @@ class Character(Combatant):
         :param str ability: The name of the ability
         :rtype: int
         """
-        return self.__ABILITIY_MODIFIER[ability]()
+        if ability is None:
+            return 0
+        return self.__ABILITIY_MODIFIER[ability.lower()]()
 
     def current_level(self):
         """
@@ -373,7 +382,7 @@ class Character(Combatant):
         feat = Feat.with_name(feat_name)
         if feat is None:
             return False
-        return feat.has_prequisties(self) and self._feat_skill_points > 0
+        return feat.has_prerequisites(self) and self._feat_skill_points > 0
 
     def use_skill(self, skill_name):
         """
@@ -393,7 +402,8 @@ class Character(Combatant):
         :param str skill_name: The name of the skill
         :rtype: bool
         """
-        return self.skill_with_name(skill_name).level > 0
+        skill = self.skill_with_name(skill_name)
+        return skill is not None and skill.level > 0
 
     def learn_skill(self, skill_name, times=1):
         """
@@ -407,11 +417,12 @@ class Character(Combatant):
         lowest_cost_class = None
         for class_ in self._classes:
             if class_.can_learn_skill(skill_name, self):
+                if lowest_cost_class is None:
+                    lowest_cost_class = class_
                 if class_.is_class_skill(skill_name):
                     lowest_cost_class = class_
-                else:
-                    if lowest_cost_class is None:
-                        lowest_cost_class = class_
+        if lowest_cost_class is None:
+            return
         lowest_cost_class.learn_skill(skill_name, self)
         self.learn_skill(skill_name, times - 1)
 
@@ -543,6 +554,17 @@ class Character(Combatant):
         :rtype: str
         """
         return core.size_category(self._height)
+
+    def attack_bonus(self):
+        """
+        Calculates the maximum attack bonus for this character
+        """
+        attack_bonus = 0
+        for cls in self._classes:
+            cls_attack_bonus = cls.attack_bonus(cls.current_level())
+            if cls_attack_bonus > attack_bonus:
+                attack_bonus = cls_attack_bonus
+        return attack_bonus
 
 
 class Class(object):
@@ -714,7 +736,7 @@ class Class(object):
         :param int level: The level
         :rtype: int
         """
-        return core.attack_bonus(level, self._attack_bonus_type)
+        return core.attack_bonus(level, self._attack_bonus_type)[0]
 
     def will_save_bonus(self, level):
         """
@@ -923,8 +945,6 @@ class Race(object):
         :param str age_type: The age type. Possible values are "young", "medium" and "old"
         :rtype: Dice
         """
-
-        self.starting_age_dice(age_type).roll()
         if age_type == "young":
             return self._starting_age_young
         if age_type == "medium":
@@ -1027,7 +1047,7 @@ class Feat(object):
             if prequisite[0] == "Level":
                 level = int(prequisite[1])
                 # TODO: check for class level
-                return character.level() >= level
+                return character.current_level() >= level
             if prequisite[0] == "Base":  # attack bonus
                 attack_bonus = int(prequisite[len(prequisite)-1].replace("+", ""))
                 return character.attack_bonus() >= attack_bonus

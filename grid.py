@@ -154,6 +154,11 @@ class Grid(object):
         return adjacent_tiles
 
     def get_tiles(self):
+        """
+        Returns all tiles
+
+        :rtype: Tile[]
+        """
         return self.__grid
 
 
@@ -176,6 +181,22 @@ class Path(object):
         self.__path = []
         self.__grid = grid
         self.__iter_current = 0
+
+    def first(self):
+        """
+        Returns the first tile in the path
+
+        :rtype: Tile
+        """
+        return self.__path[0]
+
+    def last(self):
+        """
+        Returns the last tile in the path
+
+        :rtype: Tile
+        """
+        return self.__path[len(self.__path) - 1]
 
     def append(self, tile):
         """
@@ -259,7 +280,7 @@ class Tile(object):
         """
         return len(self._occupation) == 0
 
-    def is_on_tile(self, thing):
+    def has_occupation(self, thing):
         """
         returns whether the thing occupies this tile or not
 

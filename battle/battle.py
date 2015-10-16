@@ -1,5 +1,5 @@
 from grid import PriorityQueue
-from actions import *
+from battle.actions import *
 
 
 class Battle(object):
@@ -7,7 +7,7 @@ class Battle(object):
     """
     Models a battle
 
-    :type _grid: grid.Grid
+    :type grid: grid.Grid
     :type _combatants: Combatant[]
     """
 
@@ -17,7 +17,7 @@ class Battle(object):
 
         :param Grid grid: The grid the battle takes place on
         """
-        self._grid = grid
+        self.grid = grid
         self._combatants = PriorityQueue()
 
     def add_combatant(self, combatant, x, y):
@@ -30,7 +30,7 @@ class Battle(object):
         :param int x: The x position on the grid
         :param int y: The y position on the grid
         """
-        position = self._grid.get_tile(x, y)
+        position = self.grid.get_tile(x, y)
         if position is None:
             return
         position.add_occupation(combatant)
@@ -53,6 +53,34 @@ class Battle(object):
                 combatant.remove_action_points(action.action_point_cost())
                 action.execute()
 
+    def tile(self, *args, **kwargs):
+        """
+        Returns the tile for a combatant or a position.
+
+        possible arguments are:
+        :param Combatant combatant: The combatant
+        :param int x: Position x
+        :param int y: Position y
+
+        :rtype: Tile
+        """
+        combatant = kwargs.get("combatant", None)
+        x = kwargs.get("x", None)
+        y = kwargs.get("y", None)
+        if combatant is not None:
+            return self.__tile_for_combatant(combatant)
+        if x is not None and y is not None:
+            return self.__tile_for_position(x, y)
+
+    def __tile_for_combatant(self, combatant):
+        for tile in self.grid.get_tiles():
+            if tile.has_occupation(combatant):
+                return
+        return None
+
+    def __tile_for_position(self, x, y):
+        return self.grid.get_tile(x, y)
+
 
 class Combatant(object):
 
@@ -68,7 +96,7 @@ class Combatant(object):
         """
         self._is_flat_footed = False
         self._action_points = 3
-        self._current_initiative = self.initiative()
+        self._current_initiative = 0
 
     def reset_round(self):
         """
