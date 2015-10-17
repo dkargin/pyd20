@@ -1,5 +1,6 @@
-from grid import PriorityQueue
-from battle.actions import *
+import math
+from grid import PriorityQueue, Tile
+from battle.actions import BattleAction, EndTurnAction, MoveAction
 
 
 class Battle(object):
@@ -45,6 +46,7 @@ class Battle(object):
             combatant.reset_round()
             self._combatants.update_priority(combatant, combatant.current_initiative())
         for combatant in self._combatants:
+            print(combatant, "'s turn")
             action = BattleAction()
             while not isinstance(action, EndTurnAction):
                 action = combatant.next_action(self)
@@ -75,7 +77,7 @@ class Battle(object):
     def __tile_for_combatant(self, combatant):
         for tile in self.grid.get_tiles():
             if tile.has_occupation(combatant):
-                return
+                return tile
         return None
 
     def __tile_for_position(self, x, y):
@@ -131,7 +133,6 @@ class Combatant(object):
         :param Battle battle: A reference to the battle taking place
         :rtype: BattleAction
         """
-        return EndTurnAction()
 
     def current_action_points(self):
         """
@@ -146,37 +147,3 @@ class Combatant(object):
         Removes a specific amount of action points.
         """
         self._action_points -= amount
-
-
-class BattleAction(object):
-    """
-    Models an action in a battle. This includes all actions that can
-    possibly taken during a battle including, but not limited to:
-    Moving, Attacking and using an Ability, Skill or Trait.
-    """
-
-    def __init__(self):
-        pass
-
-    def action_point_cost(self):
-        """
-        Should be implemented in subclasses. This method should
-        return the amount of action points this action costs to
-        execute.
-        :rtype: int
-        """
-        return 0
-
-    def can_execute(self, combatant):
-        """
-        Checks whether a combatant can execute an anction or not
-        :param Combatant combatant: The combatant
-        :rtype: bool
-        """
-        return combatant.current_action_points() >= self.action_point_cost()
-
-    def execute(self):
-        """
-        Should be implemented in subclasses.
-        """
-        pass

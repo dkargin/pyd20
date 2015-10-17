@@ -1,4 +1,5 @@
 from unittest import TestCase
+from battle.ki import KiCharacter
 from character import *
 from dice import d6
 import dnd
@@ -41,8 +42,8 @@ class CharacterTest(TestCase):
         feats = Feat.available_feats()
         return feats[math.floor(random.random() * len(feats))]
 
-    def __random_character(self):
-        random_character = Character("Random Character")
+    def random_character(self):
+        random_character = KiCharacter("Random Character")
         random_character.set_race(self.__random_race())
 
         # apply base stats
@@ -74,7 +75,7 @@ class CharacterTest(TestCase):
 
     def test_character(self):
         for i in range(0, 10):
-            char = self.__random_character()
+            char = self.random_character()
             print(char)
 
         """

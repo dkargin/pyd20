@@ -161,6 +161,23 @@ class Grid(object):
         """
         return self.__grid
 
+    def __repr__(self):
+        max_x = 0
+        max_y = 0
+        for tile in self.__grid:
+            if tile.x > max_x:
+                max_x = tile.x
+            if tile.y > max_y:
+                max_y = tile.y
+
+        result = "<Grid>\n"
+        for y in range(1, max_y):
+            for x in range(1, max_x):
+                result += " | " + str(self.get_tile(x, y))
+            result += " |\n"
+        result += "</Grid>"
+        return result
+
 
 class Path(object):
 

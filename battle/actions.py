@@ -1,7 +1,38 @@
 #!/usr/local/env python3
 
-from battle.battle import BattleAction
 
+class BattleAction(object):
+    """
+    Models an action in a battle. This includes all actions that can
+    possibly taken during a battle including, but not limited to:
+    Moving, Attacking and using an Ability, Skill or Trait.
+    """
+
+    def __init__(self):
+        pass
+
+    def action_point_cost(self):
+        """
+        Should be implemented in subclasses. This method should
+        return the amount of action points this action costs to
+        execute.
+        :rtype: int
+        """
+        return 0
+
+    def can_execute(self, combatant):
+        """
+        Checks whether a combatant can execute an anction or not
+        :param Combatant combatant: The combatant
+        :rtype: bool
+        """
+        return combatant.current_action_points() >= self.action_point_cost()
+
+    def execute(self):
+        """
+        Should be implemented in subclasses.
+        """
+        pass
 
 class WaitAction(BattleAction):
     """
