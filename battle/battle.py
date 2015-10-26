@@ -83,6 +83,26 @@ class Battle(object):
     def __tile_for_position(self, x, y):
         return self.grid.get_tile(x, y)
 
+    def __repr__(self):
+        max_x = 0
+        max_y = 0
+        for tile in self.grid.get_tiles():
+            if tile.x > max_x:
+                max_x = tile.x
+            if tile.y > max_y:
+                max_y = tile.y
+
+        result = ""
+        for y in range(1, max_y):
+            for x in range(1, max_x):
+                tile = self.grid.get_tile(x, y)
+                tile_str = " "
+                if len(tile._occupation) > 0:
+                    tile_str = "X"
+                result += " | " + str(tile_str)
+            result += " |\n"
+        return result
+
 
 class Combatant(object):
 

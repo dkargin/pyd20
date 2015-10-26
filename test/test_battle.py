@@ -15,6 +15,6 @@ class BattleTest(TestCase):
         battle = Battle(Grid.create_with_dimension(6, 6))
         battle.add_combatant(self.random_character(), 1, 1)
         battle.add_combatant(self.random_character(), 5, 5)
-        print(battle.grid)
+        print(battle)
         battle.next_round()
-        print(battle.grid)
+        print(battle)
