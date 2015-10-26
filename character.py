@@ -93,7 +93,7 @@ class Character(Combatant):
             "current": 0,
             "maximum": 0
         }
-        self.__ABILITIY_MODIFIER = {
+        self.__ABILITY_MODIFIER = {
             "constitution": self.constitution_mofifier,
             "con": self.constitution_mofifier,
             "charisma": self.charisma_mofifier,
@@ -108,7 +108,7 @@ class Character(Combatant):
             "wisdom": self.wisdom_mofifier,
             "wis": self.wisdom_mofifier
         }
-        self.__ABILITES = {
+        self.__ABILITIES = {
             "constitution": self.constitution,
             "con": self.constitution,
             "charisma": self.charisma,
@@ -237,7 +237,7 @@ class Character(Combatant):
         :param str abilty_name: The name of the ability
         :rtype: int
         """
-        return self.__ABILITES[abilty_name.lower()]()
+        return self.__ABILITIES[abilty_name.lower()]()
 
     def constitution(self):
         """
@@ -350,7 +350,7 @@ class Character(Combatant):
         """
         if ability is None:
             return 0
-        return self.__ABILITIY_MODIFIER[ability.lower()]()
+        return self.__ABILITY_MODIFIER[ability.lower()]()
 
     def current_level(self):
         """
