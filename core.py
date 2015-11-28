@@ -9,53 +9,62 @@ UNIT_WEIGHT_KILOGRAM = 0.45359237
 unit_length = UNIT_LENGTH_FEET
 unit_weight = UNIT_WEIGHT_POUND
 
-SIZE_CATEGORIES = {
-    "fine": {
+SIZE_CATEGORIES = [
+    {
+        "name": "fine",
         "height": [0, 0.5],
         "width":  [0, 1/8],
         "ac_modifier": 8
     },
-    "diminutive": {
+    {
+        "name": "diminutive",
         "height": [0.5, 1],
         "width":  [1/8, 1],
         "ac_modifier": 4
     },
-    "tiny": {
+    {
+        "name": "tiny",
         "height": [1, 2],
         "width":  [1, 8],
         "ac_modifier": 2
     },
-    "small": {
+    {
+        "name": "small",
         "height": [2, 4],
         "width":  [8, 60],
         "ac_modifier": 1
     },
-    "medium": {
+    {
+        "name": "medium",
         "height": [4, 8],
         "width":  [60, 500],
         "ac_modifier": 0
     },
-    "large": {
+    {
+        "name": "large",
         "height": [8, 16],
         "width":  [500, 2000],
         "ac_modifier": -1
     },
-    "huge": {
+    {
+        "name": "huge",
         "height": [16, 32],
         "width":  [2000, 16000],
         "ac_modifier": -2
     },
-    "gargantuan": {
+    {
+        "name": "gargantuan",
         "height": [32, 64],
         "width":  [16000, 125000],
         "ac_modifier": -4
     },
-    "colossal": {
+    {
+        "name": "colossal",
         "height": [64, 9999],
         "width":  [125000, 999999999],
         "ac_modifier": -8
     }
-}
+]
 
 
 def ability_modifier(value):
@@ -90,7 +99,7 @@ def bonus_spells(value):
     return bonus_spells
 
 
-def attack_bonus(level, type='good'):
+def attack_bonus(level, bonus_type='good'):
     """
     calculates the attack bonus for a given level and bonus type
     valid type values are: 'good', 'average' and 'poor'
@@ -99,11 +108,11 @@ def attack_bonus(level, type='good'):
     """
     bonus = list()
     base_bonus = 0
-    if type == 'good':
+    if bonus_type == 'good':
         base_bonus = level
-    if type == 'average':
+    if bonus_type == 'average':
         base_bonus = math.ceil(0.75 * level - 0.75)
-    if type == 'poor':
+    if bonus_type == 'poor':
         base_bonus = int(level/2)
     bonus.append(base_bonus)
     last_bonus = base_bonus
@@ -202,8 +211,8 @@ def size_category(height):
     """
     result_category = None
     for category in SIZE_CATEGORIES:
-        min_height = SIZE_CATEGORIES[category]["height"][0]
-        if(height > min_height):
+        min_height = category["height"][0]
+        if height > min_height:
             result_category = category
     return result_category
 
@@ -215,4 +224,4 @@ def ac_size_modifier(height):
     :param float height: The height in feet
     :return: int
     """
-    return SIZE_CATEGORIES[size_category(height)]["ac_modifier"]
+    return size_category(height)["ac_modifier"]
