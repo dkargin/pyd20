@@ -1,5 +1,16 @@
 #!/usr/local/env python3
 
+# Action durations
+DURATION_STANDARD = 0
+DURATION_MOVE = 1
+DURATION_FULLROUND = 2
+DURATION_FREE = 3
+DURATION_SWIFT = 4
+
+# Elementary action
+class MicroAction(object):
+    def __init__(self):
+        pass
 
 class BattleAction(object):
     """
@@ -10,6 +21,12 @@ class BattleAction(object):
 
     def __init__(self):
         pass
+
+    def duration(self):
+        """
+        :return: Get duration of the action
+        """
+        return DURATION_STANDARD
 
     def action_point_cost(self):
         """
@@ -33,6 +50,7 @@ class BattleAction(object):
         Should be implemented in subclasses.
         """
         pass
+
 
 class WaitAction(BattleAction):
     """
@@ -64,12 +82,35 @@ class EndTurnAction(BattleAction):
         pass
 
 
+class FullRoundAttack(BattleAction):
+    """
+    Implements full round attack
+    """
+    def __init__(self, target):
+        pass
+
+
+class ChargeAttack(BattleAction):
+    """
+    Implements charge attack
+    """
+    def __init__(self, combatant, target):
+        super(ChargeAttack, self).__init__()
+        self._combatant = combatant
+        self._target = target
+
+    def duration(self):
+        return DURATION_FULLROUND
+
+
 class MoveAction(BattleAction):
     """
     Implements an action that moves a combatant
 
     :type _path: Path
     :type _combatant: Combatant
+
+    #TODO: each movement should cause attack of opportunity
     """
 
     def __init__(self, combatant, path):
@@ -81,7 +122,11 @@ class MoveAction(BattleAction):
         self._combatant = combatant
         self._path = path
 
+    def duration(self):
+        return DURATION_MOVE
+
     def execute(self):
+        # We should iterate all the tiles
         start = self._path.first()
         end = self._path.last()
         start.remove_occupation(self._combatant)

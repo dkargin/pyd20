@@ -15,7 +15,6 @@ ALIGNMENT_LAWFUL = "Lawful"
 GENDER_MALE = "male"
 GENDER_FEMALE = "female"
 
-
 def relative_path():
     """
     auxiliary function to retrieve the relative path to the current script
@@ -29,7 +28,7 @@ def relative_path():
     parts = parts[:len(parts) - 1]
     return "/".join(parts)
 
-
+# Character sheet
 class Character(Combatant):
 
     """
@@ -69,30 +68,18 @@ class Character(Combatant):
         :param name: The name of the character
         """
         Combatant.__init__(self)
-        self._constitution = 0
-        self._charisma = 0
-        self._dexterity = 0
-        self._intellect = 0
-        self._strength = 0
-        self._wisdom = 0
-        self._experience = 0
+
         self._name = name
-        self._alignment = [None, None]
-        self._skills = list()
-        self._feats = list()
-        self._classes = list()
-        self._race = None
-        self._gender = None
-        self._age = 0
-        self._feat_skill_points = 1
+
         self._weight = 0
         self._height = 0
-        self._ability_skill_points = 0
-        self._level_points = 1
+
+        '''
         self._hit_points = {
             "current": 0,
             "maximum": 0
         }
+
         self.__ABILITY_MODIFIER = {
             "constitution": self.constitution_mofifier,
             "con": self.constitution_mofifier,
@@ -123,9 +110,10 @@ class Character(Combatant):
             "wisdom": self.wisdom,
             "wis": self.wisdom
         }
+        '''
 
     def __repr__(self):
-        return "<" + self._name + " " + str(self._race) + " Level " + str(self.current_level()) + " " + str(self._classes) + ">"
+        return "<" + self._name + " Level " + str(self.current_level()) + ">"
 
     def hit_points(self):
         """
@@ -135,6 +123,9 @@ class Character(Combatant):
         """
         return self._hit_points["current"]
 
+    def get_name(self):
+        return self._name
+
     def max_hit_points(self):
         """
         returns the maximum hit points
@@ -142,29 +133,6 @@ class Character(Combatant):
         :rtype: int
         """
         return self._hit_points["maximum"]
-
-    def improve_ability(self, abiltiy):
-        """
-        Improves the ability using available skill points. If no ability skill points are available,
-        this has no effect.
-
-        :param str abiltiy: The ability to improve
-        """
-        if self._ability_skill_points < 1:
-            return
-        if abiltiy == "constitution":
-            self._constitution += 1
-        if abiltiy == "charisma":
-            self._charisma += 1
-        if abiltiy == "dexterity":
-            self._dexterity += 1
-        if abiltiy == "intellect":
-            self._intellect += 1
-        if abiltiy == "strength":
-            self._strength += 1
-        if abiltiy == "wisdom":
-            self._wisdom += 1
-        self._ability_skill_points -= 1
 
     def add_experience(self, experience):
         """
@@ -230,127 +198,6 @@ class Character(Combatant):
         """
         return class_type in self._classes
 
-    def ability(self, abilty_name):
-        """
-        returns the value of the ability with the given name
-
-        :param str abilty_name: The name of the ability
-        :rtype: int
-        """
-        return self.__ABILITIES[abilty_name.lower()]()
-
-    def constitution(self):
-        """
-        returns the constitution
-
-        :rtype: int
-        """
-        age_modifier = self.__AGE_MODIFIER[self.relative_age()]
-        return self._constitution - age_modifier
-
-    def charisma(self):
-        """
-        returns the charisma
-
-        :rtype: int
-        """
-        age_modifier = self.__AGE_MODIFIER[self.relative_age()]
-        return self._charisma + age_modifier
-
-    def dexterity(self):
-        """
-        returns the dexterity
-
-        :rtype: int
-        """
-        age_modifier = self.__AGE_MODIFIER[self.relative_age()]
-        return self._dexterity - age_modifier
-
-    def intellect(self):
-        """
-        returns the intellect
-
-        :rtype: int
-        """
-        age_modifier = self.__AGE_MODIFIER[self.relative_age()]
-        return self._intellect + age_modifier
-
-    def strength(self):
-        """
-        returns the strength
-
-        :rtype: int
-        """
-        age_modifier = self.__AGE_MODIFIER[self.relative_age()]
-        return self._strength - age_modifier
-
-    def wisdom(self):
-        """
-        returns the wisdom
-
-        :rtype: int
-        """
-        age_modifier = self.__AGE_MODIFIER[self.relative_age()]
-        return self._wisdom + age_modifier
-
-    def constitution_mofifier(self):
-        """
-        returns the constitution modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.constitution())
-
-    def charisma_mofifier(self):
-        """
-        returns the charisma modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.charisma())
-
-    def dexterity_mofifier(self):
-        """
-        returns the dexterity modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.dexterity())
-
-    def intellect_mofifier(self):
-        """
-        returns the intellect modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.intellect())
-
-    def strength_modifier(self):
-        """
-        returns the strength modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.strength())
-
-    def wisdom_mofifier(self):
-        """
-        returns the wisdom modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.wisdom())
-
-    def ability_modifier(self, ability):
-        """
-        returns the modifier for a specific ability
-
-        :param str ability: The name of the ability
-        :rtype: int
-        """
-        if ability is None:
-            return 0
-        return self.__ABILITY_MODIFIER[ability.lower()]()
 
     def current_level(self):
         """
@@ -567,8 +414,69 @@ class Character(Combatant):
         return attack_bonus
 
 
-class Class(object):
 
+class Progression(object):
+    def __init__(self):
+        pass
+
+    # Apply progression
+    def apply(self, character, level_from, level_to):
+        pass
+
+
+# Progression for base attack bonus
+# LOW = 0
+# MEDIUM = 1
+# HIGH = 2
+class ProgressionBAB(Progression):
+    def __init__(self, speed):
+        self.speed = speed
+
+    def calculate(self, level):
+        if self.speed == 0:
+            return level / 2
+        elif self.speed == 1:
+            return (level * 3) / 4
+        else:
+            return level
+
+    def apply(self, character, level_from, level_to):
+        character.attack_bonus += (self.calculate(level_to) - self.calculate(level_from))
+
+
+class ProgressionSaveThrow(Progression):
+    def __init__(self, fort, ref, will):
+        self.fort = fort
+        self.ref = ref
+        self.will = will
+
+    def calculate(self, level, flag):
+        return 2 + level / 2 if flag else level / 3
+
+    def apply(self, character, level_from, level_to):
+        character._save_fort += (self.calculate(level_to, self.fort) - self.calculate(level_from, self.fort))
+        character._save_ref += (self.calculate(level_to, self.ref) - self.calculate(level_from, self.ref))
+        character._save_will += (self.calculate(level_to, self.will) - self.calculate(level_from, self.will))
+
+
+class ProgressionHP(Progression):
+    def __init__(self, dice):
+        self.dice = dice
+
+    def apply(self, character, level_from, level_to):
+        HP = character.constitution_mofifier() * (level_to - level_from)
+        if level_from == 0:
+            HP += self.dice
+            level_to-= 1
+        dice = Dice()
+        for a in range(level_to):
+            dice.add_die(Die(self.dice))
+
+        HP += dice.roll()
+        character._health_max += HP
+
+
+class Class(object):
     """
     :type _hit_die: Die
     :type _attack_bonus_type: str
@@ -587,14 +495,12 @@ class Class(object):
     :type _special: str
     """
 
-    __ALL_CLASSES = list()
-
     def __init__(self):
         """
         Creates a Class object
         """
+        self._BAB = 0
         self._hit_die = None
-        self._attack_bonus_type = None
         self._will_save_bonus_type = None
         self._fortitude_save_bonus_type = None
         self._reflex_save_bonus_type = None
@@ -603,11 +509,6 @@ class Class(object):
         self._experience = None
         self._skill_points = 0
         self._level = 0
-        self._possible_alignments = list()
-        self._class_skills = list()
-        self._class_feats = list()
-        self._ex_feats = list()
-        self._special = list()
 
     @staticmethod
     def load(data_path):

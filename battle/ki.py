@@ -1,4 +1,4 @@
-from battle.actions import *
+from .actions import *
 from character import Character
 
 

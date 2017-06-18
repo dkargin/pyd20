@@ -1,4 +1,11 @@
 import core
+import random
+import heapq
+import math
+
+
+TERRAIN_FREE = 0
+TERRAIN_WALL = 1
 
 
 class Grid(object):
@@ -11,75 +18,19 @@ class Grid(object):
     :type __grid: Tile[]
     """
 
-    def __init__(self):
+    def __init__(self, width, height):
         """
         Creates a Grid object
         """
-        self.__grid = []
         self._size = 5.0
         self.set_tilesize(5.0)
+        self._width = width
+        self._height = height
+        self.__grid = []
 
-    @staticmethod
-    def create_with_dimension(width, height, tilesize=1.0):
-        """
-        creates a rectangular grid with the given width and height
-
-        :rtype: Grid
-        """
-
-        grid = Grid()
-        for x in range(1, width + 1):
-            for y in range(1, height + 1):
-                grid.add_empty_tile(x, y)
-        grid.set_tilesize(tilesize)
-        return grid
-
-    def path_between_tiles(self, start_tile, dest_tile):
-        """
-        implements pathfinding using A*
-
-        :rtype: Path
-        """
-
-        open_list = PriorityQueue([start_tile])
-        closed_list = []
-
-        for tile in self.__grid:
-            tile.reset_g()
-
-        def h(start, end):
-            return abs(start.x - end.x) + abs(start.y - end.y)
-
-        def expand_tile(tile_to_expand):
-            for successor in self.get_adjacent_tiles(tile_to_expand):
-                if successor in closed_list:
-                    continue
-                tentative_g = tile_to_expand._g + self._size
-                if successor in open_list and tentative_g >= successor._g:
-                    continue
-                successor._predecessor = tile_to_expand
-                successor._g = tentative_g
-                f = tentative_g + h(successor, dest_tile)
-                if successor in open_list:
-                    open_list.update_priority(successor, f)
-                else:
-                    open_list.append(successor, f)
-            pass
-
-        while len(open_list) > 0:
-            current_tile = open_list.pop()
-            if current_tile == dest_tile:
-                path = Path(self)
-                current_tile = dest_tile
-                path.append(dest_tile)
-                while current_tile._predecessor is not None:
-                    path.append(current_tile._predecessor)
-                    current_tile = current_tile._predecessor
-                path.reverse()
-                return path
-            closed_list.append(current_tile)
-            expand_tile(current_tile)
-        return None
+        for y in range(0, height):
+            for x in range(0, width):
+                self.__grid.append(Tile(x,y))
 
     def set_tilesize(self, size):
         """
@@ -89,6 +40,12 @@ class Grid(object):
         """
         self._size = size / core.unit_length
 
+    def get_width(self):
+        return self._width
+
+    def get_height(self):
+        return self._height
+
     def get_tilesize(self):
         """
         returns the tilesize in the current unit
@@ -97,27 +54,21 @@ class Grid(object):
         """
         return self._size * core.unit_length
 
-    def add_empty_tile(self, x, y):
-        """
-        insert an empty tile into the grid at the specified position
+    def is_inside(self, x, y):
+        return x in range(0, self._width) and y in range(0, self._height)
 
-        :param int x: the x coordinate of the tile
-        :param int y: the y coordinate of the tile
-        """
-        tile = Tile(x, y)
-        self.__grid.append(tile)
-
-    def remove_tile(self, x, y):
-        """
-        removes the tile at position x/y
-
-        :param int x: the x coordinate of the tile
-        :param int y: the y coordinate of the tile
-        """
+    # Get random free tile
+    def get_free_tile(self):
+        free = []
         for tile in self.__grid:
-            if tile.x == x and tile.y == y:
-                self.__grid.remove(tile)
-                return
+            if tile.is_empty():
+                free.append(tile)
+        if len(free) > 0:
+            index = random.randint(0, len(free)-1)
+            tile = free[index]
+            return (tile.x, tile.y)
+        else:
+            return None
 
     def get_tile(self, x, y):
         """
@@ -127,9 +78,8 @@ class Grid(object):
         :param int y: the y coordinate of the tile
         :rtype: Tile
         """
-        for tile in self.__grid:
-            if tile.x == x and tile.y == y:
-                return tile
+        if self.is_inside(x,y):
+            return self.__grid[x + y * self._width]
         return None
 
     def get_adjacent_tiles(self, tile):
@@ -179,92 +129,75 @@ class Grid(object):
         return result
 
 
-class Path(object):
+def default_cost(src, dst):
+    return math.sqrt((src.x-dst.x)**2 + (src.y - dst.y)**2)
 
-    """
-    Implements a path through several grid tiles
-
-    :type __path: Tile[]
-    :type __grid: Grid
-    :type __iter_current: int
-    """
-
+# Does pathfinding stuff
+class PathFinder(object):
     def __init__(self, grid):
+        self.grid = grid
+        self.open_list = []
+        #self.closed_list = []
+        self.search_index = 0
+
+    def expand_tile(self, tile, costfn = default_cost):
         """
-        Creates a Path object.
-
-        :param Grid grid: Reference to the grid of the path
+        :param tile:
+        :param costfn: function for calculating tile cost
+        :return:
         """
-        self.__path = []
-        self.__grid = grid
-        self.__iter_current = 0
+        adjacent = self.grid.get_adjacent_tiles(tile)
+        for next in adjacent:
+            # Skip nodes that are already visited
+            if next._pathstate == self.search_index:
+                continue
+            next._g = tile._g + costfn(tile, next)
+            next._predecessor = tile
+            next._pathstate = self.search_index
+            self.push_node(next)
+            #self.open_list.append(next, next._g)
+        pass
 
-    def first(self):
+    def push_node(self, tile):
+        heapq.heappush(self.open_list, (tile._g, tile))
+
+    def pop_node(self):
+        return heapq.heappop(self.open_list)[1]
+
+    def path_between_tiles(self, start_tile, dest_tile):
         """
-        Returns the first tile in the path
+        implements pathfinding using A*
 
-        :rtype: Tile
+        :rtype: Path
         """
-        return self.__path[0]
 
-    def last(self):
-        """
-        Returns the last tile in the path
+        self.search_index += 1
 
-        :rtype: Tile
-        """
-        return self.__path[len(self.__path) - 1]
+        start_tile._pathstate = self.search_index
+        start_tile._g = 0
+        start_tile._predecessor = None
 
-    def append(self, tile):
-        """
-        append tile to the path
+        #self.open_list = PriorityQueue([start_tile])
+        self.open_list = []
+        self.push_node(start_tile)
 
-        :param Tile tile: the tile to append
-        """
-        self.__path.append(tile)
-
-    def reverse(self):
-        """
-        reverse the path
-        """
-        self.__path.reverse()
-
-    def remove(self, tile):
-        """
-        remove a tile from the path
-
-        :param Tile tile: the tile to remove
-        """
-        self.__path.remove(tile)
-
-    def length(self):
-        """
-        returns the length of the path in the current unit
-
-        :rtype: float
-        """
-        length = 0
-        for _ in self.__path:
-            length += self.__grid.get_tilesize()
-        return length
-
-    def __iter__(self):
-        self.__iter_current = 0
-        return self
-
-    def __next__(self):
-        if self.__iter_current >= len(self.__path):
-            raise StopIteration
-        next_item = self.__path[self.__iter_current]
-        self.__iter_current += 0
-        return next_item
-
-    def __repr__(self):
-        return self.__path.__repr__()
+        while len(self.open_list) > 0:
+            #cost, current_tile = self.open_list.pop()
+            cost, current_tile = heapq.heappop(self.open_list)
+            if current_tile == dest_tile:
+                path = Path(self.grid)
+                current_tile = dest_tile
+                path.append(dest_tile)
+                while current_tile._predecessor is not None:
+                    path.append(current_tile._predecessor)
+                    current_tile = current_tile._predecessor
+                path.reverse()
+                return path
+            self.expand_tile(current_tile)
+        return None
 
 
 class Tile(object):
-
     """
     Implements a tile on a Grid.
 
@@ -285,9 +218,14 @@ class Tile(object):
         self.x = x
         self.y = y
         self._g = 0
+        # Do we need to store pathfinding info right here?
+        # Let it be for now
         self._successor = None
         self._predecessor = None
         self._occupation = []
+        self._terrain = TERRAIN_FREE
+        # Pathfinder search index
+        self._pathstate = 0
 
     def is_empty(self):
         """
@@ -295,7 +233,7 @@ class Tile(object):
 
         :rtype: bool
         """
-        return len(self._occupation) == 0
+        return len(self._occupation) == 0 and self._terrain == TERRAIN_FREE
 
     def has_occupation(self, thing):
         """
@@ -396,6 +334,9 @@ class PriorityQueue(object):
                     break
         self.__sort()
 
+    def next(self):
+        return self.__next__()
+
     def __next__(self):
         if self.__iter_current >= len(self.__list):
             raise StopIteration
@@ -426,3 +367,92 @@ class PriorityQueue(object):
 
     def __len__(self):
         return len(self.__list)
+
+
+class Path(object):
+    """
+    Implements a path through several grid tiles
+
+    :type __path: Tile[]
+    :type __grid: Grid
+    :type __iter_current: int
+    """
+
+    def __init__(self, grid):
+        """
+        Creates a Path object.
+
+        :param Grid grid: Reference to the grid of the path
+        """
+        self.__path = []
+        self.__grid = grid
+        self.__iter_current = 0
+
+    def get_path(self):
+        return self.__path
+
+    def first(self):
+        """
+        Returns the first tile in the path
+
+        :rtype: Tile
+        """
+        return self.__path[0]
+
+    def last(self):
+        """
+        Returns the last tile in the path
+
+        :rtype: Tile
+        """
+        return self.__path[len(self.__path) - 1]
+
+    def append(self, tile):
+        """
+        append tile to the path
+
+        :param Tile tile: the tile to append
+        """
+        self.__path.append(tile)
+
+    def reverse(self):
+        """
+        reverse the path
+        """
+        self.__path.reverse()
+
+    def remove(self, tile):
+        """
+        remove a tile from the path
+
+        :param Tile tile: the tile to remove
+        """
+        self.__path.remove(tile)
+
+    def length(self):
+        """
+        returns the length of the path in the current unit
+
+        :rtype: float
+        """
+        length = 0
+        for _ in self.__path:
+            length += self.__grid.get_tilesize()
+        return length
+
+    def __iter__(self):
+        self.__iter_current = 0
+        return self
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self.__iter_current >= len(self.__path):
+            raise StopIteration
+        next_item = self.__path[self.__iter_current]
+        self.__iter_current += 0
+        return next_item
+
+    def __repr__(self):
+        return self.__path.__repr__()
