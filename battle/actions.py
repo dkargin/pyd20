@@ -40,7 +40,14 @@ class FullRoundAttackAction(BattleAction):
         self._target = target
 
     def execute(self, battle: Battle, state: TurnState):
-        pass
+        attack_roll = dice.d20.roll() + self._combatant.get_attack()
+        if attack_roll > self._target.get_AC():
+            damage = dice.d6.roll() + self._combatant.strength_modifier()
+            battle.deal_damage(self._combatant, self._target, damage)
+        else:
+            print("%s misses %s with roll=%d"% (str(self._combatant), str(self._target), attack_roll))
+        # Mark that we have used an action
+        state.use_full_round()
 
     def text(self):
         return " makes full round attack at %s" % self._target
@@ -54,12 +61,17 @@ class StandardAttackAction(BattleAction):
     """
     Implements full round attack
     """
-    def __init__(self, combatant, target):
+    def __init__(self, combatant, target: Combatant):
         super(StandardAttackAction, self).__init__(combatant)
         self._target = target
 
     def execute(self, battle: Battle, state: TurnState):
-        pass
+        attack_roll = dice.d20.roll() + self._combatant.get_attack()
+        if attack_roll > self._target.get_AC():
+            damage = dice.d6.roll() + self._combatant.strength_modifier()
+            battle.deal_damage(self._combatant, self._target, damage)
+        # Mark that we have used an action
+        state.use_standard()
 
     def text(self):
         return " attacks %s" % self._target
@@ -123,6 +135,12 @@ class MoveAction(BattleAction):
         # One last step
         if tile_next is not None:
             battle.move_combatant(self._combatant, tile_next)
+
+        state.use_move()
+
+    def can_execute(self, combatant, state: TurnState):
+        return state.move_actions > 0 and state.moves_left > 0
+
 
     def text(self):
         return "moves to %s" % self._last_target

@@ -47,7 +47,16 @@ class Battle(object):
         position.add_occupation(combatant)
         combatant.X = x
         combatant.Y = y
+        combatant.recalculate()
         self._combatants.append(combatant)
+
+    def deal_damage(self, source, victim, damage):
+        new_hp = victim.recieve_damage(damage)
+        print("%s damages %s for %d damage, %d HP left" % (str(source), str(victim), damage, new_hp))
+        if new_hp <= -10:
+            print("%s is dead" % str(victim))
+        elif new_hp < 0:
+            print("%s is unconsciousness" % str(victim))
 
     # Move character to next tile
     def move_combatant(self, combatant, tile, provoke=True):
@@ -259,15 +268,21 @@ class Combatant(object):
         self._health_max = 0
         self._health = 0
         self._brain = None
-        self._save_fort = 0
-        self._save_ref = 0
-        self._save_will = 0
-        self._AC = 0
+
+        # Save value from classes
+        self._save_fort_base = 0
+        self._save_ref_base = 0
+        self._save_will_base = 0
+        self._AC = 10
         self.move_speed = 30
         # Attack bonus for chosen maneuver/style
         self._attack_bonus_style = 0
-        # Reach, in tiles
+        # Reach, in tiles. Depends on weapon
         self._reach = 1
+
+    # Recalculate internal data
+    def recalculate(self):
+        self._health = self._health_max
 
     def get_turn_state(self):
         state = TurnState(self)
@@ -275,12 +290,22 @@ class Combatant(object):
 
     # Get armor class
     def get_AC(self):
-        return 10 + self._AC + self.dex_bonus()
+        return self._AC + self.dexterity_mofifier()
+
+    def recieve_damage(self, damage):
+        self._health -= damage
+        return self._health
 
     # Link brain
     def set_brain(self, brain):
         self._brain = brain
         brain.slave = self
+
+    def set_stats(self, str, dex, con, int, wis, cha):
+        self._stats = [str, dex, con, int, wis, cha]
+
+    def get_attack(self):
+        return self._BAB + self.strength_modifier()
 
     # Check if character is dead
     def is_dead(self):

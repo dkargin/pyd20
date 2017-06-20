@@ -27,7 +27,7 @@ class MoveAttackBrain(Brain):
         Brain.__init__(self)
         self.logger = logging.getLogger("brain")
 
-    def make_turn(self, battle, state):
+    def make_turn(self, battle, state: TurnState):
         # 1. If no enemy - find it
         if self.target is None:
             print("Has no target. Finding")
@@ -39,7 +39,10 @@ class MoveAttackBrain(Brain):
         # 2. If enemy is in range - full round attack
         if battle.is_adjacent(self.slave, self.target):
             self.logger.debug("target is near, can attack")
-            yield FullRoundAttackAction(self.slave, self.target)
+            if state.fullround_actions > 0:
+                yield FullRoundAttackAction(self.slave, self.target)
+            else:
+                yield StandardAttackAction(self.slave, self.target)
         else:
             self.logger.debug("farget %s is away. Finding path" % self.target.get_name())
             start = battle.tile_for_combatant(self.slave)

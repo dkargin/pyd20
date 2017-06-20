@@ -67,6 +67,15 @@ SIZE_CATEGORIES = [
 ]
 
 
+# Generate attack chain
+def attack_chain(bab):
+    remaining = bab
+    result = [bab]
+    while remaining > 1:
+        result.append(remaining)
+        remaining -= 5
+    return result
+
 def ability_modifier(value):
     """
     calculates the ability modifier

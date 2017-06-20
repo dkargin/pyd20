@@ -70,50 +70,35 @@ class Character(Combatant):
         Combatant.__init__(self)
 
         self._name = name
-
         self._weight = 0
         self._height = 0
-
-        '''
-        self._hit_points = {
-            "current": 0,
-            "maximum": 0
-        }
-
-        self.__ABILITY_MODIFIER = {
-            "constitution": self.constitution_mofifier,
-            "con": self.constitution_mofifier,
-            "charisma": self.charisma_mofifier,
-            "cha": self.charisma_mofifier,
-            "dexterity": self.dexterity_mofifier,
-            "dex": self.dexterity_mofifier,
-            "intellect": self.intellect_mofifier,
-            "intelligence": self.intellect_mofifier,
-            "int": self.intellect_mofifier,
-            "strength": self.strength_modifier,
-            "str": self.strength_modifier,
-            "wisdom": self.wisdom_mofifier,
-            "wis": self.wisdom_mofifier
-        }
-        self.__ABILITIES = {
-            "constitution": self.constitution,
-            "con": self.constitution,
-            "charisma": self.charisma,
-            "cha": self.charisma,
-            "dexterity": self.dexterity,
-            "dex": self.dexterity,
-            "intellect": self.intellect,
-            "intelligence": self.intellect,
-            "int": self.intellect,
-            "strength": self.strength,
-            "str": self.strength,
-            "wisdom": self.wisdom,
-            "wis": self.wisdom
-        }
-        '''
+        # Maps class type to a level
+        self._classes = {}
 
     def __repr__(self):
-        return "<" + self._name + " Level " + str(self.current_level()) + ">"
+        return "<" + self._name + " lvl" + str(self.current_level()) + ">"
+
+    # Calculate effective level
+    def current_level(self):
+        result = 0
+        for cls, level in self._classes.items():
+            result += level
+        return result
+
+    # Add level to character
+    def add_class_level(self, new_class, levels = 1):
+        old_level = 0
+        # Get old level
+        if new_class in self._classes:
+            old_level = self._classes[new_class]
+        # Apply changes
+        new_class.apply(self, old_level, old_level + levels)
+        # Move effective level
+        if new_class in self._classes:
+            self._classes[new_class] += levels
+        else:
+            self._classes[new_class] = levels
+
 
     def hit_points(self):
         """
@@ -134,19 +119,6 @@ class Character(Combatant):
         """
         return self._hit_points["maximum"]
 
-    def add_experience(self, experience):
-        """
-        adds experience points, and levels up if enough xp is gained
-
-        :param int experience: Amount of xp to add
-        """
-        level_before = self.current_level()
-        self._experience += experience
-        delta_level = self.current_level() - level_before
-        self._level_points += delta_level
-        self._feat_skill_points += int(self.current_level()/3) - int(level_before/3)
-        self._ability_skill_points += int(self.current_level()/4) - int(level_before/4)
-
     def set_race(self, race):
         """
         Sets the race
@@ -154,28 +126,6 @@ class Character(Combatant):
         :param Race race: The race to set
         """
         self._race = race
-
-    def add_class_level(self, class_type, times=1):
-        """
-        Adds a level to a class if enough level points are available.
-
-        :param Class class_type: The class type to level up
-        :param int times: Amount of levels to add.
-        """
-        if times == 0:
-            return
-        if self._level_points == 0:
-            return
-        if not self.has_class(class_type):
-            self._classes.append(copy.deepcopy(class_type))
-        self._level_points -= 1
-        self.class_with_name(class_type._name).level_up(self)
-        self.add_class_level(class_type, times - 1)
-
-        # removes empty dummy classes
-        for cls in self._classes:
-            if cls.current_level() == 0:
-                self._classes.remove(cls)
 
     def class_with_name(self, class_name):
         """
@@ -197,15 +147,6 @@ class Character(Combatant):
         :rtype: bool
         """
         return class_type in self._classes
-
-
-    def current_level(self):
-        """
-        returns the current level
-
-        :rtype: int
-        """
-        return core.current_level(self._experience)
 
     def can_learn_skill(self, skill_name):
         """
@@ -402,18 +343,9 @@ class Character(Combatant):
         """
         return core.size_category(self._height)
 
-    def attack_bonus(self):
-        """
-        Calculates the maximum attack bonus for this character
-        """
-        attack_bonus = 0
-        for cls in self._classes:
-            cls_attack_bonus = cls.attack_bonus(cls.current_level())
-            if cls_attack_bonus > attack_bonus:
-                attack_bonus = cls_attack_bonus
-        return attack_bonus
 
-
+# Level-dependent progression
+# Class consists of several progression types, like BAB, saving throw, HP, ...
 class Progression(object):
     def __init__(self):
         pass
@@ -424,9 +356,10 @@ class Progression(object):
 
 
 # Progression for base attack bonus
-# LOW = 0
-# MEDIUM = 1
-# HIGH = 2
+LOW = 0
+MEDIUM = 1
+HIGH = 2
+
 class ProgressionBAB(Progression):
     def __init__(self, speed):
         self.speed = speed
@@ -440,7 +373,7 @@ class ProgressionBAB(Progression):
             return level
 
     def apply(self, character, level_from, level_to):
-        character.attack_bonus += (self.calculate(level_to) - self.calculate(level_from))
+        character._BAB += int(self.calculate(level_to) - self.calculate(level_from))
 
 
 class ProgressionSaveThrow(Progression):
@@ -450,12 +383,18 @@ class ProgressionSaveThrow(Progression):
         self.will = will
 
     def calculate(self, level, flag):
-        return 2 + level / 2 if flag else level / 3
+        if flag == HIGH:
+            result = int(level / 2)
+            if level > 0:
+                result += 2
+            return result
+        else:
+            return int(level / 3)
 
     def apply(self, character, level_from, level_to):
-        character._save_fort += (self.calculate(level_to, self.fort) - self.calculate(level_from, self.fort))
-        character._save_ref += (self.calculate(level_to, self.ref) - self.calculate(level_from, self.ref))
-        character._save_will += (self.calculate(level_to, self.will) - self.calculate(level_from, self.will))
+        character._save_fort_base += (self.calculate(level_to, self.fort) - self.calculate(level_from, self.fort))
+        character._save_ref_base += (self.calculate(level_to, self.ref) - self.calculate(level_from, self.ref))
+        character._save_will_base += (self.calculate(level_to, self.will) - self.calculate(level_from, self.will))
 
 
 class ProgressionHP(Progression):
@@ -464,7 +403,7 @@ class ProgressionHP(Progression):
 
     def apply(self, character, level_from, level_to):
         HP = character.constitution_mofifier() * (level_to - level_from)
-        if level_from == 0:
+        if character.current_level() == 0:
             HP += self.dice
             level_to-= 1
         dice = Dice()
@@ -475,7 +414,7 @@ class ProgressionHP(Progression):
         character._health_max += HP
 
 
-class Class(object):
+class CharacterClass(object):
     """
     :type _hit_die: Die
     :type _attack_bonus_type: str
@@ -494,79 +433,20 @@ class Class(object):
     :type _special: str
     """
 
-    def __init__(self, progressions):
+    def __init__(self, name, progressions):
         """
         Creates a Class object
         """
-        self._BAB = 0
-        self._hit_die = None
-        self._will_save_bonus_type = None
-        self._fortitude_save_bonus_type = None
-        self._reflex_save_bonus_type = None
-        self._skill_modifier = None
-        self._name = None
-        self._experience = None
-        self._skill_points = 0
-        self._level = 0
+        self._name = name
         self._progressions = []
+        self._progressions.extend(progressions)
 
-    @staticmethod
-    def load(data_path):
-        """
-        Loads classes from a data file. This method should be called when initializing a package that contains
-        game specific class data.
 
-        :param str data_path: The path to the data file in json format, relative to the root package
-        """
-        data_file = relative_path() + "/" + data_path
-        classes = json.loads(open(data_file, encoding="utf-8").read())["classes"]
-        Class.__ALL_CLASSES = list()
-        for class_data in classes:
-            instance = Class()
-            instance._name = class_data["class_name"]
-            instance._hit_die = Dice.from_string(class_data["hit_die"])
-            instance._attack_bonus_type = class_data["attack_bonus_type"]
-            instance._skill_modifier = class_data["skill_modifier"]
-            instance._fortitude_save_bonus_type = class_data["fortitude_bonus_type"]
-            instance._will_save_bonus_type = class_data["will_bonus_type"]
-            instance._reflex_save_bonus_type = class_data["reflex_bonus_type"]
-            instance._class_skills = class_data["class_skills"]
-            instance._class_feats = class_data["class_feats"]
-            instance._ex_feats = class_data["ex_feats"]
-            instance._possible_alignments = class_data["possible_alignments"]
-            instance._special = class_data["special"]
-            instance._starting_age_type = class_data["starting_age_type"]
-            Class.__ALL_CLASSES.append(instance)
+    # Apply class changes for level up
+    def apply(self, character, level_from, level_to):
+        for p in self._progressions:
+            p.apply(character, level_from, level_to)
 
-    @staticmethod
-    def available_classes():
-        """
-        Returns the list of names for all available classes.
-
-        :rtype: str[]
-        """
-        class_names = []
-        for cls in Class.__ALL_CLASSES:
-            class_names.append(cls._name)
-        return class_names
-
-    def level_up(self, character):
-        """
-        Applies a class level up bonus to a character
-
-        :param Character character: The character to apply the bonus to
-        """
-        self._level += 1
-        self.__increase_skill_points(character)
-        self.__increase_health(character)
-
-    def current_level(self):
-        """
-        Returns the current level of this class
-
-        :rtype: int
-        """
-        return self._level
 
     def learn_skill(self, skill_name, character, times=1):
         """
@@ -616,42 +496,6 @@ class Class(object):
         """
         return alignment[0] in self._possible_alignments[0] and \
             alignment[1] in self._possible_alignments[1]
-
-    def attack_bonus(self, level):
-        """
-        Calculates the attack bonus for a given level
-
-        :param int level: The level
-        :rtype: int
-        """
-        return core.attack_bonus(level, self._attack_bonus_type)[0]
-
-    def will_save_bonus(self, level):
-        """
-        Calculates the will save bonus for a given level
-
-        :param int level: The level
-        :rtype: int
-        """
-        return core.save_bonus(level, self._will_save_bonus_type)
-
-    def fortitude_save_bonus(self, level):
-        """
-        Calculates the fortitude save bonus for a given level
-
-        :param int level: The level
-        :rtype: int
-        """
-        return core.save_bonus(level, self._fortitude_save_bonus_type)
-
-    def reflex_save_bonus(self, level):
-        """
-        Calculates the reflex save bonus for a given level
-
-        :param int level: The level
-        :rtype: int
-        """
-        return core.save_bonus(level, self._reflex_save_bonus_type)
 
     def roll_hit_die(self):
         """
@@ -722,6 +566,7 @@ class Class(object):
 
     def __repr__(self):
         return "<" + self._name + " Level " + str(self._level) + ">"
+
 
 
 class Race(object):

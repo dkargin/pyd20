@@ -3,12 +3,12 @@ from battle.battle import Battle
 from character import Character
 from grid import Grid, PathFinder
 import brain
+import classes
 
 from pygame.locals import *
 from render import Renderer
 
 pygame.init()
-
 
 grid = Grid(40, 40)
 
@@ -16,8 +16,15 @@ center_x = 20
 center_y = 20
 battle = Battle(grid)
 
-char1 = Character("Char1")
-char2 = Character("Char2")
+char1 = Character("Bob")
+char1.set_stats(18, 13, 16, 10, 10, 10)
+char1.add_class_level(classes.Fighter, 6)
+
+
+char2 = Character("Roy")
+char2.set_stats(18, 13, 16, 10, 10, 10)
+char2.add_class_level(classes.Fighter, 6)
+
 
 char1.set_brain(brain.MoveAttackBrain())
 char2.set_brain(brain.MoveAttackBrain())
@@ -27,12 +34,6 @@ battle.add_combatant(char2, *grid.get_free_tile())
 
 #battle.add_combatant(char1, center_x - 5, center_y)
 #battle.add_combatant(char2, center_x + 5, center_y)
-
-#pathfinder = PathFinder(grid)
-#path = pathfinder.path_between_tiles(start, end)
-
-#assert path is not None
-#assert path.length() > 0
 
 renderer = Renderer(grid, 20)
 
@@ -64,9 +65,7 @@ while not shouldExit:
 
     renderer.clear()
     renderer.draw_grid(grid)
-    #renderer.draw_path(path)
     renderer.draw_combatants(battle._combatants)
-    #pygame.display.update()
     pygame.display.flip()
 
 
