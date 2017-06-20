@@ -11,6 +11,9 @@ pygame.init()
 
 
 grid = Grid(40, 40)
+
+center_x = 20
+center_y = 20
 battle = Battle(grid)
 
 char1 = Character("Char1")
@@ -22,8 +25,8 @@ char2.set_brain(brain.MoveAttackBrain())
 battle.add_combatant(char1, *grid.get_free_tile())
 battle.add_combatant(char2, *grid.get_free_tile())
 
-start = grid.get_tile(*char1.coords())
-end = grid.get_tile(*char2.coords())
+#battle.add_combatant(char1, center_x - 5, center_y)
+#battle.add_combatant(char2, center_x + 5, center_y)
 
 #pathfinder = PathFinder(grid)
 #path = pathfinder.path_between_tiles(start, end)
@@ -59,10 +62,12 @@ while not shouldExit:
     if make_turn:
         battle.next_round()
 
+    renderer.clear()
     renderer.draw_grid(grid)
     #renderer.draw_path(path)
     renderer.draw_combatants(battle._combatants)
-    pygame.display.update()
+    #pygame.display.update()
+    pygame.display.flip()
 
 
 print("Done")

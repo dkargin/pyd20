@@ -414,7 +414,6 @@ class Character(Combatant):
         return attack_bonus
 
 
-
 class Progression(object):
     def __init__(self):
         pass
@@ -495,7 +494,7 @@ class Class(object):
     :type _special: str
     """
 
-    def __init__(self):
+    def __init__(self, progressions):
         """
         Creates a Class object
         """
@@ -509,6 +508,7 @@ class Class(object):
         self._experience = None
         self._skill_points = 0
         self._level = 0
+        self._progressions = []
 
     @staticmethod
     def load(data_path):
@@ -537,19 +537,6 @@ class Class(object):
             instance._special = class_data["special"]
             instance._starting_age_type = class_data["starting_age_type"]
             Class.__ALL_CLASSES.append(instance)
-
-    @staticmethod
-    def with_name(class_name):
-        """
-        Returns a class with the given name if one is loaded.
-
-        :param str class_name: The name of the class
-        :rtype: Class | None
-        """
-        for c in Class.__ALL_CLASSES:
-            if c._name.lower() == class_name.lower():
-                return copy.deepcopy(c)
-        return None
 
     @staticmethod
     def available_classes():

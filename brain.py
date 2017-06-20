@@ -1,4 +1,6 @@
 import math
+import logging
+from battle.actions import *
 
 class Brain(object):
     def __init__(self):
@@ -9,8 +11,8 @@ class Brain(object):
         self.path = None
 
     # To be overriden
-    def make_turn(self, battle):
-        return []
+    def make_turn(self, battle, state):
+        pass
 
 
 # Object is controlled by keyboard input
@@ -23,8 +25,10 @@ class ManualBrain(Brain):
 class MoveAttackBrain(Brain):
     def __init__(self):
         Brain.__init__(self)
+        self.logger = logging.getLogger("brain")
 
-    def make_turn(self, battle):
+    def make_turn(self, battle, state):
+        # 1. If no enemy - find it
         if self.target is None:
             print("Has no target. Finding")
             self.target = battle.find_enemy(self.slave)
@@ -32,17 +36,19 @@ class MoveAttackBrain(Brain):
         if self.target is None:
             return []
 
+        # 2. If enemy is in range - full round attack
         if battle.is_adjacent(self.slave, self.target):
-            print("Target is near, can attack")
+            self.logger.debug("target is near, can attack")
+            yield FullRoundAttackAction(self.slave, self.target)
         else:
-            src =
-            path = battle.pathfinder.path_between_tiles(src, dst)
-            print("Target %d is away" % self.target.get_name())
-
+            self.logger.debug("farget %s is away. Finding path" % self.target.get_name())
+            start = battle.tile_for_combatant(self.slave)
+            end = battle.tile_for_combatant(self.target)
+            path = battle.pathfinder.path_between_tiles(start, end)
+            self.logger.debug("found path of %d feet length" % path.length())
+            yield MoveAction(self.slave, path)
 
         '''
-        1. If no enemy - find it
-        2. If enemy is in range - full round attack
         2. If enemy is near 5ft - move and full round
         If enemy is far - move to it
         3. If enemy is near for charge - do it
@@ -50,5 +56,5 @@ class MoveAttackBrain(Brain):
         :param battlefield:
         :return:
         '''
-        return []
+        return
 

@@ -181,6 +181,8 @@ class PathFinder(object):
         self.open_list = []
         self.push_node(start_tile)
 
+        iteration = 0
+
         while len(self.open_list) > 0:
             #cost, current_tile = self.open_list.pop()
             cost, current_tile = heapq.heappop(self.open_list)
@@ -189,11 +191,13 @@ class PathFinder(object):
                 current_tile = dest_tile
                 path.append(dest_tile)
                 while current_tile._predecessor is not None:
-                    path.append(current_tile._predecessor)
                     current_tile = current_tile._predecessor
+                    if current_tile != start_tile:
+                        path.append(current_tile)
                 path.reverse()
                 return path
             self.expand_tile(current_tile)
+            iteration += 1
         return None
 
 
@@ -226,6 +230,8 @@ class Tile(object):
         self._terrain = TERRAIN_FREE
         # Pathfinder search index
         self._pathstate = 0
+        # Objects that threaten this tile
+        self._threaten = []
 
     def is_empty(self):
         """
@@ -243,6 +249,11 @@ class Tile(object):
         :rtype: bool
         """
         return thing in self._occupation
+
+    def is_threatened(self, combatant):
+        if len(self._threaten) == 0:
+            return False
+        return True
 
     def add_occupation(self, thing):
         """
@@ -268,6 +279,15 @@ class Tile(object):
         auxiliary method used for pathfinding. resets calculated g value
         """
         self._g = 0
+
+    def __lt__(self, other):
+        if isinstance(other, self.__class__):
+            return self._g < other._g
+
+    def __hash__(self):
+        return id(self)
+
+
 
 
 class PriorityQueue(object):
@@ -439,6 +459,16 @@ class Path(object):
         for _ in self.__path:
             length += self.__grid.get_tilesize()
         return length
+
+    def count(self):
+        """
+        returns number of waypoints in the path
+        :return: int
+        """
+        return len(self.__path)
+
+    def __getitem__(self, index):
+        return self.__path[index]
 
     def __iter__(self):
         self.__iter_current = 0

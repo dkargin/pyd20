@@ -2,6 +2,15 @@ import math
 import core
 from grid import PriorityQueue, Tile, PathFinder
 import dice
+import logging
+
+# Action durations
+DURATION_STANDARD = 0
+DURATION_MOVE = 1
+DURATION_FULLROUND = 2
+DURATION_FREE = 3
+DURATION_SWIFT = 4
+
 
 class Battle(object):
     """
@@ -19,7 +28,7 @@ class Battle(object):
         """
         self.grid = grid
         self.pathfinder = PathFinder(grid)
-        self._combatants = PriorityQueue()
+        self._combatants = []
         self.round = 0
 
     def add_combatant(self, combatant, x, y):
@@ -38,12 +47,23 @@ class Battle(object):
         position.add_occupation(combatant)
         combatant.X = x
         combatant.Y = y
-        self._combatants.append(combatant, combatant.current_initiative())
+        self._combatants.append(combatant)
 
     # Move character to next tile
-    def move(self, char, coord, provoke=True):
+    def move_combatant(self, combatant, tile, provoke=True):
         # 1.
-        pass
+        prev_tile = self.tile_for_combatant(combatant)
+        if prev_tile == tile:
+            return
+
+        print("moving %s from %s to %s" % (str(combatant), str(prev_tile), str(tile)))
+        if prev_tile is not None:
+            prev_tile.remove_occupation(combatant)
+
+        combatant.X = tile.x
+        combatant.Y = tile.y
+        tile.add_occupation(combatant)
+        # TODO: raise attacks of opportunity
 
     def next_round(self):
         """
@@ -56,22 +76,37 @@ class Battle(object):
 
         for combatant in self._combatants:
             print(combatant, "'s turn")
-            for action in combatant.gen_actions(self):
-                #action = combatant.next_action(self)
-                if not action.can_execute(combatant):
-                    continue
-
-                action.execute()
+            turn_state = combatant.get_turn_state()
+            turn_state.on_round_start()
+            complete = False
+            action_generator = combatant.gen_actions(self, turn_state)
+            # Hard limit on action generator
+            iteration_limit = 20
+            while not complete and iteration_limit > 0:
+                try:
+                    action = next(action_generator, turn_state)
+                    if action is None:
+                        pass
+                    elif isinstance(action, BattleAction):
+                        action.execute(self, turn_state)
+                    # TODO: process interrupts?
+                except StopIteration:
+                    complete = True
+                    break
+                iteration_limit -= 1
+            # Commit turn changes?
+            turn_state.on_round_end()
 
         self.round += 1
         print("Round %d is complete" % self.round)
 
+    # Return distance between tiles
     def distance_tiles(self, obj_a, obj_b):
         return math.sqrt((obj_a.X - obj_b.X) ** 2 + (obj_a.Y - obj_b.Y) ** 2)
 
-
+    # Check if combatant obj_b is whithin reach of combatant obj_a
     def is_adjacent(self, obj_a, obj_b):
-        return math.abs(obj_a.X - obj_b.X) <= obj_a.reach and math.abs(obj_a.Y - obj_b.Y) <= obj_a.reach
+        return math.fabs(obj_a.X - obj_b.X) <= obj_a._reach and math.fabs(obj_a.Y - obj_b.Y) <= obj_a._reach
 
     # Check if object is enemy
     def is_enemy(self, char_a, char_b):
@@ -115,17 +150,17 @@ class Battle(object):
         x = kwargs.get("x", None)
         y = kwargs.get("y", None)
         if combatant is not None:
-            return self.__tile_for_combatant(combatant)
+            return self.tile_for_combatant(combatant)
         if x is not None and y is not None:
-            return self.__tile_for_position(x, y)
+            return self.tile_for_position(x, y)
 
-    def __tile_for_combatant(self, combatant):
+    def tile_for_combatant(self, combatant):
         for tile in self.grid.get_tiles():
             if tile.has_occupation(combatant):
                 return tile
         return None
 
-    def __tile_for_position(self, x, y):
+    def tile_for_position(self, x, y):
         return self.grid.get_tile(x, y)
 
     def __repr__(self):
@@ -157,6 +192,53 @@ STAT_WIS = 4
 STAT_CHA = 5
 
 
+# Encapsulates current turn state
+class TurnState(object):
+    def __init__(self, combatant):
+        self.combatant = combatant
+        self.moves_left = combatant.move_speed
+        self.move_actions = 1
+        self.standard_actions = 1
+        self.fullround_actions = 1
+        self.move_5ft = 1
+        self.swift_actions = 1
+        self.opportunity_attacks = 1
+        # Attacked opportunity targets
+        self.opportunity_targets = []
+
+    # Use move action
+    def use_move(self):
+        self.move_5ft = 0
+        self.fullround_actions = 1
+
+    # Use standard action
+    def use_standard(self):
+        self.standard_actions = 0
+        self.fullround_actions = 0
+
+    # Use fullround action
+    def use_full_round(self):
+        self.standard_actions = 0
+        self.fullround_actions = 0
+        self.move_actions = 0
+
+    # Called on start of the turn
+    def on_round_start(self):
+        self.moves_left = self.combatant.move_speed
+        self.move_actions = 1
+        self.standard_actions = 1
+        self.fullround_actions = 1
+        self.move_5ft = 1
+        self.swift_actions = 1
+        self.opportunity_attacks = 1
+
+    # Called when combatant's turn is ended
+    def on_round_end(self):
+        # Attacked opportunity targets
+        self.opportunity_targets = []
+        self.opportunity_attacks = 1
+
+
 # Contains current combatant characteristics
 # Should be as flat as possible for better performance
 class Combatant(object):
@@ -166,16 +248,11 @@ class Combatant(object):
     :type _current_initiative: int
     """
     def __init__(self):
-        self._is_flat_footed = False
-        self._action_move = 0
-        self._action_standard = 0
-        self._action_full = 0
-        self._action_5footstep = 0
         self._current_initiative = 0
         self.X = 0
         self.Y = 0
-
         self._stats = [0,0,0,0,0,0]
+        self._status_effects = {}
         self._experience = 0
         self._alignment = 0
         self._BAB = 0
@@ -192,10 +269,15 @@ class Combatant(object):
         # Reach, in tiles
         self._reach = 1
 
+    def get_turn_state(self):
+        state = TurnState(self)
+        return state
+
     # Get armor class
     def get_AC(self):
         return 10 + self._AC + self.dex_bonus()
 
+    # Link brain
     def set_brain(self, brain):
         self._brain = brain
         brain.slave = self
@@ -318,14 +400,40 @@ class Combatant(object):
         :rtype: BattleAction
         """
 
-    # Get available action list
-    def gen_actions(self, battle):
-        if self._brain is None:
-            return []
-        return self._brain.make_turn(battle)
+    # Get generator
+    def gen_actions(self, battle, state):
+        if self._brain is not None:
+            # Retur
+            yield from self._brain.make_turn(battle, state)
 
     # Overriden by character
     def get_name(self):
         return "Unknown"
 
+
+class BattleAction(object):
+    """
+    Models an action in a battle. This includes all actions that can
+    possibly taken during a battle including, but not limited to:
+    Moving, Attacking and using an Ability, Skill or Trait.
+    """
+    def __init__(self, combatant: Combatant):
+        self._combatant = combatant
+
+    # Get duration of the action
+    def duration(self):
+        return DURATION_STANDARD
+
+    def can_execute(self, combatant):
+        return False
+
+    def execute(self, battle: Battle, state: TurnState):
+        pass
+
+    def text(self):
+        return "generic action"
+
+    # Returns action text for display
+    def action_text(self):
+        return "%s executes %s" % (self._combatant.get_name(), self.text())
 

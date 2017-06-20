@@ -32,6 +32,9 @@ class Renderer:
     def screen_to_grid(self, pt):
         return ((pt[0] - self.grid_left) / TILESIZE, (pt[1]-self.grid_top) / TILESIZE)
 
+    def clear(self):
+        self.surface.fill(BLACK)
+
     # Draw grid
     def draw_grid(self, grid):
 

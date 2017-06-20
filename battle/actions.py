@@ -1,55 +1,5 @@
 #!/usr/local/env python3
-
-# Action durations
-DURATION_STANDARD = 0
-DURATION_MOVE = 1
-DURATION_FULLROUND = 2
-DURATION_FREE = 3
-DURATION_SWIFT = 4
-
-# Elementary action
-class MicroAction(object):
-    def __init__(self):
-        pass
-
-class BattleAction(object):
-    """
-    Models an action in a battle. This includes all actions that can
-    possibly taken during a battle including, but not limited to:
-    Moving, Attacking and using an Ability, Skill or Trait.
-    """
-
-    def __init__(self):
-        pass
-
-    def duration(self):
-        """
-        :return: Get duration of the action
-        """
-        return DURATION_STANDARD
-
-    def action_point_cost(self):
-        """
-        Should be implemented in subclasses. This method should
-        return the amount of action points this action costs to
-        execute.
-        :rtype: int
-        """
-        return 0
-
-    def can_execute(self, combatant):
-        """
-        Checks whether a combatant can execute an anction or not
-        :param Combatant combatant: The combatant
-        :rtype: bool
-        """
-        return combatant.current_action_points() >= self.action_point_cost()
-
-    def execute(self):
-        """
-        Should be implemented in subclasses.
-        """
-        pass
+from .battle import *
 
 
 class WaitAction(BattleAction):
@@ -60,34 +10,59 @@ class WaitAction(BattleAction):
     def __init__(self):
         super(WaitAction, self).__init__()
 
-    def action_point_cost(self):
-        return 1
-
-    def execute(self):
+    def execute(self, battle, state):
         pass
+
+    def text(self):
+        return "waits"
 
 
 class EndTurnAction(BattleAction):
     """
     Implements the action that ends the turn
     """
-
     def __init__(self):
         super(EndTurnAction, self).__init__()
 
-    def action_point_cost(self):
-        return 0
-
-    def execute(self):
+    def execute(self, battle: Battle, state: TurnState):
         pass
 
+    def text(self):
+        return "ends its turn"
 
-class FullRoundAttack(BattleAction):
+
+class FullRoundAttackAction(BattleAction):
     """
     Implements full round attack
     """
-    def __init__(self, target):
+    def __init__(self, combatant, target):
+        super(FullRoundAttackAction, self).__init__(combatant)
+        self._target = target
+
+    def execute(self, battle: Battle, state: TurnState):
         pass
+
+    def text(self):
+        return " makes full round attack at %s" % self._target
+
+    # Get duration of the action
+    def duration(self):
+        return DURATION_FULLROUND
+
+
+class StandardAttackAction(BattleAction):
+    """
+    Implements full round attack
+    """
+    def __init__(self, combatant, target):
+        super(StandardAttackAction, self).__init__(combatant)
+        self._target = target
+
+    def execute(self, battle: Battle, state: TurnState):
+        pass
+
+    def text(self):
+        return " attacks %s" % self._target
 
 
 class ChargeAttack(BattleAction):
@@ -95,8 +70,7 @@ class ChargeAttack(BattleAction):
     Implements charge attack
     """
     def __init__(self, combatant, target):
-        super(ChargeAttack, self).__init__()
-        self._combatant = combatant
+        super(ChargeAttack, self).__init__(combatant)
         self._target = target
 
     def duration(self):
@@ -112,29 +86,46 @@ class MoveAction(BattleAction):
 
     #TODO: each movement should cause attack of opportunity
     """
-
     def __init__(self, combatant, path):
+        super(MoveAction, self).__init__(combatant)
         """
         :param Combatant combatant: The combatant to move
         :param Path path: The path the combatant takes to move
         """
-        super(MoveAction, self).__init__()
-        self._combatant = combatant
+
         self._path = path
+        self._last_target = None
 
     def duration(self):
         return DURATION_MOVE
 
-    def execute(self):
+    def execute(self, battle: Battle, state: TurnState):
         # We should iterate all the tiles
         start = self._path.first()
         end = self._path.last()
-        start.remove_occupation(self._combatant)
-        end.add_occupation(self._combatant)
+        tile_src = battle.tile_for_combatant(self._combatant)
+        tile_next = None
 
-    def can_execute(self, combatant):
-        has_enough_action_points = super(MoveAction, self).can_execute(combatant)
-        return self._path is not None and has_enough_action_points
+        #[0,1,2,3,4,5,6]
+        #[0,0,0,T,T,0,0]
+        # Moves: 0->3, 3->4, 4->6
+        for tile in self._path.get_path():
+            if tile == tile_src:
+                continue
+            tile_next = tile
+            if tile.is_threatened(self._combatant):
+                battle.move_combatant(self._combatant, tile_next)
+                tile_next = None
+
+            state.moves_left -= 5
+            if state.moves_left == 0:
+                break
+        # One last step
+        if tile_next is not None:
+            battle.move_combatant(self._combatant, tile_next)
+
+    def text(self):
+        return "moves to %s" % self._last_target
 
 
 class UseSkillAction(BattleAction):
@@ -156,8 +147,5 @@ class UseSkillAction(BattleAction):
         self._target = target
         self._skill_name = skill_name
 
-    def action_point_cost(self):
-        return 1
-
-    def execute(self):
+    def execute(self, battle: Battle, state: TurnState):
         self._character.use_skill(self._skill_name)
