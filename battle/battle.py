@@ -3,6 +3,7 @@ import core
 from grid import PriorityQueue, Tile, PathFinder
 import dice
 import logging
+from .combatant import Combatant, TurnState
 
 # Action durations
 DURATION_STANDARD = 0
@@ -50,6 +51,15 @@ class Battle(object):
         combatant.recalculate()
         self._combatants.append(combatant)
 
+    def remove_combatant(self, combatant):
+        """
+        :param combatant: Combatant to be removed
+        """
+        tile = self.tile_for_combatant(combatant)
+        if tile is None:
+            pass
+        self._combatants.remove(combatant)
+
     def deal_damage(self, source, victim, damage):
         new_hp = victim.recieve_damage(damage)
         print("%s damages %s for %d damage, %d HP left" % (str(source), str(victim), damage, new_hp))
@@ -79,11 +89,19 @@ class Battle(object):
         Ends the current round and starts a new round, resulting in new initiative rolls
         and reset action points.
         """
+        dead = []
+        self.round += 1
         print("Starting round %d" % self.round)
         for combatant in self._combatants:
+            if combatant.is_dead():
+                dead.append(combatant)
             combatant.reset_round()
 
         for combatant in self._combatants:
+            if combatant.is_dead():
+                dead.append(combatant)
+            elif not combatant.is_consciousness():
+                continue
             print(combatant, "'s turn")
             turn_state = combatant.get_turn_state()
             turn_state.on_round_start()
@@ -106,7 +124,6 @@ class Battle(object):
             # Commit turn changes?
             turn_state.on_round_end()
 
-        self.round += 1
         print("Round %d is complete" % self.round)
 
     # Return distance between tiles
@@ -127,11 +144,11 @@ class Battle(object):
     def find_enemy(self, char):
         enemies = []
         for combatant in self._combatants:
-            if self.is_enemy(char, combatant):
+            if combatant.is_consciousness() and self.is_enemy(char, combatant):
                 enemies.append(combatant)
 
         if len(enemies) > 0:
-            # TODO: find nearest
+            # TODO: filter enemies by range
             return enemies[0]
         return None
 
@@ -191,249 +208,6 @@ class Battle(object):
                 result += " | " + str(tile_str)
             result += " |\n"
         return result
-
-# Stat indexes
-STAT_STR = 0
-STAT_DEX = 1
-STAT_CON = 2
-STAT_INT = 3
-STAT_WIS = 4
-STAT_CHA = 5
-
-
-# Encapsulates current turn state
-class TurnState(object):
-    def __init__(self, combatant):
-        self.combatant = combatant
-        self.moves_left = combatant.move_speed
-        self.move_actions = 1
-        self.standard_actions = 1
-        self.fullround_actions = 1
-        self.move_5ft = 1
-        self.swift_actions = 1
-        self.opportunity_attacks = 1
-        # Attacked opportunity targets
-        self.opportunity_targets = []
-
-    # Use move action
-    def use_move(self):
-        self.move_5ft = 0
-        self.fullround_actions = 1
-
-    # Use standard action
-    def use_standard(self):
-        self.standard_actions = 0
-        self.fullround_actions = 0
-
-    # Use fullround action
-    def use_full_round(self):
-        self.standard_actions = 0
-        self.fullround_actions = 0
-        self.move_actions = 0
-
-    # Called on start of the turn
-    def on_round_start(self):
-        self.moves_left = self.combatant.move_speed
-        self.move_actions = 1
-        self.standard_actions = 1
-        self.fullround_actions = 1
-        self.move_5ft = 1
-        self.swift_actions = 1
-        self.opportunity_attacks = 1
-
-    # Called when combatant's turn is ended
-    def on_round_end(self):
-        # Attacked opportunity targets
-        self.opportunity_targets = []
-        self.opportunity_attacks = 1
-
-
-# Contains current combatant characteristics
-# Should be as flat as possible for better performance
-class Combatant(object):
-    """
-    :type _is_flat_footed: bool
-    :type _action_points: int
-    :type _current_initiative: int
-    """
-    def __init__(self):
-        self._current_initiative = 0
-        self.X = 0
-        self.Y = 0
-        self._stats = [0,0,0,0,0,0]
-        self._status_effects = {}
-        self._experience = 0
-        self._alignment = 0
-        self._BAB = 0
-        self._health_max = 0
-        self._health = 0
-        self._brain = None
-
-        # Save value from classes
-        self._save_fort_base = 0
-        self._save_ref_base = 0
-        self._save_will_base = 0
-        self._AC = 10
-        self.move_speed = 30
-        # Attack bonus for chosen maneuver/style
-        self._attack_bonus_style = 0
-        # Reach, in tiles. Depends on weapon
-        self._reach = 1
-
-    # Recalculate internal data
-    def recalculate(self):
-        self._health = self._health_max
-
-    def get_turn_state(self):
-        state = TurnState(self)
-        return state
-
-    # Get armor class
-    def get_AC(self):
-        return self._AC + self.dexterity_mofifier()
-
-    def recieve_damage(self, damage):
-        self._health -= damage
-        return self._health
-
-    # Link brain
-    def set_brain(self, brain):
-        self._brain = brain
-        brain.slave = self
-
-    def set_stats(self, str, dex, con, int, wis, cha):
-        self._stats = [str, dex, con, int, wis, cha]
-
-    def get_attack(self):
-        return self._BAB + self.strength_modifier()
-
-    # Check if character is dead
-    def is_dead(self):
-        return self._health <= -10
-
-    def ability(self, abilty_name):
-        """
-        returns the value of the ability with the given name
-
-        :param str abilty_name: The name of the ability
-        :rtype: int
-        """
-        return self.__ABILITIES[abilty_name.lower()]()
-
-    def constitution(self):
-        return self._stats[STAT_CON]
-
-    def charisma(self):
-        return self._stats[STAT_CHA]  # + age_modifier
-
-    def dexterity(self):
-        return self._stats[STAT_DEX]
-
-    def intellect(self):
-        return self._stats[STAT_INT]  # + age_modifier
-
-    def strength(self):
-        return self._stats[STAT_STR]  # - age_modifier
-
-    def wisdom(self):
-        return self._stats[STAT_WIS]  # + age_modifier
-
-    def constitution_mofifier(self):
-        """
-        returns the constitution modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.constitution())
-
-    def charisma_mofifier(self):
-        """
-        returns the charisma modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.charisma())
-
-    def dexterity_mofifier(self):
-        """
-        returns the dexterity modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.dexterity())
-
-    def intellect_mofifier(self):
-        """
-        returns the intellect modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.intellect())
-
-    def strength_modifier(self):
-        """
-        returns the strength modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.strength())
-
-    def wisdom_mofifier(self):
-        """
-        returns the wisdom modifier
-
-        :rtype: int
-        """
-        return core.ability_modifier(self.wisdom())
-
-    def reset_round(self):
-        """
-        Resets the round for this combatant
-        """
-        self._is_flat_footed = False
-        self._action_points = 3
-        self._current_initiative = self.initiative()
-
-
-    # Return combatant coordinates
-    def coords(self):
-        return (self.X, self.Y)
-
-    def current_initiative(self):
-        """
-        Returns the last rolled initiative
-        :rtype: int
-        """
-        return self._current_initiative
-
-    def initiative(self):
-        """
-        Should be implemented in subclasses. This method should return
-        the initiative value of the combatant
-
-        :rtype: int
-        """
-        pass
-
-    def next_action(self, battle):
-        """
-        Should be implemented in subclasses. This method should return
-        the next action until no action points are left. If no points
-        are left, then an EndTurnAction should be returned.
-
-        :param Battle battle: A reference to the battle taking place
-        :rtype: BattleAction
-        """
-
-    # Get generator
-    def gen_actions(self, battle, state):
-        if self._brain is not None:
-            # Retur
-            yield from self._brain.make_turn(battle, state)
-
-    # Overriden by character
-    def get_name(self):
-        return "Unknown"
 
 
 class BattleAction(object):

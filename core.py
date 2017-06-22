@@ -9,6 +9,15 @@ UNIT_WEIGHT_KILOGRAM = 0.45359237
 unit_length = UNIT_LENGTH_FEET
 unit_weight = UNIT_WEIGHT_POUND
 
+# Stat indexes
+STAT_STR = 0
+STAT_DEX = 1
+STAT_CON = 2
+STAT_INT = 3
+STAT_WIS = 4
+STAT_CHA = 5
+
+
 SIZE_CATEGORIES = [
     {
         "name": "fine",

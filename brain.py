@@ -39,10 +39,11 @@ class MoveAttackBrain(Brain):
         # 2. If enemy is in range - full round attack
         if battle.is_adjacent(self.slave, self.target):
             self.logger.debug("target is near, can attack")
-            if state.fullround_actions > 0:
-                yield FullRoundAttackAction(self.slave, self.target)
-            else:
-                yield StandardAttackAction(self.slave, self.target)
+            if self.target.is_consciousness():
+                if state.fullround_actions > 0:
+                    yield FullRoundAttackAction(self.slave, self.target)
+                else:
+                    yield StandardAttackAction(self.slave, self.target)
         else:
             self.logger.debug("farget %s is away. Finding path" % self.target.get_name())
             start = battle.tile_for_combatant(self.slave)
