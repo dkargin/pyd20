@@ -1,29 +1,6 @@
 import random
 
 
-class Die(object):
-
-    """
-    implements a die
-
-    :type sides: int
-    """
-
-    def __init__(self, sides):
-        """
-        Creates a Die object
-
-        :param int sides: The number of sides on the Die
-        """
-        self.sides = sides
-
-    def roll(self):
-        """
-        roll the die
-        """
-        return random.randint(1, self.sides)
-
-
 class Dice(object):
 
     """
@@ -32,11 +9,28 @@ class Dice(object):
     :type dice: Die[]
     """
 
-    def __init__(self):
+    def __init__(self, string=None):
         """
         Creates a Dice object. It models multiple Die objects.
         """
-        self.dice = list()
+        # Positive dice set
+        self.dice = {}
+
+        if string is not None:
+            parts = string.lower().split("d")
+            if len(parts) != 2:
+                return
+            if parts[0] == '':
+                amount = 1
+            else:
+                amount = int(parts[0])
+            sides = int(parts[1])
+            self.add_die(sides, amount)
+
+    def copy(self):
+        result = Dice()
+        result.dice = self.dice.copy()
+        return result
 
     @staticmethod
     def from_string(string):
@@ -58,14 +52,27 @@ class Dice(object):
             amount = int(parts[0])
         sides = int(parts[1])
         for i in range(amount):
-            instance.add_die(Die(sides))
+            instance.add_die(sides)
         return instance
 
-    def add_die(self, die):
+    @staticmethod
+    def roll_dice(sides, count=1):
+        """
+        roll the die
+        """
+        result = 0
+        for i in range(0, count):
+            result += random.randint(1, sides) if sides > 1 else 1
+        return result
+
+    def add_die(self, side, count = 1):
         """
         add a die to the dice group
         """
-        self.dice.append(die)
+        if side in self.dice:
+            self.dice[side] += count
+        else:
+            self.dice[side] = count
 
     def remove_die(self, die):
         """
@@ -73,15 +80,59 @@ class Dice(object):
         """
         self.dice.remove(die)
 
+    def __add__(self, other):
+        result = self.copy()
+        for side, count in other.dice.items():
+            result.add_die(side, count)
+        return result
+
+    # Get dice range, [min, max]
+    def get_range(self):
+        min = 0
+        max = 0
+        for side, count in self.dice.items():
+            min += count
+            max += side*count
+        return min, max
+
+    def __repr__(self):
+        return self.to_string()
+
+    def to_string(self):
+        result = ""
+        first = True
+        for side, count in self.dice.items():
+            str = "%d" % (count) if side == 1 else "%dd%d" % (count, side)
+            if count > 0:
+                if first:
+                    result += str
+                    first = False
+                else:
+                    result += "+" + str
+            elif count < 0:
+                result += "-" + str
+        return result
+
+    # Remove zero-count dices
+    def trim_zero(self):
+        zeros = []
+        # Collecting zeros
+        for side, count in self.dice:
+            if count == 0:
+                zeros.append(side)
+        # Removing zeros
+        for side in zeros:
+            del self.dice[side]
+
     def roll(self):
         """
         roll the dice group
-
         :rtype: int
         """
         roll_sum = 0
-        for die in self.dice:
-            roll_sum += die.roll()
+        for side, count in self.dice.items():
+            roll_sum += Dice.roll_dice(side, count)
+
         return roll_sum
 
 
@@ -103,9 +154,10 @@ def roll(dice_sting):
         return Dice.from_string(parts[0]).roll() - int(parts[1])
     return Dice.from_string(dice_sting).roll()
 
-d4 = Die(4)
-d6 = Die(6)
-d8 = Die(8)
-d10 = Die(10)
-d20 = Die(20)
-d100 = Die(100)
+d4 = Dice("d4")
+d6 = Dice("d6")
+d8 = Dice("d8")
+d10 = Dice("d10")
+d20 = Dice("d20")
+d100 = Dice("d100")
+

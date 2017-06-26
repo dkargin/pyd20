@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from character import *
+#from character import *
 
+'''
 Class.load("dnd/classes.json")
 Skill.load("dnd/skills.json")
 Race.load("dnd/races.json")
@@ -27,3 +28,4 @@ gnome = Race.with_name('gnome')
 half_elf = Race.with_name('half-elf')
 half_orc = Race.with_name('half-orc')
 halfling = Race.with_name('halfling')
+'''

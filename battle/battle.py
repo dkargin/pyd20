@@ -1,6 +1,6 @@
 import math
 import core
-from grid import PriorityQueue, Tile, PathFinder
+from grid import Tile, PathFinder
 import dice
 import logging
 from .combatant import Combatant, TurnState
@@ -20,7 +20,6 @@ class Battle(object):
     :type grid: grid.Grid
     :type _combatants: Combatant[]
     """
-
     def __init__(self, grid):
         """
         Create an instance of a battle.
@@ -97,6 +96,7 @@ class Battle(object):
                 dead.append(combatant)
             combatant.reset_round()
 
+        # Iterate all active combatants
         for combatant in self._combatants:
             if combatant.is_dead():
                 dead.append(combatant)
@@ -111,10 +111,10 @@ class Battle(object):
             iteration_limit = 20
             while not complete and iteration_limit > 0:
                 try:
-                    action = next(action_generator, turn_state)
+                    action = next(action_generator)
                     if action is None:
                         pass
-                    elif isinstance(action, BattleAction):
+                    else: #action, BattleAction):
                         action.execute(self, turn_state)
                     # TODO: process interrupts?
                 except StopIteration:
@@ -132,13 +132,20 @@ class Battle(object):
 
     # Check if combatant obj_b is whithin reach of combatant obj_a
     def is_adjacent(self, obj_a, obj_b):
-        return math.fabs(obj_a.X - obj_b.X) <= obj_a._reach and math.fabs(obj_a.Y - obj_b.Y) <= obj_a._reach
+        reach = obj_a.total_reach()
+        return math.fabs(obj_a.X - obj_b.X) <= reach and math.fabs(obj_a.Y - obj_b.Y) <= reach
 
     # Check if object is enemy
     def is_enemy(self, char_a, char_b):
         if char_a == char_b:
             return False
         return True
+
+    def path_to_range(self, src, target, range):
+        start = self.tile_for_combatant(src)
+        end = self.tile_for_combatant(target)
+        path = self.pathfinder.path_to_range(start, end, range)
+        return path
 
     # Find best enemy
     def find_enemy(self, char):
@@ -208,31 +215,4 @@ class Battle(object):
                 result += " | " + str(tile_str)
             result += " |\n"
         return result
-
-
-class BattleAction(object):
-    """
-    Models an action in a battle. This includes all actions that can
-    possibly taken during a battle including, but not limited to:
-    Moving, Attacking and using an Ability, Skill or Trait.
-    """
-    def __init__(self, combatant: Combatant):
-        self._combatant = combatant
-
-    # Get duration of the action
-    def duration(self):
-        return DURATION_STANDARD
-
-    def can_execute(self, combatant):
-        return False
-
-    def execute(self, battle: Battle, state: TurnState):
-        pass
-
-    def text(self):
-        return "generic action"
-
-    # Returns action text for display
-    def action_text(self):
-        return "%s executes %s" % (self._combatant.get_name(), self.text())
 

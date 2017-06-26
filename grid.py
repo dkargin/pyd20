@@ -70,6 +70,28 @@ class Grid(object):
         else:
             return None
 
+    def get_tile_range(self, center, distance, skip_center = False):
+        """
+        :param center: - center tile
+        :param distance: - tile range
+        :return: [] array of selected tiles
+        """
+        tiles = []
+        for y in range(center.y - distance, center.y + distance + 1):
+            for x in range(center.x - distance, center.x + distance + 1):
+                tile = self.get_tile(x,y)
+                if skip_center and tile.x == center.x and tile.y == center.y:
+                    continue
+                if tile is not None:
+                    tiles.append(tile)
+        return tiles
+
+    # Set terrain type for a tile
+    def set_terrain(self, x, y, type):
+        tile = self.get_tile(x,y)
+        tile.set_terrain(type)
+
+    # Get tile reference
     def get_tile(self, x, y):
         """
         returns the tile at position x/y
@@ -82,6 +104,7 @@ class Grid(object):
             return self.__grid[x + y * self._width]
         return None
 
+    # Get tile area
     def get_adjacent_tiles(self, tile):
         """
         returns tiles that are adjacent to the tile
@@ -132,12 +155,12 @@ class Grid(object):
 def default_cost(src, dst):
     return math.sqrt((src.x-dst.x)**2 + (src.y - dst.y)**2)
 
+
 # Does pathfinding stuff
 class PathFinder(object):
     def __init__(self, grid):
         self.grid = grid
         self.open_list = []
-        #self.closed_list = []
         self.search_index = 0
 
     def expand_tile(self, tile, costfn = default_cost):
@@ -153,31 +176,104 @@ class PathFinder(object):
                 continue
             next._g = tile._g + costfn(tile, next)
             next._predecessor = tile
-            next._pathstate = self.search_index
             self.push_node(next)
             #self.open_list.append(next, next._g)
         pass
 
     def push_node(self, tile):
+        tile._pathstate = self.get_wave_index()
         heapq.heappush(self.open_list, (tile._g, tile))
 
     def pop_node(self):
         return heapq.heappop(self.open_list)[1]
 
+    # Compile path
+    def compile_path(self, start):
+        path = Path(self.grid)
+        # Building reversed path
+        current_tile = start
+        path.append(start)
+        while current_tile._predecessor is not None:
+            current_tile = current_tile._predecessor
+            if current_tile != start:
+                path.append(current_tile)
+        # Flipping back reversed path
+        path.reverse()
+        return path
+
+    def path_to(self, start_tile, dest_functor):
+        self.search_index += 2
+
+        start_tile._g = 0
+        start_tile._predecessor = None
+        self.open_list = []
+        self.push_node(start_tile)
+
+        iteration = 0
+
+        while len(self.open_list) > 0:
+            # cost, current_tile = self.open_list.pop()
+            cost, current_tile = heapq.heappop(self.open_list)
+            if dest_functor(current_tile):
+                return self.compile_path(current_tile)
+
+            self.expand_tile(current_tile)
+            iteration += 1
+        return None
+
+    def get_wave_index(self):
+        return self.search_index
+
+    def get_target_index(self):
+        return self.search_index+1
+
+    def path_to_range(self, start_tile, dest_tile, range):
+        """
+        Calculate path to any tile in range of dest_tile
+        :param start_tile: starting tile
+        :param dest_tile: destination tile
+        :param range: minimal range to achieve
+        :return:
+        """
+        self.search_index += 2
+        # Mark destination tiles
+        target_tiles = self.grid.get_tile_range(dest_tile, range)
+        for tile in target_tiles:
+            tile._target_mark = self.get_target_index()
+
+        start_tile._g = 0
+        start_tile._predecessor = None
+        # self.open_list = PriorityQueue([start_tile])
+        self.open_list = []
+        self.push_node(start_tile)
+
+        iteration = 0
+
+        while len(self.open_list) > 0:
+            # cost, current_tile = self.open_list.pop()
+            cost, current_tile = heapq.heappop(self.open_list)
+            # Check if we have reached our destination
+            if current_tile._target_mark == self.get_target_index():
+                return self.compile_path(current_tile)
+
+            self.expand_tile(current_tile)
+            iteration += 1
+        return None
+
+
     def path_between_tiles(self, start_tile, dest_tile):
         """
-        implements pathfinding using A*
+        Get direct path between tiles
+        Implemented pathfinding using A*
 
         :rtype: Path
         """
 
-        self.search_index += 1
+        self.search_index += 2
 
-        start_tile._pathstate = self.search_index
         start_tile._g = 0
         start_tile._predecessor = None
 
-        #self.open_list = PriorityQueue([start_tile])
         self.open_list = []
         self.push_node(start_tile)
 
@@ -187,15 +283,8 @@ class PathFinder(object):
             #cost, current_tile = self.open_list.pop()
             cost, current_tile = heapq.heappop(self.open_list)
             if current_tile == dest_tile:
-                path = Path(self.grid)
-                current_tile = dest_tile
-                path.append(dest_tile)
-                while current_tile._predecessor is not None:
-                    current_tile = current_tile._predecessor
-                    if current_tile != start_tile:
-                        path.append(current_tile)
-                path.reverse()
-                return path
+                return self.compile_path(current_tile)
+
             self.expand_tile(current_tile)
             iteration += 1
         return None
@@ -230,6 +319,7 @@ class Tile(object):
         self._terrain = TERRAIN_FREE
         # Pathfinder search index
         self._pathstate = 0
+        self._target_mark = 0
         # Objects that threaten this tile
         self._threaten = []
 
@@ -240,6 +330,12 @@ class Tile(object):
         :rtype: bool
         """
         return len(self._occupation) == 0 and self._terrain == TERRAIN_FREE
+
+    def coords(self):
+        return (self.x, self.y)
+
+    def set_terrain(self, type):
+        self._terrain = type
 
     def has_occupation(self, thing):
         """
@@ -286,8 +382,6 @@ class Tile(object):
 
     def __hash__(self):
         return id(self)
-
-
 
 
 class PriorityQueue(object):

@@ -2,6 +2,7 @@ import math
 import logging
 from battle.actions import *
 
+
 class Brain(object):
     def __init__(self):
         self.slave = None
@@ -27,6 +28,7 @@ class MoveAttackBrain(Brain):
         Brain.__init__(self)
         self.logger = logging.getLogger("brain")
 
+
     def make_turn(self, battle, state: TurnState):
         # 1. If no enemy - find it
         if self.target is None:
@@ -34,7 +36,7 @@ class MoveAttackBrain(Brain):
             self.target = battle.find_enemy(self.slave)
 
         if self.target is None:
-            return []
+            yield WaitAction(self.slave)
 
         # 2. If enemy is in range - full round attack
         if battle.is_adjacent(self.slave, self.target):
@@ -46,9 +48,7 @@ class MoveAttackBrain(Brain):
                     yield StandardAttackAction(self.slave, self.target)
         else:
             self.logger.debug("farget %s is away. Finding path" % self.target.get_name())
-            start = battle.tile_for_combatant(self.slave)
-            end = battle.tile_for_combatant(self.target)
-            path = battle.pathfinder.path_between_tiles(start, end)
+            path = battle.path_to_range(self.slave, self.target, self.slave.total_reach())
             self.logger.debug("found path of %d feet length" % path.length())
             yield MoveAction(self.slave, path)
 
@@ -60,5 +60,4 @@ class MoveAttackBrain(Brain):
         :param battlefield:
         :return:
         '''
-        return
 

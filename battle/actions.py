@@ -1,14 +1,41 @@
 #!/usr/local/env python3
 from .battle import *
 
+class BattleAction(object):
+    """
+    Models an action in a battle. This includes all actions that can
+    possibly taken during a battle including, but not limited to:
+    Moving, Attacking and using an Ability, Skill or Trait.
+    """
+    def __init__(self, combatant: Combatant):
+        self._combatant = combatant
+
+    # Get duration of the action
+    def duration(self):
+        return DURATION_STANDARD
+
+    def can_execute(self, combatant):
+        return False
+
+    def execute(self, battle: Battle, state: TurnState):
+        pass
+
+    def text(self):
+        return "generic action"
+
+    # Returns action text for display
+    def action_text(self):
+        return "%s executes %s" % (self._combatant.get_name(), self.text())
+
 
 class WaitAction(BattleAction):
     """
     Implements an action that does nothing
     """
 
-    def __init__(self):
-        super(WaitAction, self).__init__()
+    def __init__(self, combatant):
+        super(WaitAction, self).__init__(combatant)
+        pass
 
     def execute(self, battle, state):
         pass
@@ -41,7 +68,7 @@ class FullRoundAttackAction(BattleAction):
 
     def execute(self, battle: Battle, state: TurnState):
         attack_roll = dice.d20.roll() + self._combatant.get_attack()
-        if attack_roll > self._target.get_AC():
+        if attack_roll > self._target.get_AC(self._target):
             damage = dice.d6.roll() + self._combatant.strength_modifier()
             battle.deal_damage(self._combatant, self._target, damage)
         else:
