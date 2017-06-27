@@ -31,7 +31,7 @@ class Battle(object):
         self._combatants = []
         self.round = 0
 
-    def add_combatant(self, combatant, x, y):
+    def add_combatant(self, combatant, x, y, **kwargs):
         """
         Adds a combatant to the battle. This is typically a Character or a Monster.
         If the grid has no tile at the specified position, the combatant will not
@@ -45,6 +45,7 @@ class Battle(object):
         if position is None:
             return
         position.add_occupation(combatant)
+        combatant.set_faction(kwargs.get('faction', 'none'))
         combatant.X = x
         combatant.Y = y
         combatant.recalculate()
@@ -90,7 +91,7 @@ class Battle(object):
         """
         dead = []
         self.round += 1
-        print("Starting round %d" % self.round)
+        #print("Starting round %d" % self.round)
         for combatant in self._combatants:
             if combatant.is_dead():
                 dead.append(combatant)
@@ -102,7 +103,7 @@ class Battle(object):
                 dead.append(combatant)
             elif not combatant.is_consciousness():
                 continue
-            print(combatant, "'s turn")
+            #print(combatant, "'s turn")
             turn_state = combatant.get_turn_state()
             turn_state.on_round_start()
             complete = False
@@ -136,10 +137,13 @@ class Battle(object):
         return math.fabs(obj_a.X - obj_b.X) <= reach and math.fabs(obj_a.Y - obj_b.Y) <= reach
 
     # Check if object is enemy
-    def is_enemy(self, char_a, char_b):
+    def is_combatant_enemy(self, char_a, char_b):
         if char_a == char_b:
             return False
-        return True
+        return self.is_faction_enemy(char_a.get_faction(),char_b.get_faction())
+
+    def is_faction_enemy(self, faction_a, faction_b):
+        return faction_a != faction_b
 
     def path_to_range(self, src, target, range):
         start = self.tile_for_combatant(src)
@@ -151,7 +155,7 @@ class Battle(object):
     def find_enemy(self, char):
         enemies = []
         for combatant in self._combatants:
-            if combatant.is_consciousness() and self.is_enemy(char, combatant):
+            if combatant.is_consciousness() and self.is_combatant_enemy(char, combatant):
                 enemies.append(combatant)
 
         if len(enemies) > 0:

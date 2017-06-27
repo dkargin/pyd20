@@ -13,7 +13,7 @@ class Weapon(Item):
         # Monster size, which considers this weapon 'Light'
         self._light = kwargs.get("light", SIZE_MEDIUM)
         # Can be gripped by two hands
-        self._twohanded = kwargs.get("twohand", False)
+        self._twohanded = kwargs.get("twohanded", False)
         # Critical hit info
         self.crit_mult = kwargs.get("crit_mult", 2)
         self.crit_range = kwargs.get("crit_range", 1)

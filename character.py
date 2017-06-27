@@ -68,7 +68,8 @@ class Character(Combatant):
         self._weapon_off = None
 
     def __repr__(self):
-        return "<" + self._name + " lvl" + str(self.current_level()) + ">"
+        return "<" + self._name + ">"
+        #return "<" + self._name + " lvl" + str(self.current_level()) + ">"
 
     # Calculate effective level
     def current_level(self):

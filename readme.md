@@ -46,38 +46,32 @@ Feats:
 2. Статус выбраных участников (Character sheet)
 3. 
 
-Кейс 1. Два воина: двуручный меч против щит-меч
-Кейс 2. Рейнджер против двуручного, charge
-
 Что сделано:
 
-1. Стандартная атака
-1. Перемещение
-1. Полнораундовая атака замещена стандартным действием
-1. Базовые классовые прогрессии: BAB, saving throw, HP
-
-
+1. Basic actions:
+    - Standard attack
+    - Movement
+1. Basic class progression internals: BAB, saving throw, HP
+1. Basic weapons, armors and shields and its stats
+1. Full round attack + TWF. Though
 
 # Ближайший план #
 
-1. Разделить combatant и Character. Character - содержит "лист персонажа". Combatant - упрощёное представление. А оно точно так надо?
-1. Одеть персонажей (броня, оружие, щит)
-    1. написать список брони, заполнить вручную
-    1. добавить AC от брони
-1. Полнораундовая атака
-1. TWF
 1. Атаки по возможности
-1. Стили атак:
-    1. defensively
-    1. power attack
-    1. шквал ударов
-1. Особые атаки
-    1. trip
-    1. disarm
-1.
+1. Movement speed and armor penalty
+1. Animations:
+    - movement
+    - attack
+1. Feats:
+    1. Rage
+    1. Monk wis to AC
 
-Полнораундовая атака: [BAB series]
-TWF-1: [BAB series -2] + [Offhand-2]
-TWF-2: [BAB series -2] + [Offhand-2] + [Offhand-7]
-TWF-3: [BAB series -2] + [Offhand-2] + [Offhand-7]
+    Flurry of blows
+    Rage
+    Power attack
+
+
+# Brain #
+
+Brain update is implemented as generator/coroutine function. It iteratively returns next 'mini-action'. After mini-action is resolved, control returns to generator
 

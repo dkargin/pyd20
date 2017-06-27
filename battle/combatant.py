@@ -27,8 +27,17 @@ class Combatant(object):
     def __init__(self, name, **kwargs):
         self._name = name
         self._current_initiative = 0
+
+        # Current tile coordinates
         self.X = 0
         self.Y = 0
+
+        # Current visual coordinates. Most of time it is equal to tile coordinates
+        self.visual_X = 0.0
+        self.visual_Y = 0.0
+
+        self._faction = "none"
+
         self._stats = [10, 10, 10, 10, 10, 10]
 
         # List of current status effects, mapping effect->duration
@@ -174,25 +183,35 @@ class Combatant(object):
     def do_attack(self, attack_desc):
         pass
 
+    # Calculate total weapon reach
     def total_reach(self):
         reach = self._size
         # TODO: add weapon modifier
         return reach
+
+    # Set combatant faction
+    def set_faction(self, faction):
+        self._faction = faction
+
+    def get_faction(self):
+        return self._faction
 
     # Override current stats
     def set_stats(self, str, dex, con, int, wis, cha):
         self._stats = [str, dex, con, int, wis, cha]
 
     def print_character(self):
-        str = "Name: %s\n" % self.get_name()
-        str+= "HP=%d/%d AC=%d ATT=%d\n" % (self.health(), self._health_max, self.get_AC(None), self.get_attack())
-        str+= "fort=%d ref=%d will=%d\n" % (self.save_fort(), self.save_ref(), self.save_will())
+        text = "Name: %s of %s\n" % (self.get_name(), str(self.get_faction()))
+        text+= "STR=%d;DEX=%d;CON=%d;INT=%d;WIS=%d;CHA=%d\n"%tuple(self._stats)
+        text+= "HP=%d/%d AC=%d ATT=%d\n" % (self.health(), self._health_max, self.get_AC(None), self.get_attack())
+        text+= "fort=%d ref=%d will=%d\n" % (self.save_fort(), self.save_ref(), self.save_will())
+
         chain = self.generate_bab_chain()
         if len(chain) > 0:
-            str+= "Cycle: \n"
+            text+= "Cycle: \n"
             for strike in chain:
-                str += "\t%s\n" % strike.text()
-        return str
+                text += "\t%s\n" % strike.text()
+        return text
 
     # Return effective health
     def health(self):
@@ -226,6 +245,10 @@ class Combatant(object):
         else:
             damage_mod += int(str_mod)
 
+        if self._has_finisse:
+            attack += max(str_mod, self.dexterity_mofifier())
+        else:
+            attack += str_mod
         '''
         Damage bonus types:
         str/2, str, str3/2

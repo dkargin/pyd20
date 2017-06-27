@@ -32,11 +32,15 @@ class MoveAttackBrain(Brain):
     def make_turn(self, battle, state: TurnState):
         # 1. If no enemy - find it
         if self.target is None:
-            print("Has no target. Finding")
             self.target = battle.find_enemy(self.slave)
+            if self.target is not None:
+                print("%s found enemy: %s" %(self.slave.get_name(), str(self.target)))
+
 
         if self.target is None:
+            print("%s has no targets" % self.slave.get_name())
             yield WaitAction(self.slave)
+            return
 
         # 2. If enemy is in range - full round attack
         if battle.is_adjacent(self.slave, self.target):

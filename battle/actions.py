@@ -1,6 +1,7 @@
 #!/usr/local/env python3
 from .battle import *
 
+
 class BattleAction(object):
     """
     Models an action in a battle. This includes all actions that can
@@ -72,7 +73,7 @@ class FullRoundAttackAction(BattleAction):
             damage = dice.d6.roll() + self._combatant.strength_modifier()
             battle.deal_damage(self._combatant, self._target, damage)
         else:
-            print("%s misses %s with roll=%d"% (str(self._combatant), str(self._target), attack_roll))
+            print("%s misses %s with roll=%d"% (self._combatant.get_name(), str(self._target), attack_roll))
         # Mark that we have used an action
         state.use_full_round()
 
@@ -167,7 +168,6 @@ class MoveAction(BattleAction):
 
     def can_execute(self, combatant, state: TurnState):
         return state.move_actions > 0 and state.moves_left > 0
-
 
     def text(self):
         return "moves to %s" % self._last_target

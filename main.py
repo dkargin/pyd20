@@ -60,14 +60,11 @@ def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
 
 char2 = make_shield_fighter('Roy')
 
-char3 = make_twf_fighter('Dancey')
+battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
+battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
 
 print(char1.print_character())
 print(char2.print_character())
-print(char3.print_character())
-
-battle.add_combatant(char1, *grid.get_free_tile())
-battle.add_combatant(char2, *grid.get_free_tile())
 
 #battle.add_combatant(char1, center_x - 5, center_y)
 #battle.add_combatant(char2, center_x + 5, center_y)
