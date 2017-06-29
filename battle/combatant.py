@@ -1,6 +1,7 @@
 from core import *
 import dice
 import dnd.weapon
+from .entity import Entity
 
 
 # Attack description
@@ -46,15 +47,11 @@ class AttackDesc:
 
 # Contains current combatant characteristics
 # Should be as flat as possible for better performance
-class Combatant(object):
+class Combatant(Entity):
     def __init__(self, name, **kwargs):
+        Entity.__init__(self, **kwargs)
         self._name = name
         self._current_initiative = 0
-
-        # Current tile coordinates
-        self.X = 0
-        self.Y = 0
-
         # Current visual coordinates. Most of time it is equal to tile coordinates
         self.visual_X = 0.0
         self.visual_Y = 0.0
@@ -94,8 +91,6 @@ class Combatant(object):
         self._attack_bonus_style = 0
         # Damage bonus can differ for each weapon
         self._damage_bonus_style = 0
-        # Body size, in tiles
-        self._size = 1
         # Precalculated full round attack set
         self._weapon_strikes = []
         self._natural_strikes = {}
@@ -116,12 +111,8 @@ class Combatant(object):
         self._has_zen_archery = False
         self._twf_skill = 0
 
-        self._threatened_tiles = []
-
         self._feats = []
         self._events = DnDEventManager()
-
-
 
         # Current path. For visualization
         self.path = None
@@ -162,7 +153,6 @@ class Combatant(object):
             if source in self._temp_hp:
                 self._temp_hp
 
-
     def get_name(self):
         return self._name
 
@@ -178,8 +168,6 @@ class Combatant(object):
             return False
         self._equipped[slot] = item
         item.on_equip(self)
-        #if self._armor is not None:
-        #    self._carry_weight_limit -= self._armor.weight()
         self._carry_weight_limit += item.weight()
 
     # Get armor class
@@ -214,6 +202,23 @@ class Combatant(object):
     # Execute an attack
     def do_attack(self, attack_desc):
         pass
+
+    # Check if combatant has near reach
+    def has_reach_near(self):
+        weapon = self.get_main_weapon()
+        if weapon is not None and weapon.has_reach_near():
+            return True
+        return False
+
+    # Check if combatant has far reach
+    def has_reach_far(self):
+        weapon = self.get_main_weapon()
+        if weapon is not None and weapon.has_reach_far():
+            return True
+        return False
+
+    def natural_reach(self):
+        return self._natural_reach
 
     # Calculate total weapon reach
     def total_reach(self):
@@ -437,7 +442,7 @@ class Combatant(object):
 
     # Return combatant coordinates
     def coords(self):
-        return (self.X, self.Y)
+        return (self.x, self.y)
 
     def current_initiative(self):
         """

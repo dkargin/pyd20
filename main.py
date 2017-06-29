@@ -26,7 +26,7 @@ def draw_cross(x, y, size):
 
 battle = Battle(grid)
 
-char1 = Character("Bob", brain=brain.MoveAttackBrain())
+char1 = Character("Bob", size=2, brain=brain.MoveAttackBrain())
 char1.set_stats(18, 13, 16, 10, 10, 10)
 char1.wear_item(dnd.armor.full_plate, core.ITEM_SLOT_ARMOR)
 char1.wear_item(dnd.weapon.glaive, core.ITEM_SLOT_MAIN)

@@ -15,6 +15,9 @@ class Brain(object):
     def make_turn(self, battle, state):
         pass
 
+    def react_opportunity(self, combatant, action):
+        pass
+
 
 # Object is controlled by keyboard input
 class ManualBrain(Brain):
@@ -43,7 +46,7 @@ class MoveAttackBrain(Brain):
             return
 
         # 2. If enemy is in range - full round attack
-        if battle.is_adjacent(self.slave, self.target):
+        if self.slave.is_adjacent(self.target):
             self.logger.debug("target is near, can attack")
             if self.target.is_consciousness():
                 # Mark that we have used an action

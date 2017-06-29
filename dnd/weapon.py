@@ -49,6 +49,12 @@ class Weapon(Item):
     def has_reach(self):
         return self._reach > REACH_NEAR
 
+    def has_reach_near(self):
+        return (self._reach & REACH_NEAR) is not 0
+
+    def has_reach_far(self):
+        return (self._reach & REACH_FAR) is not 0
+
     # Check if that weapon is light for that combatant
     def is_light(self, combatant):
         return self._light <= combatant._size

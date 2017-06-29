@@ -47,12 +47,12 @@ class Battle(object):
             return
 
         combatant.set_faction(kwargs.get('faction', 'none'))
-        combatant.X = x
-        combatant.Y = y
+        combatant.x = x
+        combatant.y = y
         combatant.recalculate()
         self._combatants.append(combatant)
-        self.grid.threaten(combatant, position, combatant.total_reach())
-        position.add_occupation(combatant)
+
+        self.grid.register_entity(combatant)
 
     def remove_combatant(self, combatant):
         """
@@ -62,6 +62,7 @@ class Battle(object):
         if tile is None:
             pass
         self._combatants.remove(combatant)
+        self.grid.unregister_entity(combatant)
 
     def deal_damage(self, source, victim, damage):
         new_hp = victim.recieve_damage(damage)
@@ -72,13 +73,14 @@ class Battle(object):
             print("%s is unconsciousness" % str(victim))
 
     # Gather attacks of opportinity, provoked by combatant, standing at specified tile
-    def opportunity_provoke(self, combatant: Combatant, tile: Tile, action):
+    def opportunity_provoke(self, combatant: Combatant, action):
         AoOs = []
         is_enemy = lambda a: self.is_combatant_enemy(a, combatant)
-        if tile.is_threatened(combatant):
-            for attacker in filter(is_enemy, tile._threaten):
-                # self.__check_AoO_move(provoke, combatant)
-                pass
+        for tile in combatant._occupied_tiles:
+            if tile.is_threatened(combatant):
+                for attacker in filter(is_enemy, tile.threaten):
+                    # self.__check_AoO_move(provoke, combatant)
+                    AoOs.append(attacker)
         return AoOs
 
     # Process turn for selected combatant
@@ -134,15 +136,6 @@ class Battle(object):
             self.combatant_make_turn(combatant)
 
         print(" ----==== Round %d is complete ====---- " % self.round)
-
-    # Return distance between tiles
-    def distance_tiles(self, obj_a, obj_b):
-        return math.sqrt((obj_a.X - obj_b.X) ** 2 + (obj_a.Y - obj_b.Y) ** 2)
-
-    # Check if combatant obj_b is whithin reach of combatant obj_a
-    def is_adjacent(self, obj_a, obj_b):
-        reach = obj_a.total_reach()
-        return math.fabs(obj_a.X - obj_b.X) <= reach and math.fabs(obj_a.Y - obj_b.Y) <= reach
 
     # Check if object is enemy
     def is_combatant_enemy(self, char_a, char_b):
@@ -200,7 +193,7 @@ class Battle(object):
             return self.tile_for_position(x, y)
 
     def tile_for_combatant(self, combatant) -> Tile:
-        return self.tile_for_position(combatant.X, combatant.Y)
+        return self.tile_for_position(combatant.x, combatant.y)
         #for tile in self.grid.get_tiles():
         #    if tile.has_occupation(combatant):
         #        return tile
@@ -210,8 +203,18 @@ class Battle(object):
         return self.grid.get_tile(x, y)
 
     def tile_threatened(self, tile, combatant):
-        for u in tile._threaten:
+        if tile == None:
+            return False
+        for u in tile.threaten:
             if self.is_combatant_enemy(u, combatant):
+                return True
+        return False
+
+    def position_threatened(self, combatant, x,y):
+        dx = x - combatant.x
+        dy = y - combatant.y
+        for tile in combatant._occupied_tiles:
+            if self.tile_threatened(self.tile_for_position(tile.x + dx, tile.y + dy), combatant):
                 return True
         return False
 
@@ -232,7 +235,7 @@ class Battle(object):
             if tile == tile_src:
                 continue
             tiles_moved.append(tile)
-            if self.tile_threatened(tile, combatant):
+            if self.position_threatened(combatant, tile.x, tile.y):
                 yield battle.actions.MoveAction(combatant, tiles_moved)
                 tiles_moved = []
 

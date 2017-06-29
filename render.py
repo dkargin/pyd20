@@ -8,6 +8,8 @@ TILESIZE=16
 # set up the colors
 BLACK = (  0,   0,   0)
 WHITE = (255, 255, 255)
+GREY0 = ( 64,  64,  64)
+GREY1 = (128, 128, 128)
 RED   = (255,   0,   0)
 GREEN = (  0, 255,   0)
 BLUE  = (  0,   0, 255)
@@ -64,16 +66,16 @@ class Renderer:
 
         # Draw vertical lines
         for col in range(grid.get_width()+1):
-            pygame.draw.line(self.surface, WHITE, (self.grid_left + col * TILESIZE, self.grid_top), (self.grid_left + col * TILESIZE, self.grid_bottom))
+            pygame.draw.line(self.surface, GREY0, (self.grid_left + col * TILESIZE, self.grid_top), (self.grid_left + col * TILESIZE, self.grid_bottom))
 
         # Draw horizontal lines
         for row in range(grid.get_height()+1):
-            pygame.draw.line(self.surface, WHITE, (self.grid_left, self.grid_top + row * TILESIZE), (self.grid_right, self.grid_top + row * TILESIZE))
+            pygame.draw.line(self.surface, GREY0, (self.grid_left, self.grid_top + row * TILESIZE), (self.grid_right, self.grid_top + row * TILESIZE))
 
         # Draw tiles
         for tile in grid.get_tiles():
             color = WHITE
-            if tile._terrain != 0:
+            if tile.terrain != 0:
                 rect = (*tile.coords(), 1, 1)
                 pygame.draw.rect(self.surface, color, self.grid_to_screen(rect))
 
@@ -99,18 +101,15 @@ class Renderer:
         return text_surface
 
     def draw_combatant(self, u: Combatant):
-        coord = self.grid_to_screen((u.X + 0.5, u.Y + 0.5))
+
         color = BLUE
 
-        # pygame.draw.rect(self.surface, coord, row * TILESIZE, TILESIZE, TILESIZE)
-        pygame.draw.circle(self.surface, color, coord, int(TILESIZE / 2))
-        # pygame.draw.
+        size = u.get_size()
+        coord = self.grid_to_screen((u.x + size * 0.5, u.y + size * 0.5))
 
-        text_surface = self.get_text(u.get_name())
-        if text_surface:
-            text_width = text_surface.get_width()
-            text_coord = (coord[0]-text_width/2, coord[1]-TILESIZE)
-            self.surface.blit(text_surface, text_coord)
+        # pygame.draw.rect(self.surface, coord, row * TILESIZE, TILESIZE, TILESIZE)
+        pygame.draw.circle(self.surface, color, coord, int(size*TILESIZE *0.5))
+        # pygame.draw.
 
         if self._draw_path and u.path is not None:
             self.draw_path(u.path)
@@ -118,6 +117,12 @@ class Renderer:
         for tile in u._threatened_tiles:
             coord_cur = self.grid_to_screen((tile.x + 0.5, tile.y + 0.5))
             pygame.draw.line(self.surface, RED, coord, coord_cur)
+
+        text_surface = self.get_text(u.get_name())
+        if text_surface:
+            text_width = text_surface.get_width()
+            text_coord = (coord[0] - text_width / 2, coord[1] - size * TILESIZE)
+            self.surface.blit(text_surface, text_coord)
 
     def draw_combatants(self, combatants):
         for u in combatants:

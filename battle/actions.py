@@ -173,7 +173,7 @@ class MoveAction(BattleAction):
         # 5ft step still can provoke
         # Not moving still can provoke
         success = True
-        AoOs = battle.opportunity_provoke(combatant, start, self)
+        AoOs = battle.opportunity_provoke(combatant, self)
 
         for attack in AoOs:
             # TODO: roll AoO and check if it really interrupts
@@ -182,13 +182,12 @@ class MoveAction(BattleAction):
         if not success:
             return False
 
-        start.remove_occupation(combatant)
-        battle.grid.unthreaten(combatant)
+        battle.grid.unregister_entity(combatant)
 
-        combatant.X = self._finish.x
-        combatant.Y = self._finish.y
-        self._finish.add_occupation(self._finish)
-        battle.grid.threaten(combatant, self._finish, combatant.total_reach())
+        combatant.x = self._finish.x
+        combatant.y = self._finish.y
+
+        battle.grid.register_entity(combatant)
         return True
 
     def can_execute(self, combatant, state: TurnState):
