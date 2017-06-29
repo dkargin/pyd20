@@ -1,6 +1,45 @@
 #!/usr/local/env python3
 from .battle import *
 
+ACTION_RESULT_SUCCESS = 0
+ACTION_RESULT_FAILED = 1
+
+"""
+BattleAction - elementary action. It is executed separately and cannot interrupted.
+This action cannot be 'half done'. It is either succeded, or failed
+
+Some action can be groupped in action sequence. Action sequence can be interrupted. AI shoud decide
+in that case what to do next. TurnState will contain information about current 'time' limitations
+
+Elementary actions:
+ - Move between unthreatened tiles
+ - Attack
+ - Cast a spell
+ - Jump. Part of a move
+ - Tumble. Part of move?
+ - Stand up
+ - Use an item
+
+Sequences:
+ - Fullround attack: action sequence {Attack1, Attack2, Attack3}
+    - Some attacks can provide additional 'free' attacks
+ - Charge: {Move, Attack}
+ - ChargePounce: {Move, Attack1, Attack2, ...}
+ - SpringAttack/MoveAndShoot: {Move, Attack, Move}
+ - BoundingAssault: {Move, Attack, Move}
+
+
+
+Update combatants
+           -> brain.gen_actions
+    action <- Action1
+                        -> execute
+                            <- action2
+    action <- Action2
+    acrion <- Action3...
+
+"""
+
 
 class BattleAction(object):
     """
@@ -28,29 +67,21 @@ class BattleAction(object):
     def action_text(self):
         return "%s executes %s" % (self._combatant.get_name(), self.text())
 
+    # If action is 'move' action
+    def is_move_action(self):
+        return False
 
-class WaitAction(BattleAction):
+    # If action is 'attack' action
+    def is_attack_action(self):
+        return False
+
+
+class EmptyAction(BattleAction):
     """
-    Implements an action that does nothing
-    """
-
-    def __init__(self, combatant):
-        super(WaitAction, self).__init__(combatant)
-        pass
-
-    def execute(self, battle, state):
-        pass
-
-    def text(self):
-        return "waits"
-
-
-class EndTurnAction(BattleAction):
-    """
-    Implements the action that ends the turn
+    An empty animation action. Returned when there are no other actions available
     """
     def __init__(self):
-        super(EndTurnAction, self).__init__()
+        super(EmptyAction, self).__init__()
 
     def execute(self, battle: Battle, state: TurnState):
         pass
@@ -59,112 +90,106 @@ class EndTurnAction(BattleAction):
         return "ends its turn"
 
 
-class FullRoundAttackAction(BattleAction):
+class EndTurnAction(BattleAction):
     """
-    Implements full round attack
+    An empty animation action. Returned when there are no other actions available
     """
-    def __init__(self, combatant, target):
-        super(FullRoundAttackAction, self).__init__(combatant)
-        self._target = target
+
+    def __init__(self, combatant):
+        super(EndTurnAction, self).__init__(combatant)
 
     def execute(self, battle: Battle, state: TurnState):
-        attack_roll = dice.d20.roll() + self._combatant.get_attack()
-        if attack_roll > self._target.get_AC(self._target):
-            damage = dice.d6.roll() + self._combatant.strength_modifier()
-            battle.deal_damage(self._combatant, self._target, damage)
-        else:
-            print("%s misses %s with roll=%d"% (self._combatant.get_name(), str(self._target), attack_roll))
-        # Mark that we have used an action
-        state.use_full_round()
+        pass
 
     def text(self):
-        return " makes full round attack at %s" % self._target
-
-    # Get duration of the action
-    def duration(self):
-        return DURATION_FULLROUND
+        return "ends its turn"
 
 
-class StandardAttackAction(BattleAction):
+# Single attack
+class AttackAction(BattleAction):
     """
-    Implements full round attack
+    Implements animation for a single attack
     """
-    def __init__(self, combatant, target: Combatant):
-        super(StandardAttackAction, self).__init__(combatant)
-        self._target = target
+    def __init__(self, combatant, attack_desc: Combatant):
+        super(AttackAction, self).__init__(combatant)
+        self._desc = attack_desc
 
     def execute(self, battle: Battle, state: TurnState):
-        attack_roll = dice.d20.roll() + self._combatant.get_attack()
-        if attack_roll > self._target.get_AC():
-            damage = dice.d6.roll() + self._combatant.strength_modifier()
-            battle.deal_damage(self._combatant, self._target, damage)
-        # Mark that we have used an action
-        state.use_standard()
+        desc = self._desc
+        target = desc.get_target()
+        attack_roll = desc.roll_attack()
+        crit_confirm = desc.roll_attack()
+
+        # TODO: run events for on_strike_begin(desc, target)
+        AC = target.get_touch_ac(target) if desc.touch else target.get_AC(target)
+
+        if desc.is_critical(attack_roll):
+            # TODO: run events for critical hit
+            pass
+
+        if attack_roll >= AC:
+            damage = desc.roll_damage()
+            print("%s hits %s with roll %d vs AC=%d" % (self._combatant.get_name(), target.get_name(), attack_roll, AC))
+            battle.deal_damage(self._combatant, target, damage)
+        else:
+            print ("%s misses %s with roll %d vs AC=%d" % (self._combatant.get_name(), target.get_name(), attack_roll, AC))
+            # TODO: run events for on_strike_finish()
 
     def text(self):
         return " attacks %s" % self._target
 
+    def is_attack_action(self):
+        return True
 
-class ChargeAttack(BattleAction):
-    """
-    Implements charge attack
-    """
-    def __init__(self, combatant, target):
-        super(ChargeAttack, self).__init__(combatant)
-        self._target = target
-
-    def duration(self):
-        return DURATION_FULLROUND
+    def is_move_action(self):
+        return False
 
 
 class MoveAction(BattleAction):
     """
     Implements an action that moves a combatant
 
-    :type _path: Path
-    :type _combatant: Combatant
+    :type _start: Tile starting tile
+    :type _finish: Tile finish tile
 
     #TODO: each movement should cause attack of opportunity
     """
-    def __init__(self, combatant, path):
+    def __init__(self, combatant, tiles, provoke = False):
         super(MoveAction, self).__init__(combatant)
-        """
-        :param Combatant combatant: The combatant to move
-        :param Path path: The path the combatant takes to move
-        """
-
-        self._path = path
-        self._last_target = None
+        self._finish = tiles[len(tiles)-1]
+        self._provoke = provoke
 
     def duration(self):
         return DURATION_MOVE
 
     def execute(self, battle: Battle, state: TurnState):
-        # We should iterate all the tiles
-        start = self._path.first()
-        end = self._path.last()
-        tile_src = battle.tile_for_combatant(self._combatant)
-        tile_next = None
+        combatant = self._combatant
+        start = battle.tile_for_combatant(combatant)
+        if start == self._finish:
+            return
 
-        #[0,1,2,3,4,5,6]
-        #[0,0,0,T,T,0,0]
-        # Moves: 0->3, 3->4, 4->6
-        for tile in self._path.get_path():
-            if tile == tile_src:
-                continue
-            tile_next = tile
-            if tile.is_threatened(self._combatant):
-                battle.move_combatant(self._combatant, tile_next)
-                tile_next = None
+        print("moving %s from %s to %s" % (str(combatant), str(start), str(self._finish)))
+        # AoO can interupt movement
+        # 5ft step still can provoke
+        # Not moving still can provoke
+        success = True
+        AoOs = battle.opportunity_provoke(combatant, start, self)
 
-            state.moves_left -= 5
-            if state.moves_left == 0:
-                break
-        # One last step
-        if tile_next is not None:
-            battle.move_combatant(self._combatant, tile_next)
+        for attack in AoOs:
+            # TODO: roll AoO and check if it really interrupts
+            pass
 
-        state.use_move()
+        if not success:
+            return False
+
+        start.remove_occupation(combatant)
+        battle.grid.unthreaten(combatant)
+
+        combatant.X = self._finish.x
+        combatant.Y = self._finish.y
+        self._finish.add_occupation(self._finish)
+        battle.grid.threaten(combatant, self._finish, combatant.total_reach())
+        return True
 
     def can_execute(self, combatant, state: TurnState):
         return state.move_actions > 0 and state.moves_left > 0

@@ -1,31 +1,28 @@
-import pygame, sys
-from battle.battle import Battle
-from battle.combatant import Combatant
-from character import Character
-from grid import *
+import pygame
+
 import brain
 import classes
+import core
 import dnd.armor
 import dnd.weapon
-import core
-import dice
-
-from pygame.locals import *
+from battle.battle import Battle
+from battle.grid import *
+from character import Character
 from render import Renderer
 
 pygame.init()
 
 grid = Grid(40, 40)
 
-
-
 center_x = 20
 center_y = 20
 
-for i in range(-5, 6):
-    grid.set_terrain(center_x, center_y + i, TERRAIN_WALL)
-    grid.set_terrain(center_x+ i, center_y, TERRAIN_WALL)
+def draw_cross(x, y, size):
+    for i in range(-size, size+1):
+        grid.set_terrain(x, y + i, TERRAIN_WALL)
+        grid.set_terrain(x+ i, y, TERRAIN_WALL)
 
+#draw_cross(center_x, center_y, 5)
 
 battle = Battle(grid)
 
@@ -60,14 +57,15 @@ def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
 
 char2 = make_shield_fighter('Roy')
 
-battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
-battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
+#battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
+#battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
+battle.add_combatant(char1, center_x - 15, center_y, faction="team red")
+battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
+
 
 print(char1.print_character())
 print(char2.print_character())
 
-#battle.add_combatant(char1, center_x - 5, center_y)
-#battle.add_combatant(char2, center_x + 5, center_y)
 
 renderer = Renderer(grid, 20)
 

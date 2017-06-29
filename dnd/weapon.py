@@ -3,6 +3,11 @@ from dice import *
 
 from .item import Item
 
+REACH_NEAR = 1
+REACH_FAR = 2
+REACH_UNIVERSAL = 3
+
+
 class Weapon(Item):
     """
     Weapon class
@@ -18,7 +23,7 @@ class Weapon(Item):
         self.crit_mult = kwargs.get("crit_mult", 2)
         self.crit_range = kwargs.get("crit_range", 1)
         # Additionan reach
-        self._reach = kwargs.get("reach", 0)
+        self._reach = kwargs.get("reach", REACH_NEAR)
         # Magic enchantment
         self._enchantment = kwargs.get("enchantment", 0)
         # Throwing range increment
@@ -29,6 +34,9 @@ class Weapon(Item):
     def enchant(self, level):
         self._enchantment = level
 
+    def is_critical(self, roll):
+        return roll > (20 - self.crit_range)
+
     def is_ranged(self):
         return self._range > 0
 
@@ -37,6 +45,9 @@ class Weapon(Item):
 
     def damage(self, combatant, target=None):
         return self._damage.copy()
+
+    def has_reach(self):
+        return self._reach > REACH_NEAR
 
     # Check if that weapon is light for that combatant
     def is_light(self, combatant):
@@ -95,7 +106,14 @@ glaive = Weapon(name='Glaive',
                 light=SIZE_HUGE,
                 twohanded=True,
                 crit_mult=3, crit_range=1,
-                reach=1)
+                reach=REACH_UNIVERSAL)
+
+guisarme  = Weapon(name='Guisarme',
+                damage=Dice("d10"),
+                light=SIZE_HUGE,
+                twohanded=True,
+                crit_mult=3, crit_range=1,
+                reach=REACH_UNIVERSAL, trip=True)
 
 halberd = Weapon(name='Halberd', damage=Dice("d10"), light=SIZE_LARGE,
                   twohanded=True,
@@ -106,4 +124,10 @@ greatsword = Weapon(name='Greatsword',
                     light=SIZE_HUGE,
                     twohanded=True,
                     crit_mult=2, crit_range=1)
+
+scythe = Weapon(name='Scythe',
+                    damage=Dice("1d4"),
+                    light=SIZE_HUGE,
+                    twohanded=True,
+                    crit_mult=4, crit_range=1)
 

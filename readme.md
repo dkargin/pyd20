@@ -16,6 +16,7 @@ Feats:
 	- alter damage
 
 
+
 # AI #
 
 Сначала прикручиваем такие виды простых мозгов:
@@ -69,6 +70,7 @@ Feats:
     Flurry of blows
     Rage
     Power attack
+1. Proper sizes, reach templates and pathfinding for larger creatures
 
 
 # Brain #

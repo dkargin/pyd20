@@ -28,6 +28,11 @@ class Renderer:
 
         self.font = pygame.font.Font(None, 24)
 
+        self._draw_names = True
+        self._draw_reach = True
+        self._draw_path = True
+        self._draw_threaten = True
+
         self.char_names = {}
 
     # Convert grid coordinates to screen
@@ -72,6 +77,7 @@ class Renderer:
                 rect = (*tile.coords(), 1, 1)
                 pygame.draw.rect(self.surface, color, self.grid_to_screen(rect))
 
+
     # Draw tiled path
     def draw_path(self, path, color=GREEN):
         prev = None
@@ -96,14 +102,22 @@ class Renderer:
         coord = self.grid_to_screen((u.X + 0.5, u.Y + 0.5))
         color = BLUE
 
-
         # pygame.draw.rect(self.surface, coord, row * TILESIZE, TILESIZE, TILESIZE)
         pygame.draw.circle(self.surface, color, coord, int(TILESIZE / 2))
         # pygame.draw.
 
         text_surface = self.get_text(u.get_name())
         if text_surface:
-            self.surface.blit(text_surface, coord)
+            text_width = text_surface.get_width()
+            text_coord = (coord[0]-text_width/2, coord[1]-TILESIZE)
+            self.surface.blit(text_surface, text_coord)
+
+        if self._draw_path and u.path is not None:
+            self.draw_path(u.path)
+
+        for tile in u._threatened_tiles:
+            coord_cur = self.grid_to_screen((tile.x + 0.5, tile.y + 0.5))
+            pygame.draw.line(self.surface, RED, coord, coord_cur)
 
     def draw_combatants(self, combatants):
         for u in combatants:

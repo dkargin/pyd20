@@ -11,7 +11,7 @@ char1.wear_item(dnd.weapon.glaive, core.ITEM_SLOT_MAIN)
 char1.add_class_level(classes.Fighter, 6)
 
 # Create shield fighter
-def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
+def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10], **kwargs):
     char = Character(name)
     char.set_stats(*stats)
     char.wear_item(dnd.armor.full_plate, core.ITEM_SLOT_ARMOR)
@@ -21,8 +21,8 @@ def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
     return char
 
 # Create dual weapons fighter
-def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
-    char = Character(name, brain=brain.MoveAttackBrain())
+def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10], **kwargs):
+    char = Character(name, **kwargs)
     char.set_stats(*stats)
     char.wear_item(dnd.armor.full_plate, core.ITEM_SLOT_ARMOR)
     char.wear_item(dnd.weapon.longsword, core.ITEM_SLOT_MAIN)

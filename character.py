@@ -8,7 +8,6 @@ from battle.combatant import Combatant
 from dice import *
 
 
-
 def relative_path():
     """
     auxiliary function to retrieve the relative path to the current script
@@ -312,14 +311,6 @@ class Character(Combatant):
         shield_bonus = 0    # TODO: implement equipment
         return 10 + armor_bonus + shield_bonus + ac_size_modifier(self._height) + self.dexterity_mofifier()
 
-    def initiative(self):
-        """
-        Calculates the initiative
-
-        :rtype: int
-        """
-        return d20.roll() + self.dexterity_mofifier()
-
     def size_category(self):
         """
         Returns the size category
@@ -340,7 +331,6 @@ class Progression(object):
         pass
 
 
-# Progression for base attack bonus
 LOW = 0
 MEDIUM = 1
 HIGH = 2
@@ -405,6 +395,9 @@ class ProgressionHP(Progression):
 
 class CharacterClass(object):
     """
+    Encapsulates character class
+    Character class contains a set of 'progressions' and per-level feats,
+    which define class features
     :type _name: str
     """
     def __init__(self, name, progressions):
@@ -499,25 +492,6 @@ class CharacterClass(object):
             if skill.lower() == skill_name.lower():
                 return True
         return False
-
-    def feats(self):
-        """
-        returns the list of available class feats
-
-        :rtype: ClassFeat[]
-        """
-        feats = list()
-        for level in range(0, self.current_level()):
-            for class_feat in self._special[level]:
-                contains_feat = False
-                for feat in feats:
-                    if class_feat[0] == feat.name:
-                        contains_feat = True
-                        feat.level = class_feat[1]
-                        break
-                if contains_feat is False:
-                    feats.append(ClassFeat(class_feat[0]))
-        return feats
 
     def __increase_skill_points(self, character):
         skill_points = (self._skill_modifier + character.intellect_mofifier())

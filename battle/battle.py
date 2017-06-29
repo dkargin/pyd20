@@ -1,9 +1,10 @@
 import math
-import core
-from grid import Tile, PathFinder
+
 import dice
-import logging
-from .combatant import Combatant, TurnState
+from battle.grid import Tile, PathFinder
+from .combatant import Combatant, TurnState, AttackDesc
+
+import battle.actions
 
 # Action durations
 DURATION_STANDARD = 0
@@ -44,12 +45,14 @@ class Battle(object):
         position = self.grid.get_tile(x, y)
         if position is None:
             return
-        position.add_occupation(combatant)
+
         combatant.set_faction(kwargs.get('faction', 'none'))
         combatant.X = x
         combatant.Y = y
         combatant.recalculate()
         self._combatants.append(combatant)
+        self.grid.threaten(combatant, position, combatant.total_reach())
+        position.add_occupation(combatant)
 
     def remove_combatant(self, combatant):
         """
@@ -68,21 +71,46 @@ class Battle(object):
         elif new_hp < 0:
             print("%s is unconsciousness" % str(victim))
 
-    # Move character to next tile
-    def move_combatant(self, combatant, tile, provoke=True):
-        # 1.
-        prev_tile = self.tile_for_combatant(combatant)
-        if prev_tile == tile:
+    # Gather attacks of opportinity, provoked by combatant, standing at specified tile
+    def opportunity_provoke(self, combatant: Combatant, tile: Tile, action):
+        AoOs = []
+        is_enemy = lambda a: self.is_combatant_enemy(a, combatant)
+        if tile.is_threatened(combatant):
+            for attacker in filter(is_enemy, tile._threaten):
+                # self.__check_AoO_move(provoke, combatant)
+                pass
+        return AoOs
+
+    # Process turn for selected combatant
+    def combatant_make_turn(self, combatant):
+        # print(combatant, "'s turn")
+        turn_state = combatant.get_turn_state()
+        turn_state.on_round_start()
+
+        # Hard limit on action generator
+        iteration_limit = 20
+
+        for action in combatant.gen_actions(self, turn_state):
+            self.execute_combatant_action(action, turn_state)
+
+            iteration_limit -= 1
+            if iteration_limit <= 0:
+                break
+
+        # Commit turn changes?
+        turn_state.on_round_end()
+
+    def execute_combatant_action(self, action, turn_state):
+        """
+        Executes minimal game action
+        :param action:
+        :param turn_state:
+        :return:
+        """
+        if action is None:
             return
-
-        print("moving %s from %s to %s" % (str(combatant), str(prev_tile), str(tile)))
-        if prev_tile is not None:
-            prev_tile.remove_occupation(combatant)
-
-        combatant.X = tile.x
-        combatant.Y = tile.y
-        tile.add_occupation(combatant)
-        # TODO: raise attacks of opportunity
+        else:
+            action.execute(self, turn_state)
 
     def next_round(self):
         """
@@ -103,29 +131,9 @@ class Battle(object):
                 dead.append(combatant)
             elif not combatant.is_consciousness():
                 continue
-            #print(combatant, "'s turn")
-            turn_state = combatant.get_turn_state()
-            turn_state.on_round_start()
-            complete = False
-            action_generator = combatant.gen_actions(self, turn_state)
-            # Hard limit on action generator
-            iteration_limit = 20
-            while not complete and iteration_limit > 0:
-                try:
-                    action = next(action_generator)
-                    if action is None:
-                        pass
-                    else: #action, BattleAction):
-                        action.execute(self, turn_state)
-                    # TODO: process interrupts?
-                except StopIteration:
-                    complete = True
-                    break
-                iteration_limit -= 1
-            # Commit turn changes?
-            turn_state.on_round_end()
+            self.combatant_make_turn(combatant)
 
-        print("Round %d is complete" % self.round)
+        print(" ----==== Round %d is complete ====---- " % self.round)
 
     # Return distance between tiles
     def distance_tiles(self, obj_a, obj_b):
@@ -191,32 +199,55 @@ class Battle(object):
         if x is not None and y is not None:
             return self.tile_for_position(x, y)
 
-    def tile_for_combatant(self, combatant):
-        for tile in self.grid.get_tiles():
-            if tile.has_occupation(combatant):
-                return tile
-        return None
+    def tile_for_combatant(self, combatant) -> Tile:
+        return self.tile_for_position(combatant.X, combatant.Y)
+        #for tile in self.grid.get_tiles():
+        #    if tile.has_occupation(combatant):
+        #        return tile
+        #return None
 
     def tile_for_position(self, x, y):
         return self.grid.get_tile(x, y)
 
-    def __repr__(self):
-        max_x = 0
-        max_y = 0
-        for tile in self.grid.get_tiles():
-            if tile.x > max_x:
-                max_x = tile.x
-            if tile.y > max_y:
-                max_y = tile.y
+    def tile_threatened(self, tile, combatant):
+        for u in tile._threaten:
+            if self.is_combatant_enemy(u, combatant):
+                return True
+        return False
 
-        result = ""
-        for y in range(1, max_y):
-            for x in range(1, max_x):
-                tile = self.grid.get_tile(x, y)
-                tile_str = " "
-                if len(tile._occupation) > 0:
-                    tile_str = "X"
-                result += " | " + str(tile_str)
-            result += " |\n"
-        return result
+
+    ############## Action generators ################
+    def make_action_move_tiles(self, combatant: Combatant, state: TurnState, path):
+        # We should iterate all the tiles
+        tile_src = self.tile_for_combatant(combatant)
+        tiles_moved = []
+        combatant.path = path
+
+        # [0,1,2,3,4,5,6]
+        # [0,0,0,T,T,0,0]
+        # Moves: 0->3, 3->4, 4->6
+        waypoints = path.get_path()
+        while len(waypoints) > 0:
+            tile = waypoints.pop(0)
+            if tile == tile_src:
+                continue
+            tiles_moved.append(tile)
+            if self.tile_threatened(tile, combatant):
+                yield battle.actions.MoveAction(combatant, tiles_moved)
+                tiles_moved = []
+
+            state.moves_left -= 5
+            if state.moves_left <= 0:
+                break
+
+        # One last step
+        if len(tiles_moved) > 0 is not None:
+            yield battle.actions.MoveAction(combatant, tiles_moved)
+
+        state.use_move()
+
+    def make_action_strike(self, combatant: Combatant, state: TurnState, target: Combatant, desc: AttackDesc):
+        yield battle.actions.AttackAction(combatant, desc)
+
+
 

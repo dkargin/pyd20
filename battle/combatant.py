@@ -8,14 +8,37 @@ class AttackDesc:
     def __init__(self, weapon, on_hit=None, **kwargs):
         self.attack = kwargs.get('attack', 0)
         self.damage = kwargs.get('damage', dice.Dice())
+        # Diced bonus damage, like sneak attack, elemental damage and so on
+        self.bonus_damage = dice.Dice()
+        self.damage_mult = 1
         self.weapon = weapon
         self.touch = kwargs.get('touch', False)
         self.on_hit = on_hit
+
+        # Attack target
+        self.target = None
+        self.source = None
 
     def text(self):
         dmg_min, dmg_max = self.damage.get_range()
         weapon_name = self.weapon._name if self.weapon is not None else "null weapon"
         return "attack with %s, roll=%d dam=%s->%d-%d" % (weapon_name, self.attack, self.damage.to_string(), dmg_min, dmg_max)
+
+    def roll_attack(self):
+        return self.attack + dice.d20.roll()
+
+    def roll_damage(self):
+        return self.damage.roll()
+
+    def is_critical(self, roll):
+        return self.weapon.is_critical(roll)
+
+    def get_target(self):
+        return self.target
+
+    def update_target(self, target):
+        # TODO: recalculate target-specific parameters
+        self.target = target
 
     def __repr__(self):
         return self.text()
@@ -86,14 +109,22 @@ class Combatant(object):
         self._max_dex_ac = 100
         self._opportunity_attacks = 1
         self._opportunities_used = []
+        self._natural_reach = 1
 
         self._has_insightfull_strike = False
         self._has_finisse = False
         self._has_zen_archery = False
         self._twf_skill = 0
 
+        self._threatened_tiles = []
+
         self._feats = []
         self._events = DnDEventManager()
+
+
+
+        # Current path. For visualization
+        self.path = None
 
         brain = kwargs.get('brain', None)
         self.set_brain(brain)
@@ -136,7 +167,8 @@ class Combatant(object):
         return self._name
 
     def get_turn_state(self):
-        state = TurnState(self)
+        strikes = self.generate_bab_chain()
+        state = TurnState(self, strikes)
         return state
 
     # Wear an item
@@ -151,13 +183,13 @@ class Combatant(object):
         self._carry_weight_limit += item.weight()
 
     # Get armor class
-    def get_AC(self, target):
+    def get_AC(self, target=None):
         AC = self._AC + self._ac_deflection + self._ac_dodge + self._ac_natural + self._ac_armor
         dex = self.dexterity_mofifier()
         AC += min(dex, self._max_dex_ac)
         return AC
 
-    def get_touch_ac(self, target):
+    def get_touch_ac(self, target=None):
         AC = self._AC + self._ac_deflection + self._ac_dodge
         dex = self.dexterity_mofifier()
         AC += min(dex, self._max_dex_ac)
@@ -185,8 +217,10 @@ class Combatant(object):
 
     # Calculate total weapon reach
     def total_reach(self):
-        reach = self._size
-        # TODO: add weapon modifier
+        reach = self._natural_reach
+        weapon = self.get_main_weapon()
+        if weapon is not None and weapon.has_reach():
+            reach *= 2
         return reach
 
     # Set combatant faction
@@ -401,7 +435,6 @@ class Combatant(object):
         self._action_points = 3
         self._current_initiative = self.initiative()
 
-
     # Return combatant coordinates
     def coords(self):
         return (self.X, self.Y)
@@ -415,22 +448,11 @@ class Combatant(object):
 
     def initiative(self):
         """
-        Should be implemented in subclasses. This method should return
-        the initiative value of the combatant
+        Calculates the initiative
 
         :rtype: int
         """
-        pass
-
-    def next_action(self, battle):
-        """
-        Should be implemented in subclasses. This method should return
-        the next action until no action points are left. If no points
-        are left, then an EndTurnAction should be returned.
-
-        :param Battle battle: A reference to the battle taking place
-        :rtype: BattleAction
-        """
+        return dice.d20.roll() + self.dexterity_mofifier()
 
     # Get generator
     def gen_actions(self, battle, state):
@@ -458,7 +480,7 @@ class Combatant(object):
 
 # Encapsulates current turn state
 class TurnState(object):
-    def __init__(self, combatant):
+    def __init__(self, combatant, attacks):
         self.combatant = combatant
         self.moves_left = combatant.move_speed
         self.move_actions = 1
@@ -469,16 +491,42 @@ class TurnState(object):
         self.opportunity_attacks = 1
         # Attacked opportunity targets
         self.opportunity_targets = []
+        self.made_attack = 0
+        # Available attacks
+        self.attacks = attacks
+
+
+    # Use attack from generated attack list
+    def use_attack(self):
+        if len(self.attacks) > 0:
+            attack = self.attacks.pop()
+            self.made_attack += 1
+            self.use_standard(attack=True)
+            return attack
+        return None
 
     # Use move action
-    def use_move(self):
-        self.move_5ft = 0
+    def use_move(self, real_move = True):
+        if real_move:
+            self.move_5ft = 0
         self.fullround_actions = 1
 
+    # Returns true if character has attack actions
+    def can_attack(self):
+        return (self.fullround_actions > 0 or self.standard_actions > 0) and len(self.attacks) > 0
+
+    def can_move(self):
+        return self.moves_left > 0 and self.move_actions > 0
+
+    def can_5ft_step(self):
+        return self.move_5ft > 0
+
     # Use standard action
-    def use_standard(self):
+    def use_standard(self, attack=False):
         self.standard_actions = 0
-        self.fullround_actions = 0
+        if not attack:
+            self.fullround_actions = 0
+            self.made_attack = 1
 
     # Use fullround action
     def use_full_round(self):
@@ -501,6 +549,11 @@ class TurnState(object):
         # Attacked opportunity targets
         self.opportunity_targets = []
         self.opportunity_attacks = 1
+        # Clean up attack sequence
+        self.attacks = []
+
+    def complete(self):
+        return not self.can_attack() and not self.can_move()
 
 
 # Any sort of effect, that can change stat or any mechanic

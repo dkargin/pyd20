@@ -1,7 +1,7 @@
 from unittest import TestCase
-from battle.battle import *
+
 from battle.actions import *
-from grid import Grid
+from battle.grid import Grid
 
 
 class BattleTest(TestCase):

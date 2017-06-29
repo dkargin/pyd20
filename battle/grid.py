@@ -86,6 +86,31 @@ class Grid(object):
                     tiles.append(tile)
         return tiles
 
+    # Mark tiles to be threatened by a combatant
+    def threaten(self, combatant, center, range):
+        tiles = self.get_tile_range(center, range)
+        for tile in tiles:
+            if not combatant in tile._threaten:
+                tile._threaten.append(combatant)
+                combatant._threatened_tiles.append(tile)
+
+    # Remove threat references
+    def unthreaten(self, combatant):
+        for tile in combatant._threatened_tiles:
+            tile._threaten.remove(combatant)
+        combatant._threatened_tiles = []
+
+    def register_combatant(self, combatant):
+        range = combatant.total_reach()
+        # TODO: implement multi-tile occupation
+        tile = self.get_tile(combatant.X, combatant.Y)
+        tile.add_occupation(combatant)
+        # TODO: implement proper threaten template
+        self.threaten(combatant, tile, range)
+        """
+        1. Get template, in form of set of relative tile coordinates and assigned roles
+        """
+
     # Set terrain type for a tile
     def set_terrain(self, x, y, type):
         tile = self.get_tile(x,y)
@@ -171,6 +196,8 @@ class PathFinder(object):
         """
         adjacent = self.grid.get_adjacent_tiles(tile)
         for next in adjacent:
+            if not next.is_empty():
+                continue
             # Skip nodes that are already visited
             if next._pathstate == self.search_index:
                 continue
@@ -365,7 +392,8 @@ class Tile(object):
 
         :param thing: the thing to free from this tile
         """
-        self._occupation.remove(thing)
+        if thing in self._occupation:
+            self._occupation.remove(thing)
 
     def __repr__(self):
         return "<Tile " + str(self.x) + "x" + str(self.y) + " " + str(self._occupation) + ">"
@@ -580,3 +608,101 @@ class Path(object):
 
     def __repr__(self):
         return self.__path.__repr__()
+
+
+# Reach templates for different creature sizes and reaches
+# NOTE: reach weapon are doubling natural reach
+class OccupationTemplate:
+    MARK_OCCUPY = 1
+    MARK_THREATEN_NEAR = 2
+    MARK_THREATEN_FAR = 4
+
+    def __init__(self, size, reach, far=False, near=True):
+        self.size = size
+        self.reach = reach
+        self.far = far
+        self.near = near
+        # List of triplets {x, y, role}, where x and y - relative coordinates, role = tile role
+        self.template = []
+        self.tiles_occupated = []
+        self.tiles_threatened = []
+        self.tiles_adjacent = []
+        self.block_size = 0
+        self.offset = 0
+        self.build()
+
+    def build(self):
+        reach = self.reach
+        far_reach = self.reach
+        size = self.size
+
+        if self.far:
+            far_reach *= 2
+
+
+        def classify(self, x, y):
+            return False
+
+        # Returns if cell is occupied by this creature
+        def occupy(x, y):
+            return x in range(0, size) and y in range(0, size)
+
+        # If cell is adjacent to a creature
+        def adjacent(x, y):
+            return x in range(-1, size+1) and y in range(-1, size+1) and not occupy(x,y)
+
+        def threaten_near(x, y):
+            return x in range(-reach, size + reach) and y in range(-reach, size + reach)
+
+        def threaten_far(x,y):
+            return x in range(-far_reach, size + far_reach) and y in range(-far_reach, size + far_reach)
+
+        self.block_size = 2 * far_reach + self.size
+        self.offset = far_reach
+        self.template = []
+
+        for x in range(-far_reach, size + far_reach):
+            for y in range(-far_reach, size + far_reach):
+                type = 0
+                if occupy(x,y):
+                    type |= self.MARK_OCCUPY
+                    self.tiles_occupied.append((x, y))
+                elif threaten_near(x,y):
+                    if self.near:
+                        type |= self.MARK_THREATEN_NEAR
+                        self.tiles_threatened.append((x,y))
+                elif self.far and threaten_far(x,y):
+                    type |= self.MARK_THREATEN_FAR
+                    self.tiles_threatened.append((x, y))
+
+                tile = (x, y, type)
+                self.template.append(tile)
+        pass
+
+    def __str__(self):
+        grid = []
+        for x in range(0, self.block_size):
+            grid.append([' '] * self.block_size)
+
+        for tile in self.template:
+            x,y,type = tile
+            x += self.offset
+            y += self.offset
+
+            if type & self.MARK_THREATEN_NEAR:
+                grid[x][y] = '+'
+            if type & self.MARK_THREATEN_FAR:
+                grid[x][y] = '*'
+            if type & self.MARK_OCCUPY:
+                grid[x][y] = 'X'
+        result = ""
+        for row in grid:
+            row_str = "|" + ''.join(row) + "|\n"
+            result += row_str
+        return result
+
+    def __repr__(self):
+        return str(self)
+
+
+
