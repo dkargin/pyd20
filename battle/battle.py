@@ -73,9 +73,9 @@ class Battle(object):
             print("%s is unconsciousness" % str(victim))
 
     # Gather attacks of opportinity, provoked by combatant, standing at specified tile
-    def opportunity_provoke(self, combatant: Combatant, action):
+    def get_threatening_enemies(self, combatant: Combatant, action):
         AoOs = []
-        is_enemy = lambda a: self.is_combatant_enemy(a, combatant)
+        is_enemy = lambda a: self.is_combatant_enemy(a, combatant) and combatant.opportunities_left() > 0
         for tile in combatant._occupied_tiles:
             if tile.is_threatened(combatant):
                 for attacker in filter(is_enemy, tile.threaten):
@@ -87,22 +87,23 @@ class Battle(object):
     def combatant_make_turn(self, combatant):
         # print(combatant, "'s turn")
         turn_state = combatant.get_turn_state()
-        turn_state.on_round_start()
+
+        combatant.on_round_start()
 
         # Hard limit on action generator
         iteration_limit = 20
 
-        for action in combatant.gen_actions(self, turn_state):
-            self.execute_combatant_action(action, turn_state)
+        for action in combatant.gen_actions(self):
+            self.execute_combatant_action(action)
 
             iteration_limit -= 1
             if iteration_limit <= 0:
                 break
 
         # Commit turn changes?
-        turn_state.on_round_end()
+        combatant.on_round_end()
 
-    def execute_combatant_action(self, action, turn_state):
+    def execute_combatant_action(self, action):
         """
         Executes minimal game action
         :param action:
@@ -112,7 +113,7 @@ class Battle(object):
         if action is None:
             return
         else:
-            action.execute(self, turn_state)
+            action.execute(self)
 
     def next_round(self):
         """

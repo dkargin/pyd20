@@ -12,12 +12,14 @@ class Brain(object):
         self.path = None
 
     # To be overriden
-    def make_turn(self, battle, state):
+    def make_turn(self, battle):
         pass
 
-    def react_opportunity(self, combatant, action):
+    def respond_provocation(self, combatant, action=None):
         pass
 
+    def get_turn_state(self):
+        return self.slave.get_turn_state()
 
 # Object is controlled by keyboard input
 class ManualBrain(Brain):
@@ -32,7 +34,8 @@ class MoveAttackBrain(Brain):
         Brain.__init__(self)
         self.logger = logging.getLogger("brain")
 
-    def make_turn(self, battle, state: TurnState):
+    def make_turn(self, battle):
+        state = self.get_turn_state()
         # Trying iteratively use all turn actions
         # 1. If no enemy - find it
         if self.target is None:
@@ -69,7 +72,8 @@ class StandAttackBrain(Brain):
         Brain.__init__(self)
         self.logger = logging.getLogger("brain")
 
-    def make_turn(self, battle, state: TurnState):
+    def make_turn(self, battle):
+        state = self.get_turn_state()
         # Trying iteratively use all turn actions
         # 1. If no enemy - find it
         if self.target is None:

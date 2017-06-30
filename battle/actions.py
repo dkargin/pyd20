@@ -60,6 +60,9 @@ class BattleAction(object):
     def execute(self, battle: Battle, state: TurnState):
         pass
 
+    def _get_turn_state(self):
+        return self._combatant.get_turn_state()
+
     def text(self):
         return "generic action"
 
@@ -83,7 +86,7 @@ class EmptyAction(BattleAction):
     def __init__(self):
         super(EmptyAction, self).__init__()
 
-    def execute(self, battle: Battle, state: TurnState):
+    def execute(self, battle: Battle):
         pass
 
     def text(self):
@@ -98,7 +101,7 @@ class EndTurnAction(BattleAction):
     def __init__(self, combatant):
         super(EndTurnAction, self).__init__(combatant)
 
-    def execute(self, battle: Battle, state: TurnState):
+    def execute(self, battle: Battle):
         pass
 
     def text(self):
@@ -114,7 +117,8 @@ class AttackAction(BattleAction):
         super(AttackAction, self).__init__(combatant)
         self._desc = attack_desc
 
-    def execute(self, battle: Battle, state: TurnState):
+    def execute(self, battle: Battle):
+        state = self._get_turn_state()
         desc = self._desc
         target = desc.get_target()
         attack_roll = desc.roll_attack()
@@ -162,8 +166,9 @@ class MoveAction(BattleAction):
     def duration(self):
         return DURATION_MOVE
 
-    def execute(self, battle: Battle, state: TurnState):
+    def execute(self, battle: Battle):
         combatant = self._combatant
+        state = self._get_turn_state()
         start = battle.tile_for_combatant(combatant)
         if start == self._finish:
             return
@@ -173,11 +178,12 @@ class MoveAction(BattleAction):
         # 5ft step still can provoke
         # Not moving still can provoke
         success = True
-        AoOs = battle.opportunity_provoke(combatant, self)
+        if self._provoke:
+            enemies = battle.get_threatening_enemies(combatant, self)
+            for enemy in enemies:
+                enemy.respond_provocation(self._combatant, self)
+                # TODO: roll AoO and check if it really interrupts
 
-        for attack in AoOs:
-            # TODO: roll AoO and check if it really interrupts
-            pass
 
         if not success:
             return False
@@ -189,9 +195,6 @@ class MoveAction(BattleAction):
 
         battle.grid.register_entity(combatant)
         return True
-
-    def can_execute(self, combatant, state: TurnState):
-        return state.move_actions > 0 and state.moves_left > 0
 
     def text(self):
         return "moves to %s" % self._last_target
@@ -211,10 +214,9 @@ class UseSkillAction(BattleAction):
         :param Character character: The character that executes the skill
         :param Combatant target: The target to use the skill on
         """
-        super(UseSkillAction, self).__init__()
-        self._character = character
+        super(UseSkillAction, self).__init__(character)
         self._target = target
         self._skill_name = skill_name
 
-    def execute(self, battle: Battle, state: TurnState):
-        self._character.use_skill(self._skill_name)
+    def execute(self, battle: Battle):
+        self._combatant.use_skill(self._skill_name)

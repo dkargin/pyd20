@@ -103,6 +103,7 @@ class Combatant(Entity):
         self._armor_check_penalty = 0
         self._max_dex_ac = 100
         self._opportunity_attacks = 1
+        self._opportunity_attacks_max = 1
         self._opportunities_used = []
         self._natural_reach = 1
 
@@ -111,8 +112,10 @@ class Combatant(Entity):
         self._has_zen_archery = False
         self._twf_skill = 0
 
+        self._turn_state = TurnState()
+
         self._feats = []
-        self._events = DnDEventManager()
+        self._events = MechanicsEventManager()
 
         # Current path. For visualization
         self.path = None
@@ -158,8 +161,31 @@ class Combatant(Entity):
 
     def get_turn_state(self):
         strikes = self.generate_bab_chain()
-        state = TurnState(self, strikes)
-        return state
+        self._turn_state.set_attacks(strikes)
+        return self._turn_state
+
+    # Called on start of the turn
+    def on_round_start(self):
+        state = self._turn_state
+        state.moves_left = self.move_speed
+        state.move_actions = 1
+        state.standard_actions = 1
+        state.fullround_actions = 1
+        state.move_5ft = 1
+        state.swift_actions = 1
+        self.opportunity_attacks = 1
+
+        self._events.on_turn_start(self)
+
+    # Called when combatant's turn is ended
+    def on_round_end(self):
+        state = self._turn_state
+        # Attacked opportunity targets
+        self._opportunities_used = []
+        self._opportunity_attacks = 1
+        # Clean up attack sequence
+        state.attacks = []
+        self._events.on_turn_end(self)
 
     # Wear an item
     # returns true if item is changed
@@ -176,6 +202,13 @@ class Combatant(Entity):
         dex = self.dexterity_mofifier()
         AC += min(dex, self._max_dex_ac)
         return AC
+
+    def opportunities_left(self):
+        return self._opportunity_attacks
+
+    def respond_provocation(self, combatant, action=None):
+        if self._brain is not None:
+            self._brain.respond_provocation(combatant, action)
 
     def get_touch_ac(self, target=None):
         AC = self._AC + self._ac_deflection + self._ac_dodge
@@ -298,7 +331,7 @@ class Combatant(Entity):
 
         # For all effects
         desc = AttackDesc(weapon, attack=attack, damage=damage, **kwargs)
-        self._events.modify_attack_desc(self, target, desc)
+        self._events.on_calc_attack(self, target, desc)
         return desc
     # Generate attack chain for full attack action
     def generate_bab_chain(self, target = None, **kwargs):
@@ -460,10 +493,10 @@ class Combatant(Entity):
         return dice.d20.roll() + self.dexterity_mofifier()
 
     # Get generator
-    def gen_actions(self, battle, state):
+    def gen_actions(self, battle):
         if self._brain is not None:
             # Retur
-            yield from self._brain.make_turn(battle, state)
+            yield from self._brain.make_turn(battle)
 
     # Overriden by character
     def get_name(self):
@@ -485,21 +518,19 @@ class Combatant(Entity):
 
 # Encapsulates current turn state
 class TurnState(object):
-    def __init__(self, combatant, attacks):
-        self.combatant = combatant
-        self.moves_left = combatant.move_speed
+    def __init__(self):
+        self.moves_left = 0
         self.move_actions = 1
         self.standard_actions = 1
         self.fullround_actions = 1
         self.move_5ft = 1
         self.swift_actions = 1
-        self.opportunity_attacks = 1
-        # Attacked opportunity targets
-        self.opportunity_targets = []
         self.made_attack = 0
         # Available attacks
-        self.attacks = attacks
+        self.attacks = []
 
+    def set_attacks(self, attacks):
+        self.attacks = attacks
 
     # Use attack from generated attack list
     def use_attack(self):
@@ -538,24 +569,6 @@ class TurnState(object):
         self.standard_actions = 0
         self.fullround_actions = 0
         self.move_actions = 0
-
-    # Called on start of the turn
-    def on_round_start(self):
-        self.moves_left = self.combatant.move_speed
-        self.move_actions = 1
-        self.standard_actions = 1
-        self.fullround_actions = 1
-        self.move_5ft = 1
-        self.swift_actions = 1
-        self.opportunity_attacks = 1
-
-    # Called when combatant's turn is ended
-    def on_round_end(self):
-        # Attacked opportunity targets
-        self.opportunity_targets = []
-        self.opportunity_attacks = 1
-        # Clean up attack sequence
-        self.attacks = []
 
     def complete(self):
         return not self.can_attack() and not self.can_move()
@@ -626,50 +639,47 @@ class AttackStyle(object):
 # Manager for DnD system events
 # Stores a number of handlers for each event type
 # This used to implement lots of feat overrides
-class DnDEventManager:
+class MechanicsEventManager:
+    class SubscriberList:
+        def __init__(self):
+            self._subscribers = []
+
+        def __radd__(self, handler):
+            if not callable(handler):
+                raise ValueError
+            if handler not in self._subscribers:
+                self._subscribers.append(handler)
+
+        def __rsub__(self, handler):
+            if handler in self._subscribers:
+                self._subscribers.remove(handler)
+
+        # Call all subscribers
+        def __call__(self, *args, **kwargs):
+            for handler in self._subscribers:
+                handler(*args, **kwargs)
+
     def __init__(self):
         # For sneak attack, all passive targets,
-        self._attack_desc = []
-        # Events that fired on round start
-        self._round_start = []
+        # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
+        self.on_calc_attack = MechanicsEventManager.SubscriberList()
+        # Events that fired on start of the turn
+        # on_turn_start(self, combatant: Combatant):
+        self.on_turn_start = MechanicsEventManager.SubscriberList()
+        # Events that fired on end of the turn
+        # on_turn_end(self, combatant: Combatant):
+        self.on_turn_end = MechanicsEventManager.SubscriberList()
+        # Events that fired on end of the round
+        # on_round_end(self, combatant: Combatant):
+        self.on_round_end = MechanicsEventManager.SubscriberList()
         # Events that fired when combatant is hit
-        self._on_get_hit = []
+        # on_get_hit(self, combatant, effect, **kwargs):
+        self.on_get_hit = MechanicsEventManager.SubscriberList()
         # Called when effect is applied
-        self._on_effect_apply = []
-
-        self._on_save_will = []
-        self._on_save_fort = []
-        self._on_save_ref = []
-
-    def subscribe_attack_desc(self, handler):
-        if handler not in self._attack_desc:
-            self._attack_desc.append(self)
-
-    def unsubscribe_attack_desc(self, handler):
-        if handler in self._attack_desc:
-            self._attack_desc.remove(handler)
-
-    # Called during attack calculation
-    def modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
-        for handler in self._attack_desc:
-            handler(combatant, target, desc)
-
-    # Call all handlers for fortitude saving throw
-    def on_save_fort(self, combatant, effect, **kwargs):
-        for handler in self._on_save_fort:
-            handler(combatant, effect, **kwargs)
-
-    # Call all handlers for reflex saving throw
-    def on_save_ref(self, combatant, effect, **kwargs):
-        for handler in self._on_save_ref:
-            handler(combatant, effect, **kwargs)
-
-    # Call all handlers for will saving throw
-    def on_save_will(self, combatant, effect, **kwargs):
-        for handler in self._on_save_will:
-            handler(combatant, effect, **kwargs)
-
-    # Call all handlers for
-    def on_get_hit(self, combatant, effect, **kwargs):
-        for handler in self._on_get_hit:
-            handler(combatant, effect, **kwargs)
+        self.on_effect_apply = MechanicsEventManager.SubscriberList()
+        # on_save_will(self, combatant, effect, **kwargs):
+        self.on_save_will = MechanicsEventManager.SubscriberList()
+        # on_save_fort(self, combatant, effect, **kwargs):
+        self.on_save_fort = MechanicsEventManager.SubscriberList()
+        # on_save_ref(self, combatant, effect, **kwargs):
+        self.on_save_ref = MechanicsEventManager.SubscriberList()
