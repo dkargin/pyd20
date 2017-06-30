@@ -31,9 +31,9 @@ class Renderer:
         self.font = pygame.font.Font(None, 24)
 
         self._draw_names = True
-        self._draw_reach = True
+        self._draw_reach = False
         self._draw_path = True
-        self._draw_threaten = True
+        self._draw_threaten = False
 
         self.char_names = {}
 
@@ -105,7 +105,7 @@ class Renderer:
         color = BLUE
 
         size = u.get_size()
-        coord = self.grid_to_screen((u.x + size * 0.5, u.y + size * 0.5))
+        coord = self.grid_to_screen((u.visual_X + size * 0.5, u.visual_Y + size * 0.5))
 
         # pygame.draw.rect(self.surface, coord, row * TILESIZE, TILESIZE, TILESIZE)
         pygame.draw.circle(self.surface, color, coord, int(size*TILESIZE *0.5))

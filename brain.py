@@ -1,9 +1,13 @@
 import math
 import logging
 from battle.actions import *
-
+from battle.combatant import *
 
 class Brain(object):
+    """
+    :type slave: Combatant | None
+    :type target: Combatant | None
+    """
     def __init__(self):
         self.slave = None
         # Attack target
@@ -15,17 +19,17 @@ class Brain(object):
     def make_turn(self, battle):
         pass
 
-    def respond_provocation(self, combatant, action=None):
-        pass
+    def respond_provocation(self, battle, target : Combatant, action=None):
+        state = self.get_turn_state()
+        if self.slave.opportunities_left() > 0 and state.attack_AoO is not None:
+            print("%s uses opportinity to attack %s" % (self.slave.get_name(), target.get_name()))
+            desc = state.attack_AoO.copy()
+            desc.update_target(target)
+            self.slave.use_opportunity(desc)
+            yield from battle.do_action_strike(self.slave, desc)
 
-    def get_turn_state(self):
+    def get_turn_state(self) -> TurnState:
         return self.slave.get_turn_state()
-
-# Object is controlled by keyboard input
-class ManualBrain(Brain):
-    def __init__(self):
-        Brain.__init__(self)
-        pass
 
 
 # Brain for simple movement and attacking
@@ -87,7 +91,7 @@ class StandAttackBrain(Brain):
             return
 
         # 2. If enemy is in range - full round attack
-        if not battle.is_adjacent(self.slave, self.target):
+        if not self.slave.is_adjacent(self.target):
             self.logger.debug("target is far, can not attack")
             return
 
@@ -100,3 +104,10 @@ class StandAttackBrain(Brain):
             yield from battle.make_action_strike(self.slave, state, self.target, desc)
         else:
             self.target = None
+
+
+# Object is controlled by keyboard input
+class ManualBrain(Brain):
+    def __init__(self):
+        Brain.__init__(self)
+        pass

@@ -56,13 +56,15 @@ Feats:
 1. Basic weapons, armors and shields and its stats
 1. Full round attack + TWF. Though
 
-# Ближайший план #
+# Plan #
 
 1. Attack of opportunity
     - threatened zone for any size and reach    OK
 1. Proper sizes, reach templates and pathfinding for larger creatures
     - proper sizes        OK
     - reach templates     OK
+    - find path to adjacent tile
+    - find path for large object
 1. Movement speed and armor penalty
 1. Animations:
     - movement
@@ -75,7 +77,9 @@ Feats:
     Rage
     Power attack
 
-
+1. Средство для отрисовки дерева кратчайших путей
+2. Генерим набор тайлов, из которых можно атаковать цель
+3. Оторвать поиск пути от grid
 
 # Brain #
 

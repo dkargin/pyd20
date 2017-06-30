@@ -1,5 +1,6 @@
 #!/usr/local/env python3
 from .battle import *
+import animation
 
 ACTION_RESULT_SUCCESS = 0
 ACTION_RESULT_FAILED = 1
@@ -58,7 +59,7 @@ class BattleAction(object):
         return False
 
     def execute(self, battle: Battle, state: TurnState):
-        pass
+        yield
 
     def _get_turn_state(self):
         return self._combatant.get_turn_state()
@@ -87,7 +88,7 @@ class EmptyAction(BattleAction):
         super(EmptyAction, self).__init__()
 
     def execute(self, battle: Battle):
-        pass
+        yield
 
     def text(self):
         return "ends its turn"
@@ -118,26 +119,8 @@ class AttackAction(BattleAction):
         self._desc = attack_desc
 
     def execute(self, battle: Battle):
-        state = self._get_turn_state()
         desc = self._desc
-        target = desc.get_target()
-        attack_roll = desc.roll_attack()
-        crit_confirm = desc.roll_attack()
-
-        # TODO: run events for on_strike_begin(desc, target)
-        AC = target.get_touch_ac(target) if desc.touch else target.get_AC(target)
-
-        if desc.is_critical(attack_roll):
-            # TODO: run events for critical hit
-            pass
-
-        if attack_roll >= AC:
-            damage = desc.roll_damage()
-            print("%s hits %s with roll %d vs AC=%d" % (self._combatant.get_name(), target.get_name(), attack_roll, AC))
-            battle.deal_damage(self._combatant, target, damage)
-        else:
-            print ("%s misses %s with roll %d vs AC=%d" % (self._combatant.get_name(), target.get_name(), attack_roll, AC))
-            # TODO: run events for on_strike_finish()
+        yield from battle.do_action_strike(self._combatant, desc)
 
     def text(self):
         return " attacks %s" % self._target
@@ -158,9 +141,10 @@ class MoveAction(BattleAction):
 
     #TODO: each movement should cause attack of opportunity
     """
-    def __init__(self, combatant, tiles, provoke = False):
+    def __init__(self, combatant, tiles, provoke = True):
         super(MoveAction, self).__init__(combatant)
         self._finish = tiles[len(tiles)-1]
+        self._path = tiles
         self._provoke = provoke
 
     def duration(self):
@@ -181,9 +165,8 @@ class MoveAction(BattleAction):
         if self._provoke:
             enemies = battle.get_threatening_enemies(combatant, self)
             for enemy in enemies:
-                enemy.respond_provocation(self._combatant, self)
+                yield from enemy.respond_provocation(battle, self._combatant, self)
                 # TODO: roll AoO and check if it really interrupts
-
 
         if not success:
             return False
@@ -194,7 +177,8 @@ class MoveAction(BattleAction):
         combatant.y = self._finish.y
 
         battle.grid.register_entity(combatant)
-        return True
+        yield animation.MovePath(combatant, self._path)
+        combatant.fix_visual()
 
     def text(self):
         return "moves to %s" % self._last_target

@@ -1,10 +1,10 @@
-import math
-
+import types
 import dice
 from battle.grid import Tile, PathFinder
 from .combatant import Combatant, TurnState, AttackDesc
 
 import battle.actions
+import animation
 
 # Action durations
 DURATION_STANDARD = 0
@@ -15,6 +15,7 @@ DURATION_SWIFT = 4
 
 
 class Battle(object):
+    NEXT_ACTION = 1
     """
     Models a battle
 
@@ -53,6 +54,7 @@ class Battle(object):
         self._combatants.append(combatant)
 
         self.grid.register_entity(combatant)
+        combatant.fix_visual()
 
     def remove_combatant(self, combatant):
         """
@@ -83,26 +85,6 @@ class Battle(object):
                     AoOs.append(attacker)
         return AoOs
 
-    # Process turn for selected combatant
-    def combatant_make_turn(self, combatant):
-        # print(combatant, "'s turn")
-        turn_state = combatant.get_turn_state()
-
-        combatant.on_round_start()
-
-        # Hard limit on action generator
-        iteration_limit = 20
-
-        for action in combatant.gen_actions(self):
-            self.execute_combatant_action(action)
-
-            iteration_limit -= 1
-            if iteration_limit <= 0:
-                break
-
-        # Commit turn changes?
-        combatant.on_round_end()
-
     def execute_combatant_action(self, action):
         """
         Executes minimal game action
@@ -112,29 +94,58 @@ class Battle(object):
         """
         if action is None:
             return
-        else:
-            action.execute(self)
+        ret = action.execute(self)
+        if isinstance(ret, types.GeneratorType):
+            yield from action.execute(self)
+        #elif callable(action.execute):
+        #    action.execute()
 
-    def next_round(self):
-        """
-        Ends the current round and starts a new round, resulting in new initiative rolls
-        and reset action points.
-        """
-        dead = []
-        self.round += 1
-        #print("Starting round %d" % self.round)
-        for combatant in self._combatants:
-            if combatant.is_dead():
-                dead.append(combatant)
-            combatant.reset_round()
+    # Process turn for selected combatant
+    def combatant_make_turn(self, combatant):
+        # print(combatant, "'s turn")
+        combatant.on_round_start()
 
-        # Iterate all active combatants
-        for combatant in self._combatants:
-            if combatant.is_dead():
-                dead.append(combatant)
-            elif not combatant.is_consciousness():
-                continue
-            self.combatant_make_turn(combatant)
+        # Hard limit on action generator
+        iteration_limit = 20
+
+        # Iterate through all combatant actions during the turn
+        for action in combatant.gen_actions(self):
+            yield from self.execute_combatant_action(action)
+
+            iteration_limit -= 1
+            if iteration_limit <= 0:
+                break
+
+        # Commit turn changes?
+        combatant.on_round_end()
+
+    def battle_generator(self):
+        """
+        Endless 'thread-like' function tnat runs battle processing
+        Each 'yield' returns an animation, that main game loop should show
+        until next game action can be issued
+
+        yield Animation - stop turn processing and render animation, until it is complete
+        yield ...
+        """
+        while True:
+            dead = []
+            self.round += 1
+            print("Starting round %d" % self.round)
+            for combatant in self._combatants:
+                if combatant.is_dead():
+                    dead.append(combatant)
+                combatant.reset_round()
+
+            # Iterate all active combatants
+            for combatant in self._combatants:
+                if combatant.is_dead():
+                    dead.append(combatant)
+                elif not combatant.is_consciousness():
+                    continue
+                yield from self.combatant_make_turn(combatant)
+
+            yield None
 
         print(" ----==== Round %d is complete ====---- " % self.round)
 
@@ -223,7 +234,7 @@ class Battle(object):
     ############## Action generators ################
     def make_action_move_tiles(self, combatant: Combatant, state: TurnState, path):
         # We should iterate all the tiles
-        tile_src = self.tile_for_combatant(combatant)
+        #tile_src = self.tile_for_combatant(combatant)
         tiles_moved = []
         combatant.path = path
 
@@ -233,8 +244,8 @@ class Battle(object):
         waypoints = path.get_path()
         while len(waypoints) > 0:
             tile = waypoints.pop(0)
-            if tile == tile_src:
-                continue
+            #if tile == tile_src:
+            #    continue
             tiles_moved.append(tile)
             if self.position_threatened(combatant, tile.x, tile.y):
                 yield battle.actions.MoveAction(combatant, tiles_moved)
@@ -249,9 +260,52 @@ class Battle(object):
             yield battle.actions.MoveAction(combatant, tiles_moved)
 
         state.use_move()
-
+    # Make generator for Attack action
     def make_action_strike(self, combatant: Combatant, state: TurnState, target: Combatant, desc: AttackDesc):
         yield battle.actions.AttackAction(combatant, desc)
 
+    # Execute strike action
+    def do_action_strike(self, combatant, desc: AttackDesc):
+        yield animation.AttackStart(combatant, desc.get_target())
+        attack, roll = desc.roll_attack()
+        # Roll for critical confirmation
+        crit_confirm, crit_confirm_roll = desc.roll_attack()
+        target = desc.get_target()
+
+        # TODO: run events for on_strike_begin(desc, target)
+        AC = target.get_touch_ac(target) if desc.touch else target.get_AC(target)
+
+        # TODO: run events for critical hit
+        has_crit = desc.is_critical(attack) and (crit_confirm >= AC or crit_confirm_roll == 20)
+        hit = attack >= AC
+        if roll == 20:
+            hit = True
+        if roll == 1:
+            hit = False
+
+        attack_text = ""
+        total_damage = 0
+
+        if hit:
+            damage = desc.roll_damage()
+            bonus_damage = desc.roll_bonus_damage()
+            if has_crit:
+                damage *= desc.weapon.crit_mult
+                attack_text = "critically hits"
+            else:
+                attack_text = "hits"
+
+            total_damage = damage + bonus_damage
+        else:
+            attack_text = "misses"
+
+        print("%s %s %s with roll %d(%d) vs AC=%d" % (combatant.get_name(),
+                                                      attack_text,
+                                                      target.get_name(),
+                                                      attack, roll, AC))
+        if hit:
+            self.deal_damage(combatant, target, total_damage)
 
 
+        yield animation.AttackFinish(combatant, target)
+        # TODO: run events for on_strike_finish()

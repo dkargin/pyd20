@@ -1,5 +1,5 @@
 import pygame
-
+import logging
 import brain
 import classes
 import core
@@ -9,6 +9,8 @@ from battle.battle import Battle
 from battle.grid import *
 from character import Character
 from render import Renderer
+
+logger = logging.getLogger(__name__)
 
 pygame.init()
 
@@ -26,7 +28,7 @@ def draw_cross(x, y, size):
 
 battle = Battle(grid)
 
-char1 = Character("Bob", size=2, brain=brain.MoveAttackBrain())
+char1 = Character("Bob", size=2, brain=brain.StandAttackBrain())
 char1.set_stats(18, 13, 16, 10, 10, 10)
 char1.wear_item(dnd.armor.full_plate, core.ITEM_SLOT_ARMOR)
 char1.wear_item(dnd.weapon.glaive, core.ITEM_SLOT_MAIN)
@@ -72,8 +74,21 @@ renderer = Renderer(grid, 20)
 pygame.display.set_caption("Battlescape")
 
 shouldExit = False
+animation = None
+
+
+
+
+# Get current time, in seconds
+def get_time():
+    return pygame.time.get_ticks()*0.001
+
+turn_generator = battle.battle_generator()
+wait_turn = True
+
 while not shouldExit:
     make_turn = False
+    pygame.time.wait(30)
     move_dir = None
     # Collect events
     for event in pygame.event.get():
@@ -90,9 +105,24 @@ while not shouldExit:
             move_dir = ( 1, 0)
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
             move_dir = (-1, 0)
-    # Process events
-    if make_turn:
-        battle.next_round()
+
+    if animation is not None:
+        time = get_time()
+        animation.update(time)
+        if animation.is_complete(time):
+            logging.info("%s is complete" % animation)
+            animation = None
+
+    if animation is None and ((wait_turn and make_turn) or not wait_turn):
+        animation = next(turn_generator)
+        if animation is None:
+            print("Press key for the next turn")
+        else:
+            logger.info("Got animation: %s" % str(animation) )
+
+            animation.start(get_time())
+        wait_turn = animation is None
+
 
     renderer.clear()
     renderer.draw_grid(grid)

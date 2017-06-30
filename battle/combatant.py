@@ -2,11 +2,11 @@ from core import *
 import dice
 import dnd.weapon
 from .entity import Entity
-
+import copy
 
 # Attack description
 class AttackDesc:
-    def __init__(self, weapon, on_hit=None, **kwargs):
+    def __init__(self, weapon, **kwargs):
         self.attack = kwargs.get('attack', 0)
         self.damage = kwargs.get('damage', dice.Dice())
         # Diced bonus damage, like sneak attack, elemental damage and so on
@@ -14,11 +14,12 @@ class AttackDesc:
         self.damage_mult = 1
         self.weapon = weapon
         self.touch = kwargs.get('touch', False)
-        self.on_hit = on_hit
-
         # Attack target
         self.target = None
         self.source = None
+
+    def copy(self):
+        return copy.copy(self)
 
     def text(self):
         dmg_min, dmg_max = self.damage.get_range()
@@ -26,10 +27,14 @@ class AttackDesc:
         return "attack with %s, roll=%d dam=%s->%d-%d" % (weapon_name, self.attack, self.damage.to_string(), dmg_min, dmg_max)
 
     def roll_attack(self):
-        return self.attack + dice.d20.roll()
+        roll = dice.d20.roll()
+        return self.attack + roll, roll
 
     def roll_damage(self):
         return self.damage.roll()
+
+    def roll_bonus_damage(self):
+        return self.bonus_damage.roll()
 
     def is_critical(self, roll):
         return self.weapon.is_critical(roll)
@@ -52,10 +57,6 @@ class Combatant(Entity):
         Entity.__init__(self, **kwargs)
         self._name = name
         self._current_initiative = 0
-        # Current visual coordinates. Most of time it is equal to tile coordinates
-        self.visual_X = 0.0
-        self.visual_Y = 0.0
-
         self._faction = "none"
 
         self._stats = [10, 10, 10, 10, 10, 10]
@@ -162,6 +163,8 @@ class Combatant(Entity):
     def get_turn_state(self):
         strikes = self.generate_bab_chain()
         self._turn_state.set_attacks(strikes)
+        # Use the first strike for AoO
+        self._turn_state.attack_AoO = strikes[0]
         return self._turn_state
 
     # Called on start of the turn
@@ -206,9 +209,13 @@ class Combatant(Entity):
     def opportunities_left(self):
         return self._opportunity_attacks
 
-    def respond_provocation(self, combatant, action=None):
+    # Use opportunity attack
+    def use_opportunity(self, desc: AttackDesc):
+        self._opportunities_used.append(desc)
+
+    def respond_provocation(self, battle, combatant, action=None):
         if self._brain is not None:
-            self._brain.respond_provocation(combatant, action)
+            yield from self._brain.respond_provocation(battle, combatant, action)
 
     def get_touch_ac(self, target=None):
         AC = self._AC + self._ac_deflection + self._ac_dodge
@@ -333,6 +340,7 @@ class Combatant(Entity):
         desc = AttackDesc(weapon, attack=attack, damage=damage, **kwargs)
         self._events.on_calc_attack(self, target, desc)
         return desc
+
     # Generate attack chain for full attack action
     def generate_bab_chain(self, target = None, **kwargs):
         attack_chain = []
@@ -528,6 +536,8 @@ class TurnState(object):
         self.made_attack = 0
         # Available attacks
         self.attacks = []
+        # Attack to be used for AoO
+        self.attack_AoO = []
 
     def set_attacks(self, attacks):
         self.attacks = attacks

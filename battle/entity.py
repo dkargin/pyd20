@@ -6,6 +6,9 @@ class Entity:
         # Current tile coordinates
         self.x = 0
         self.y = 0
+        # Current visual coordinates. Most of time it is equal to tile coordinates
+        self.visual_X = 0.0
+        self.visual_Y = 0.0
         # Body size, in tiles
         self._size = kwargs.get('size', 1)
         self._occupation_template = None
@@ -31,5 +34,10 @@ class Entity:
     def is_adjacent(self, other):
         reach = self.total_reach()
         return math.fabs(self.x - other.x) <= reach and math.fabs(self.y - other.y) <= reach
+
+    def fix_visual(self):
+        self.visual_X = self.x
+        self.visual_Y = self.y
+
 
 
