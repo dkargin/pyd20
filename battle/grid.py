@@ -1,11 +1,39 @@
 import core
 import random
-import heapq
 import math
 
 
 TERRAIN_FREE = 0
-TERRAIN_WALL = 1
+TERRAIN_GRASS = 1
+
+TERRAIN_WALL = 10
+
+
+
+class Point:
+    def __init__(self, **kwargs):
+        self.x = kwargs.get('x', 0.0)
+        self.y = kwargs.get('y', 0.0)
+
+    def make_tuple(self):
+        return self.x, self.y
+
+    def __add__(self, other):
+        return Point(x=self.x+other.x, y=self.y+other.y)
+
+    def __sub__(self, other):
+        return Point(x=self.x-other.x, y=self.y-other.y)
+
+    def __mul__(self, scale):
+        return Point(x=self.x*scale, y=self.y * scale)
+
+    # Manhattan metric
+    def distance_manhattan(self, b):
+        return min(abs(self.x - b.x), abs(self.y - b.y))
+
+    # Euclidian metric
+    def distance(self, b):
+        return math.sqrt((self.x - b.x)**2 + (self.y - b.y)**2)
 
 
 class Grid(object):
@@ -73,18 +101,16 @@ class Grid(object):
         else:
             return None
 
-    def get_tile_range(self, center, distance, skip_center = False):
+    def get_tile_range(self, center, distance):
         """
         :param center: - center tile
         :param distance: - tile range
         :return: [] array of selected tiles
         """
         tiles = []
-        for y in range(center.y - distance, center.y + distance + 1):
-            for x in range(center.x - distance, center.x + distance + 1):
+        for y in range(math.floor(center.y - distance), math.ceil(center.y + distance)):
+            for x in range(math.floor(center.x - distance), math.ceil(center.x + distance)):
                 tile = self.get_tile(x,y)
-                if skip_center and tile.x == center.x and tile.y == center.y:
-                    continue
                 if tile is not None:
                     tiles.append(tile)
         return tiles
@@ -129,7 +155,6 @@ class Grid(object):
         for tile in entity._occupied_tiles:
             tile.occupation.remove(entity)
         entity._occupied_tiles = []
-
 
 
     # Set terrain type for a tile
@@ -178,7 +203,7 @@ class Grid(object):
         key = (size, base_reach, near, far)
 
         if key in self._occupancy_templates:
-            return self._occupancy_templates(key)
+            return self._occupancy_templates[key]
 
         new_template = OccupationTemplate(size, base_reach, far, near)
         self._occupancy_templates[key] = new_template
@@ -221,7 +246,6 @@ class Tile(object):
     :type _predecessor: Tile | None
     :type _occupation: list
     """
-
     def __init__(self, x, y):
         """
         Creates a Tile object
@@ -230,11 +254,14 @@ class Tile(object):
         """
         self.x = x
         self.y = y
-        self._g = 0
+        # Max size allowed to be in this tile
+        self._max_size = 10
         # Do we need to store pathfinding info right here?
         # Let it be for now
+        self._g = 0
         self._successor = None
         self._predecessor = None
+
         self.occupation = []
         self.terrain = TERRAIN_FREE
         # Pathfinder search index
@@ -249,7 +276,7 @@ class Tile(object):
 
         :rtype: bool
         """
-        return len(self.occupation) == 0 and self.terrain == TERRAIN_FREE
+        return len(self.occupation) == 0 and self.terrain != TERRAIN_WALL
 
     def coords(self):
         return (self.x, self.y)
@@ -286,245 +313,6 @@ class Tile(object):
 
     def __hash__(self):
         return id(self)
-
-
-# Default cost function for pathfinder
-def default_cost(src, dst):
-    return math.sqrt((src.x - dst.x) ** 2 + (src.y - dst.y) ** 2)
-
-
-# Does pathfinding stuff
-class PathFinder(object):
-    def __init__(self, grid):
-        self.grid = grid
-        self.open_list = []
-        self.search_index = 0
-
-    def expand_tile(self, tile, costfn = default_cost):
-        """
-        :param tile:
-        :param costfn: function for calculating tile cost
-        :return:
-        """
-        adjacent = self.grid.get_adjacent_tiles(tile)
-        for next in adjacent:
-            if not next.is_empty():
-                continue
-            # Skip nodes that are already visited
-            if next._pathstate == self.search_index:
-                continue
-            next._g = tile._g + costfn(tile, next)
-            next._predecessor = tile
-            self.push_node(next)
-            #self.open_list.append(next, next._g)
-        pass
-
-    def push_node(self, tile):
-        tile._pathstate = self.get_wave_index()
-        heapq.heappush(self.open_list, (tile._g, tile))
-
-    def pop_node(self):
-        return heapq.heappop(self.open_list)[1]
-
-    # Compile path
-    def compile_path(self, start):
-        path = Path(self.grid)
-        # Building reversed path
-        current_tile = start
-        path.append(start)
-        while current_tile._predecessor is not None:
-            current_tile = current_tile._predecessor
-            if current_tile != start:
-                path.append(current_tile)
-        # Flipping back reversed path
-        path.reverse()
-        return path
-
-    def path_to(self, start_tile, dest_functor):
-        self.search_index += 2
-
-        start_tile._g = 0
-        start_tile._predecessor = None
-        self.open_list = []
-        self.push_node(start_tile)
-
-        iteration = 0
-
-        while len(self.open_list) > 0:
-            # cost, current_tile = self.open_list.pop()
-            cost, current_tile = heapq.heappop(self.open_list)
-            if dest_functor(current_tile):
-                return self.compile_path(current_tile)
-
-            self.expand_tile(current_tile)
-            iteration += 1
-        return None
-
-    def get_wave_index(self):
-        return self.search_index
-
-    def get_target_index(self):
-        return self.search_index+1
-
-    def path_to_range(self, start_tile, dest_tile, range):
-        """
-        Calculate path to any tile in range of dest_tile
-        :param start_tile: starting tile
-        :param dest_tile: destination tile
-        :param range: minimal range to achieve
-        :return:
-        """
-        self.search_index += 2
-        # Mark destination tiles
-        target_tiles = self.grid.get_tile_range(dest_tile, range)
-        for tile in target_tiles:
-            tile._target_mark = self.get_target_index()
-
-        start_tile._g = 0
-        start_tile._predecessor = None
-        # self.open_list = PriorityQueue([start_tile])
-        self.open_list = []
-        self.push_node(start_tile)
-
-        iteration = 0
-
-        while len(self.open_list) > 0:
-            # cost, current_tile = self.open_list.pop()
-            cost, current_tile = heapq.heappop(self.open_list)
-            # Check if we have reached our destination
-            if current_tile._target_mark == self.get_target_index():
-                return self.compile_path(current_tile)
-
-            self.expand_tile(current_tile)
-            iteration += 1
-        return None
-
-    def path_between_tiles(self, start_tile, dest_tile):
-        """
-        Get direct path between tiles
-        Implemented pathfinding using A*
-
-        :rtype: Path
-        """
-
-        self.search_index += 2
-
-        start_tile._g = 0
-        start_tile._predecessor = None
-
-        self.open_list = []
-        self.push_node(start_tile)
-
-        iteration = 0
-
-        while len(self.open_list) > 0:
-            #cost, current_tile = self.open_list.pop()
-            cost, current_tile = heapq.heappop(self.open_list)
-            if current_tile == dest_tile:
-                return self.compile_path(current_tile)
-
-            self.expand_tile(current_tile)
-            iteration += 1
-        return None
-
-
-class Path(object):
-    """
-    Implements a path through several grid tiles
-
-    :type __path: Tile[]
-    :type __grid: Grid
-    :type __iter_current: int
-    """
-
-    def __init__(self, grid):
-        """
-        Creates a Path object.
-
-        :param Grid grid: Reference to the grid of the path
-        """
-        self.__path = []
-        self.__grid = grid
-        self.__iter_current = 0
-
-    def get_path(self):
-        return self.__path
-
-    def first(self):
-        """
-        Returns the first tile in the path
-
-        :rtype: Tile
-        """
-        return self.__path[0]
-
-    def last(self):
-        """
-        Returns the last tile in the path
-
-        :rtype: Tile
-        """
-        return self.__path[len(self.__path) - 1]
-
-    def append(self, tile):
-        """
-        append tile to the path
-
-        :param Tile tile: the tile to append
-        """
-        self.__path.append(tile)
-
-    def reverse(self):
-        """
-        reverse the path
-        """
-        self.__path.reverse()
-
-    def remove(self, tile):
-        """
-        remove a tile from the path
-
-        :param Tile tile: the tile to remove
-        """
-        self.__path.remove(tile)
-
-    def length(self):
-        """
-        returns the length of the path in the current unit
-
-        :rtype: float
-        """
-        length = 0
-        for _ in self.__path:
-            length += self.__grid.get_tilesize()
-        return length
-
-    def count(self):
-        """
-        returns number of waypoints in the path
-        :return: int
-        """
-        return len(self.__path)
-
-    def __getitem__(self, index):
-        return self.__path[index]
-
-    def __iter__(self):
-        self.__iter_current = 0
-        return self
-
-    def next(self):
-        return self.__next__()
-
-    def __next__(self):
-        if self.__iter_current >= len(self.__path):
-            raise StopIteration
-        next_item = self.__path[self.__iter_current]
-        self.__iter_current += 0
-        return next_item
-
-    def __repr__(self):
-        return self.__path.__repr__()
 
 
 # Reach templates for different creature sizes and reaches

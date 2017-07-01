@@ -1,6 +1,7 @@
 import types
 import dice
-from battle.grid import Tile, PathFinder
+from battle.grid import Tile, Grid
+from battle.pathfinder import PathFinder
 from .combatant import Combatant, TurnState, AttackDesc
 
 import battle.actions
@@ -22,16 +23,19 @@ class Battle(object):
     :type grid: grid.Grid
     :type _combatants: Combatant[]
     """
-    def __init__(self, grid):
+    def __init__(self, grid_width, grid_height):
         """
         Create an instance of a battle.
 
         :param Grid grid: The grid the battle takes place on
         """
-        self.grid = grid
-        self.pathfinder = PathFinder(grid)
+        self.grid = Grid(grid_width, grid_height)
+        self.pathfinder = PathFinder(self.grid)
         self._combatants = []
         self.round = 0
+
+    def get_grid(self):
+        return self.grid
 
     def add_combatant(self, combatant, x, y, **kwargs):
         """
@@ -158,10 +162,12 @@ class Battle(object):
     def is_faction_enemy(self, faction_a, faction_b):
         return faction_a != faction_b
 
-    def path_to_range(self, src, target, range):
+    def path_to_melee_range(self, src, target, range):
         start = self.tile_for_combatant(src)
         end = self.tile_for_combatant(target)
-        path = self.pathfinder.path_to_range(start, end, range)
+        near = target.get_size()*0.5
+        far = target.get_size()*0.5 + range
+        path = self.pathfinder.path_to_melee_range(start, target.get_center(), near, far)
         return path
 
     # Find best enemy

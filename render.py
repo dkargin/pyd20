@@ -1,7 +1,7 @@
 import pygame
 import math
 from battle.combatant import Combatant
-
+from battle.grid import *
 # Pixel size for a tile
 TILESIZE=16
 
@@ -12,6 +12,7 @@ GREY0 = ( 64,  64,  64)
 GREY1 = (128, 128, 128)
 RED   = (255,   0,   0)
 GREEN = (  0, 255,   0)
+GREEN0 = (  16, 128,  16)
 BLUE  = (  0,   0, 255)
 
 
@@ -75,9 +76,12 @@ class Renderer:
         # Draw tiles
         for tile in grid.get_tiles():
             color = WHITE
-            if tile.terrain != 0:
-                rect = (*tile.coords(), 1, 1)
-                pygame.draw.rect(self.surface, color, self.grid_to_screen(rect))
+            if tile.terrain == 0:
+                continue
+            elif tile.terrain == TERRAIN_GRASS:
+                color = GREEN0
+            rect = (*tile.coords(), 1, 1)
+            pygame.draw.rect(self.surface, color, self.grid_to_screen(rect))
 
 
     # Draw tiled path
@@ -114,9 +118,10 @@ class Renderer:
         if self._draw_path and u.path is not None:
             self.draw_path(u.path)
 
-        for tile in u._threatened_tiles:
-            coord_cur = self.grid_to_screen((tile.x + 0.5, tile.y + 0.5))
-            pygame.draw.line(self.surface, RED, coord, coord_cur)
+        if self._draw_threaten:
+            for tile in u._threatened_tiles:
+                coord_cur = self.grid_to_screen((tile.x + 0.5, tile.y + 0.5))
+                pygame.draw.line(self.surface, RED, coord, coord_cur)
 
         text_surface = self.get_text(u.get_name())
         if text_surface:
@@ -127,3 +132,7 @@ class Renderer:
     def draw_combatants(self, combatants):
         for u in combatants:
             self.draw_combatant(u)
+
+    def draw_battle(self, battle):
+        self.draw_grid(battle.get_grid())
+        self.draw_combatants(battle._combatants)

@@ -49,7 +49,7 @@ class MovePath(Animation):
     """
     :type _path: grid.Path
     """
-    def __init__(self, entity, path, speed = 3.0):
+    def __init__(self, entity, path, speed = 10.0):
         self._entity = entity
         self._path = path
         self._speed = speed

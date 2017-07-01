@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 
 pygame.init()
 
-grid = Grid(40, 40)
-
 center_x = 20
 center_y = 20
+
+battle = Battle(40, 40)
+grid = battle.get_grid()
 
 def draw_cross(x, y, size):
     for i in range(-size, size+1):
@@ -25,8 +26,6 @@ def draw_cross(x, y, size):
         grid.set_terrain(x+ i, y, TERRAIN_WALL)
 
 #draw_cross(center_x, center_y, 5)
-
-battle = Battle(grid)
 
 char1 = Character("Bob", size=2, brain=brain.StandAttackBrain())
 char1.set_stats(18, 13, 16, 10, 10, 10)
@@ -57,13 +56,33 @@ def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
     return char
 
 
-char2 = make_shield_fighter('Roy')
+char2 = make_shield_fighter('Roy1')
+char3 = make_shield_fighter('Roy2')
+char4 = make_shield_fighter('Roy3')
+char5 = make_shield_fighter('Roy4')
 
 #battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
 battle.add_combatant(char1, center_x - 15, center_y, faction="team red")
 battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
+battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
+battle.add_combatant(char4, center_x + 15, center_y-4, faction="team blue")
+battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")
 
+
+# Drawing attack positions by specifying reach range
+def draw_attack_positions(combatant, reach0, reach1):
+    tiles0 = grid.get_tile_range(combatant.get_center(), combatant.get_size()*0.5+reach0)
+    tiles1 = grid.get_tile_range(combatant.get_center(), combatant.get_size()*0.5+reach1)
+
+    for tile in tiles0:
+        if tile in tiles1:
+            continue
+        tile.set_terrain(TERRAIN_GRASS)
+
+#draw_attack_positions(char1, 1,0)
+#draw_attack_positions(char2, 1,0)
+#draw_attack_positions(char3, 2,1)
 
 print(char1.print_character())
 print(char2.print_character())
@@ -75,8 +94,6 @@ pygame.display.set_caption("Battlescape")
 
 shouldExit = False
 animation = None
-
-
 
 
 # Get current time, in seconds
@@ -125,8 +142,7 @@ while not shouldExit:
 
 
     renderer.clear()
-    renderer.draw_grid(grid)
-    renderer.draw_combatants(battle._combatants)
+    renderer.draw_battle(battle)
     pygame.display.flip()
 
 print("Done")

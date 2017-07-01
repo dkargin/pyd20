@@ -65,7 +65,7 @@ class MoveAttackBrain(Brain):
                 self.target = None
         elif state.can_move():
             self.logger.debug("farget %s is away. Finding path" % self.target.get_name())
-            path = battle.path_to_range(self.slave, self.target, self.slave.total_reach())
+            path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
             self.logger.debug("found path of %d feet length" % path.length())
             yield from battle.make_action_move_tiles(self.slave, state, path)
 

@@ -1,4 +1,5 @@
 import math
+from .grid import Point
 
 # Grid entity
 class Entity:
@@ -18,6 +19,9 @@ class Entity:
 
     def get_size(self):
         return self._size
+
+    def get_center(self):
+        return Point(x=(self.x + self._size*0.5), y=self.y + self._size*0.5)
 
     def get_occupation_template(self):
         return self._occupation_template

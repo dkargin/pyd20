@@ -1,30 +1,16 @@
-Действия
-
-1. Move
-2. Standard action: Attack, Spell, ...
-3. Full round
-4. Charge
-
-
-Style:
-	Power attack
-	Fight Defencively
-	Combat expertise
-
-Feats:
-	- enable style
-	- alter damage
-
-
-
 # AI #
 
-Сначала прикручиваем такие виды простых мозгов:
+We have the following brains implemented:
 
-- standing warrior. 
-- agressive warrior. Move to target + attack
-- evasive ranger. Move away + attack
+- aggressive warrior. Moves to target and attacks it. Implemented in class MoveAttackBrain
+- standing warrior. No movement is allowed for him. But will attack any target in range. Implemented in class StandAttackBrain
+
+To be implemented:
+
+- evasive ranger. Move away + attack.
 - manual (player). Asks for a move on each turn
+- planning bitch.
+
 
 Все являются наследниками класса Brain
 
@@ -47,39 +33,30 @@ Feats:
 2. Статус выбраных участников (Character sheet)
 3. 
 
-Что сделано:
+What is done:
 
 1. Basic actions:
     - Standard attack
     - Movement
 1. Basic class progression internals: BAB, saving throw, HP
 1. Basic weapons, armors and shields and its stats
-1. Full round attack + TWF. Though
+1. Full round attack + TWF
+1. Resolving attack of opportunity for movement in threatened area
+1. Pathfinding works
+1. Brain picks proper melee attack tile
+1. Game loop properly generates animations for combatant actions
+
 
 # Plan #
 
-1. Attack of opportunity
-    - threatened zone for any size and reach    OK
-1. Proper sizes, reach templates and pathfinding for larger creatures
-    - proper sizes        OK
-    - reach templates     OK
-    - find path to adjacent tile
-    - find path for large object
 1. Movement speed and armor penalty
-1. Animations:
-    - movement
-    - attack
 1. Feats:
     1. Rage
     1. Monk wis to AC
+    1. Flurry of blows
+    1. Rage
+    1. Power attack
 
-    Flurry of blows
-    Rage
-    Power attack
-
-1. Средство для отрисовки дерева кратчайших путей
-2. Генерим набор тайлов, из которых можно атаковать цель
-3. Оторвать поиск пути от grid
 
 # Brain #
 
