@@ -63,6 +63,7 @@ class Combatant(Entity):
 
         # List of current status effects, mapping effect->duration
         self._status_effects = {}
+        self._status_flags = set()
         self._experience = 0
         self._alignment = 0
         self._BAB = 0
@@ -88,6 +89,8 @@ class Combatant(Entity):
         self._ac_natural = 0
         self._ac_deflection = 0
         self.move_speed = 30
+        # Penalty to move speed
+        self.move_penalty = 0
         # Attack bonus for chosen maneuver/style
         self._attack_bonus_style = 0
         # Damage bonus can differ for each weapon
@@ -123,6 +126,15 @@ class Combatant(Entity):
 
         brain = kwargs.get('brain', None)
         self.set_brain(brain)
+
+    def has_status_flag(self, status):
+        return status in self._status_flags
+
+    def add_status_flag(self, status):
+        self._status_flags.add(status)
+
+    def remove_status_flag(self, status):
+        self._status_flags.remove(status)
 
     # Recalculate internal data
     def recalculate(self):
@@ -545,7 +557,7 @@ class TurnState(object):
     # Use attack from generated attack list
     def use_attack(self):
         if len(self.attacks) > 0:
-            attack = self.attacks.pop()
+            attack = self.attacks.pop(0)
             self.made_attack += 1
             self.use_standard(attack=True)
             return attack

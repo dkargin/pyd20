@@ -282,7 +282,7 @@ class Battle(object):
         AC = target.get_touch_ac(target) if desc.touch else target.get_AC(target)
 
         # TODO: run events for critical hit
-        has_crit = desc.is_critical(attack) and (crit_confirm >= AC or crit_confirm_roll == 20)
+        has_crit = desc.is_critical(roll) and (crit_confirm >= AC or crit_confirm_roll == 20)
         hit = attack >= AC
         if roll == 20:
             hit = True
@@ -305,10 +305,10 @@ class Battle(object):
         else:
             attack_text = "misses"
 
-        print("%s %s %s with roll %d(%d) vs AC=%d" % (combatant.get_name(),
+        print("%s %s %s with roll %d(%d+%d) vs AC=%d" % (combatant.get_name(),
                                                       attack_text,
                                                       target.get_name(),
-                                                      attack, roll, AC))
+                                                      attack, roll, attack-roll, AC))
         if hit:
             self.deal_damage(combatant, target, total_damage)
 

@@ -28,8 +28,8 @@ class Point:
         return Point(x=self.x*scale, y=self.y * scale)
 
     # Manhattan metric
-    def distance_manhattan(self, b):
-        return min(abs(self.x - b.x), abs(self.y - b.y))
+    def distance_melee(self, b):
+        return max(abs(self.x - b.x), abs(self.y - b.y))
 
     # Euclidian metric
     def distance(self, b):

@@ -20,8 +20,13 @@ class Entity:
     def get_size(self):
         return self._size
 
-    def get_center(self):
+    def get_center(self) -> Point:
         return Point(x=(self.x + self._size*0.5), y=self.y + self._size*0.5)
+
+    def distance_melee(self, other):
+        center_self = self.get_center()
+        center_other = other.get_center()
+        return center_self.distance_melee(center_other) - other.get_size() * 0.5
 
     def get_occupation_template(self):
         return self._occupation_template
@@ -37,7 +42,8 @@ class Entity:
     # Check if combatant obj_b is whithin reach of combatant obj_a
     def is_adjacent(self, other):
         reach = self.total_reach()
-        return math.fabs(self.x - other.x) <= reach and math.fabs(self.y - other.y) <= reach
+        distance = self.distance_melee(other)
+        return reach > distance
 
     def fix_visual(self):
         self.visual_X = self.x

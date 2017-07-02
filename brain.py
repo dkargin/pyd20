@@ -55,14 +55,16 @@ class MoveAttackBrain(Brain):
         # 2. If enemy is in range - full round attack
         if self.slave.is_adjacent(self.target):
             self.logger.debug("target is near, can attack")
-            if self.target.is_consciousness():
-                # Mark that we have used an action
-                desc = state.use_attack()
-                desc.update_target(self.target)
-                # TODO: update attack data according to selected target or custom attack
-                yield from battle.make_action_strike(self.slave, state, self.target, desc)
-            else:
-                self.target = None
+            while state.can_attack():
+                if self.target.is_consciousness():
+                    # Mark that we have used an action
+                    desc = state.use_attack()
+                    desc.update_target(self.target)
+                    # TODO: update attack data according to selected target or custom attack
+                    yield from battle.make_action_strike(self.slave, state, self.target, desc)
+                else:
+                    self.target = None
+                    break
         elif state.can_move():
             self.logger.debug("farget %s is away. Finding path" % self.target.get_name())
             path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
@@ -96,14 +98,16 @@ class StandAttackBrain(Brain):
             return
 
         self.logger.debug("target is near, can attack")
-        if self.target.is_consciousness():
-            # Mark that we have used an action
-            desc = state.use_attack()
-            desc.update_target(self.target)
-            # TODO: update attack data according to selected target or custom attack
-            yield from battle.make_action_strike(self.slave, state, self.target, desc)
-        else:
-            self.target = None
+        while state.can_attack():
+            if self.target.is_consciousness():
+                # Mark that we have used an action
+                desc = state.use_attack()
+                desc.update_target(self.target)
+                # TODO: update attack data according to selected target or custom attack
+                yield from battle.make_action_strike(self.slave, state, self.target, desc)
+            else:
+                self.target = None
+                break
 
 
 # Object is controlled by keyboard input
