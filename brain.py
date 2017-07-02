@@ -23,13 +23,31 @@ class Brain(object):
         state = self.get_turn_state()
         if self.slave.opportunities_left() > 0 and state.attack_AoO is not None:
             print("%s uses opportinity to attack %s" % (self.slave.get_name(), target.get_name()))
-            desc = state.attack_AoO.copy()
-            desc.update_target(target)
-            self.slave.use_opportunity(desc)
+            desc = self.slave.calculate_attack_of_opportinity(target)
             yield from battle.do_action_strike(self.slave, desc)
 
     def get_turn_state(self) -> TurnState:
         return self.slave.get_turn_state()
+
+    # Estimate fight probabilities against specified enemy
+    def estimate_battle(self, enemy: Combatant):
+        AC = enemy.get_AC()
+        attacks = self.slave.generate_bab_chain(enemy)
+        total_dmg = 0
+        strikes = []
+        for strike in attacks:
+            prob = 100*strike.hit_probability(AC)
+            dam = strike.estimated_damage(enemy)
+            total_dmg += dam
+            strikes.append("prob=%d;dam=%0.3f"%(prob,dam))
+        print("Estimated strikes=[%s]. Round damage=%.2f" % (str(strikes), total_dmg))
+
+    def find_enemy_target(self, battle, force = False):
+        if self.target is None or force:
+            self.target = battle.find_enemy(self.slave)
+            if self.target is not None:
+                print("%s found enemy: %s" % (self.slave.get_name(), str(self.target)))
+            self.estimate_battle(self.target)
 
 
 # Brain for simple movement and attacking
@@ -41,15 +59,10 @@ class MoveAttackBrain(Brain):
     def make_turn(self, battle):
         state = self.get_turn_state()
         # Trying iteratively use all turn actions
-        # 1. If no enemy - find it
-        if self.target is None:
-            self.target = battle.find_enemy(self.slave)
-            if self.target is not None:
-                print("%s found enemy: %s" %(self.slave.get_name(), str(self.target)))
+        self.find_enemy_target(battle)
 
         if self.target is None:
             print("%s has no targets" % self.slave.get_name())
-            #yield WaitAction(self.slave)
             return
 
         # 2. If enemy is in range - full round attack
@@ -82,10 +95,7 @@ class StandAttackBrain(Brain):
         state = self.get_turn_state()
         # Trying iteratively use all turn actions
         # 1. If no enemy - find it
-        if self.target is None:
-            self.target = battle.find_enemy(self.slave)
-            if self.target is not None:
-                print("%s found enemy: %s" %(self.slave.get_name(), str(self.target)))
+        self.find_enemy_target(battle)
 
         if self.target is None:
             print("%s has no targets" % self.slave.get_name())

@@ -135,6 +135,17 @@ class Dice(object):
 
         return roll_sum
 
+    # Calculate mean
+    def mean(self):
+        summ1 = 0
+        total = 0
+        for side, count in self.dice.items():
+            summ1 += (1 + side) * 0.5 * count
+            total += 1
+        #if total > 0:
+        #    return summ1 / total
+        return summ1
+
 
 def roll(dice_sting):
     """

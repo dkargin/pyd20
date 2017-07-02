@@ -1,11 +1,10 @@
-import core
+#import core
 import random
 import math
-
+from .core import unit_length
 
 TERRAIN_FREE = 0
 TERRAIN_GRASS = 1
-
 TERRAIN_WALL = 10
 
 
@@ -34,6 +33,9 @@ class Point:
     # Euclidian metric
     def distance(self, b):
         return math.sqrt((self.x - b.x)**2 + (self.y - b.y)**2)
+
+    def __str__(self):
+        return "(%d;%d)" % (self.x, self.y)
 
 
 class Grid(object):
@@ -69,7 +71,7 @@ class Grid(object):
 
         :param float size: the new tilesize
         """
-        self._size = size / core.unit_length
+        self._size = size / unit_length
 
     def get_width(self):
         return self._width
@@ -83,7 +85,7 @@ class Grid(object):
 
         :rtype: int
         """
-        return self._size * core.unit_length
+        return self._size * unit_length
 
     def is_inside(self, x, y):
         return x in range(0, self._width) and y in range(0, self._height)
@@ -278,8 +280,8 @@ class Tile(object):
         """
         return len(self.occupation) == 0 and self.terrain != TERRAIN_WALL
 
-    def coords(self):
-        return (self.x, self.y)
+    def get_coord(self):
+        return Point(x=self.x, y=self.y)
 
     def set_terrain(self, type):
         self.terrain = type

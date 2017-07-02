@@ -1,11 +1,10 @@
 import json
 import os
-from core import *
 import copy
 
-from battle.combatant import Combatant
-
-from dice import *
+from .core import *
+from .dice import *
+from .combatant import Combatant
 
 
 def relative_path():
@@ -76,6 +75,16 @@ class Character(Combatant):
         for cls, level in self._classes.items():
             result += level
         return result
+
+    def get_class_level(self, class_name):
+        """
+        :param str class_name: required character class name
+        :return:
+        """
+        for cls, level in self._classes.items():
+            if cls.name == class_name:
+                return level
+        return 0
 
     # Add level to character
     def add_class_level(self, new_class, levels = 1, **kwargs):
@@ -277,17 +286,18 @@ class Character(Combatant):
             feats += class_.feats()
         return feats
 
-    def has_feat(self, feat_name):
+    def get_feat_type(self, feat_type):
         """
         Checks whether a feat has been learned
 
-        :param str feat_name: The name of the feat
+        :param class feat_type: Class type of the feat
         :rtype: bool
         """
+        result = []
         for feat in self.feats():
-            if feat.name.lower() == feat_name.lower():
-                return True
-        return False
+            if isinstance(feat, feat_type):
+                result.append(feat)
+        return result
 
     def skill_with_name(self, skill_name):
         """
@@ -331,11 +341,6 @@ class Progression(object):
         pass
 
 
-LOW = 0
-MEDIUM = 1
-HIGH = 2
-
-
 # Progression for base attack bonus
 class ProgressionBAB(Progression):
     def __init__(self, speed):
@@ -356,6 +361,7 @@ class ProgressionBAB(Progression):
 # Progression for saving throws
 class ProgressionSaveThrow(Progression):
     def __init__(self, fort, ref, will):
+        super(ProgressionSaveThrow, self).__init__()
         self.fort = fort
         self.ref = ref
         self.will = will
@@ -377,6 +383,7 @@ class ProgressionSaveThrow(Progression):
 
 class ProgressionHP(Progression):
     def __init__(self, dice):
+        super(ProgressionHP, self).__init__()
         self.dice = dice
 
     def apply(self, character, level_from, level_to):
@@ -391,6 +398,32 @@ class ProgressionHP(Progression):
         HP += dice.roll()
         character._health_max += HP
 
+
+# Progression that adds stateless feat on specified level
+class ProgressionFeat(Progression):
+    def __init__(self, feat, level):
+        super(ProgressionFeat, self).__init__()
+        self._feat = feat
+        self._level = level
+
+    def apply(self, character: Character, level_from, level_to):
+        if level_from < self._level and level_to >= self._level:
+            character.add_feat(self._feat)
+
+
+# Adds feat level progression
+class ProgressionFeatLevel(Progression):
+    def __init__(self, feat, levels_upgrade = [], *kargs, **kwargs):
+        self._feat = feat
+        self._feat_kargs = kargs
+        self._feat_kwargs = kwargs
+        self._levels = levels_upgrade
+
+    def apply(self, character: Character, level_from, level_to):
+        # Check if character has fet
+        if not character.get_feat_type(self._feat):
+            feat = self._feat(*self._feat_kargs, **self._feat_kwargs)
+            character.add_feat(feat)
 
 
 class CharacterClass(object):
@@ -407,6 +440,10 @@ class CharacterClass(object):
         self._name = name
         self._progressions = []
         self._progressions.extend(progressions)
+
+    @property
+    def name(self):
+        return self._name
 
     # Apply class changes for level up
     def apply(self, character, level_from, level_to):
@@ -461,14 +498,6 @@ class CharacterClass(object):
         """
         return alignment[0] in self._possible_alignments[0] and \
             alignment[1] in self._possible_alignments[1]
-
-    def roll_hit_die(self):
-        """
-        Rolls a hit die
-
-        :rtype: int
-        """
-        return self._hit_die.roll()
 
     def skill_points(self, int_modifier):
         """
@@ -731,7 +760,7 @@ class Feat(object):
     def __repr__(self):
         return "<" + self.name + ">"
 
-    def apply(self, combatant):
+    def apply(self, combatant: Combatant):
         pass
 
 

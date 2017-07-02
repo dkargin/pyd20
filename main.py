@@ -2,13 +2,16 @@ import pygame
 import logging
 import brain
 import classes
-import core
 import dnd.armor
 import dnd.weapon
+import dnd.feats
+from battle.core import *
 from battle.battle import Battle
 from battle.grid import *
-from character import Character
+from battle.character import Character
 from render import Renderer
+
+from battle_utils import *
 
 logger = logging.getLogger(__name__)
 
@@ -20,54 +23,31 @@ center_y = 20
 battle = Battle(40, 40)
 grid = battle.get_grid()
 
-def draw_cross(x, y, size):
-    for i in range(-size, size+1):
-        grid.set_terrain(x, y + i, TERRAIN_WALL)
-        grid.set_terrain(x+ i, y, TERRAIN_WALL)
-
-#draw_cross(center_x, center_y, 5)
+#draw_cross(grid, center_x, center_y, 5)
 
 char1 = Character("Bob", size=2, brain=brain.StandAttackBrain())
-char1.set_stats(18, 13, 16, 10, 10, 10)
-char1.wear_item(dnd.armor.full_plate, core.ITEM_SLOT_ARMOR)
-char1.wear_item(dnd.weapon.glaive, core.ITEM_SLOT_MAIN)
+char1.set_stats(18, 16, 16, 10, 10, 10)
+char1.wear_item(dnd.armor.breastplate, ITEM_SLOT_ARMOR)
+char1.wear_item(dnd.weapon.glaive, ITEM_SLOT_MAIN)
 char1.add_class_level(classes.Fighter, 6)
-
-# Create shield fighter
-def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
-    char = Character(name, brain=brain.MoveAttackBrain())
-    char.set_stats(*stats)
-    char.wear_item(dnd.armor.full_plate, core.ITEM_SLOT_ARMOR)
-    char.wear_item(dnd.armor.tower_shield, core.ITEM_SLOT_OFFHAND)
-    char.wear_item(dnd.weapon.longsword, core.ITEM_SLOT_MAIN)
-    char.add_class_level(classes.Fighter, 6)
-    return char
-
-# Create dual weapons fighter
-def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
-    char = Character(name, brain=brain.MoveAttackBrain())
-    char.set_stats(*stats)
-    char.wear_item(dnd.armor.full_plate, core.ITEM_SLOT_ARMOR)
-    char.wear_item(dnd.weapon.longsword, core.ITEM_SLOT_MAIN)
-    char.wear_item(dnd.weapon.shortsword, core.ITEM_SLOT_OFFHAND)
-    char.add_class_level(classes.Fighter, 6)
-    char._twf_skill = 1
-    #char.add_feat(feats.TWF)
-    return char
+char1.add_feat(dnd.feats.CombatReflexes())
+char1.add_feat(dnd.feats.DeftOpportunist())
 
 
 char2 = make_shield_fighter('Roy1')
-char3 = make_shield_fighter('Roy2')
-char4 = make_shield_fighter('Roy3')
-char5 = make_shield_fighter('Roy4')
+char3 = make_twf_fighter('Roy2')
+char4 = make_monk('Monky')
+
+#char5 = make_shield_fighter('Roy4')
 
 #battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
-battle.add_combatant(char1, center_x - 15, center_y, faction="team red")
+battle.add_combatant(char1, center_x, center_y, faction="team red")
+
 battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
-"""
 battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
 battle.add_combatant(char4, center_x + 15, center_y-4, faction="team blue")
+"""
 battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")
 """
 
@@ -82,12 +62,7 @@ def draw_attack_positions(combatant, reach0, reach1):
             continue
         tile.set_terrain(TERRAIN_GRASS)
 
-#draw_attack_positions(char1, 1,0)
-#draw_attack_positions(char2, 1,0)
-#draw_attack_positions(char3, 2,1)
-
-print(char1.print_character())
-print(char2.print_character())
+battle.print_characters()
 
 
 renderer = Renderer(grid, 20)

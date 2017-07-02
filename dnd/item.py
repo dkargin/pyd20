@@ -18,6 +18,9 @@ class Item(object):
     def on_equip(self, combatant):
         pass
 
+    def on_remove(self, combatant):
+        pass
+
     def is_weapon(self):
         return False
 

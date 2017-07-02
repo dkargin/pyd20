@@ -1,18 +1,11 @@
 import types
-import dice
+from .dice import *
 from battle.grid import Tile, Grid
 from battle.pathfinder import PathFinder
 from .combatant import Combatant, TurnState, AttackDesc
 
 import battle.actions
 import animation
-
-# Action durations
-DURATION_STANDARD = 0
-DURATION_MOVE = 1
-DURATION_FULLROUND = 2
-DURATION_FREE = 3
-DURATION_SWIFT = 4
 
 
 class Battle(object):
@@ -55,8 +48,8 @@ class Battle(object):
         combatant.x = x
         combatant.y = y
         combatant.recalculate()
+        combatant.on_round_start()
         self._combatants.append(combatant)
-
         self.grid.register_entity(combatant)
         combatant.fix_visual()
 
@@ -64,11 +57,12 @@ class Battle(object):
         """
         :param combatant: Combatant to be removed
         """
-        tile = self.tile_for_combatant(combatant)
-        if tile is None:
-            pass
         self._combatants.remove(combatant)
         self.grid.unregister_entity(combatant)
+
+    def print_characters(self):
+        for ch in self._combatants:
+            print(ch.print_character())
 
     def deal_damage(self, source, victim, damage):
         new_hp = victim.recieve_damage(damage)
@@ -164,7 +158,6 @@ class Battle(object):
 
     def path_to_melee_range(self, src, target, range):
         start = self.tile_for_combatant(src)
-        end = self.tile_for_combatant(target)
         near = target.get_size()*0.5
         far = target.get_size()*0.5 + range
         path = self.pathfinder.path_to_melee_range(start, target.get_center(), near, far)
@@ -187,7 +180,7 @@ class Battle(object):
         print("Rolling new initiative order")
         for combatant in self._combatants:
             combatant.reset_round()
-            initiative = combatant.current_initiative() + dice.d20.roll()
+            initiative = combatant.current_initiative() + d20.roll()
             print(combatant, "rolls %d for initiative" % initiative)
             self._combatants.update_priority(combatant, initiative)
 
@@ -210,6 +203,7 @@ class Battle(object):
         if x is not None and y is not None:
             return self.tile_for_position(x, y)
 
+    # TODO: Get rid of it
     def tile_for_combatant(self, combatant) -> Tile:
         return self.tile_for_position(combatant.x, combatant.y)
         #for tile in self.grid.get_tiles():

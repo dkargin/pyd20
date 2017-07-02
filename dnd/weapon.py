@@ -1,5 +1,5 @@
-from core import *
-from dice import *
+from battle.core import *
+from battle.dice import *
 
 from .item import Item
 
@@ -14,7 +14,11 @@ class Weapon(Item):
     """
     def __init__(self, base=None, **kwargs):
         Item.__init__(self, base, **kwargs)
+        # If weapon is double-sided
+        self._double = kwargs.get("double", False)
         self._damage = kwargs.get("damage", d6)
+        # Off-side weapon damage
+        self._damage_off = kwargs.get("damage_off", d6)
         # Monster size, which considers this weapon 'Light'
         self._light = kwargs.get("light", SIZE_MEDIUM)
         # Can be gripped by two hands
@@ -81,6 +85,20 @@ kukri = Weapon(name='Kukri', damage=d4,
                crit_mult=2,
                crit_range=3,
                range=0)
+
+kama = Weapon(name='kama', damage=d6,
+               light=SIZE_SMALL,
+               twohanded=False,
+               crit_mult=2,
+               crit_range=1,
+               range=0)
+
+quarterstaff = Weapon(name='quarterstaff', damage=d6,
+              light=SIZE_SMALL,
+              twohanded=False,
+              crit_mult=2,
+              crit_range=1,
+              range=0)
 
 shortsword = Weapon(name='Shord sword',
                     damage=d6,

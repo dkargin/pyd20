@@ -23,6 +23,9 @@ class Entity:
     def get_center(self) -> Point:
         return Point(x=(self.x + self._size*0.5), y=self.y + self._size*0.5)
 
+    def get_coord(self) -> Point:
+        return Point(x=self.x, y=self.y)
+
     def distance_melee(self, other):
         center_self = self.get_center()
         center_other = other.get_center()

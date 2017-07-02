@@ -1,5 +1,5 @@
-from core import *
-import dice
+from .core import *
+from battle.dice import *
 import dnd.weapon
 from .entity import Entity
 import copy
@@ -8,15 +8,18 @@ import copy
 class AttackDesc:
     def __init__(self, weapon, **kwargs):
         self.attack = kwargs.get('attack', 0)
-        self.damage = kwargs.get('damage', dice.Dice())
+        self.damage = kwargs.get('damage', Dice())
         # Diced bonus damage, like sneak attack, elemental damage and so on
-        self.bonus_damage = dice.Dice()
+        self.bonus_damage = Dice()
         self.damage_mult = 1
         self.weapon = weapon
         self.touch = kwargs.get('touch', False)
         # Attack target
         self.target = None
         self.source = None
+        self.opportunity = False
+        self.spellstrike = False
+        self.ranged = False
 
     def copy(self):
         return copy.copy(self)
@@ -27,7 +30,7 @@ class AttackDesc:
         return "attack with %s, roll=%d dam=%s->%d-%d" % (weapon_name, self.attack, self.damage.to_string(), dmg_min, dmg_max)
 
     def roll_attack(self):
-        roll = dice.d20.roll()
+        roll = d20.roll()
         return self.attack + roll, roll
 
     def roll_damage(self):
@@ -36,6 +39,22 @@ class AttackDesc:
     def roll_bonus_damage(self):
         return self.bonus_damage.roll()
 
+    # Calculates hit probability
+    def hit_probability(self, AC):
+        delta = 20 + self.attack - AC
+        if delta < 1:
+            delta = 1
+        if delta > 19:
+            delta = 19
+        return delta / 20.0
+
+    # Calculate estimated damage per round
+    def estimated_damage(self, target):
+        prob = self.hit_probability(target.get_AC())
+        # TODO: calculate crit damage bonus
+        damage = self.damage.mean() + self.bonus_damage.mean()
+        return prob * damage
+
     def is_critical(self, roll):
         return self.weapon.is_critical(roll)
 
@@ -43,16 +62,106 @@ class AttackDesc:
         return self.target
 
     def update_target(self, target):
-        # TODO: recalculate target-specific parameters
         self.target = target
 
     def __repr__(self):
         return self.text()
 
 
+# Utility class for storing event subscribers
+class SubscriberList:
+    def __init__(self):
+        self._subscribers = []
+
+    def __iadd__(self, handler):
+        if not callable(handler):
+            raise ValueError
+        if handler not in self._subscribers:
+            self._subscribers.append(handler)
+        return self
+
+    def __isub__(self, handler):
+        if handler in self._subscribers:
+            self._subscribers.remove(handler)
+        return self
+
+    # Call all subscribers
+    def __call__(self, *args, **kwargs):
+        for handler in self._subscribers:
+            handler(*args, **kwargs)
+
+
 # Contains current combatant characteristics
 # Should be as flat as possible for better performance
 class Combatant(Entity):
+    # Manager for DnD system events
+    # Stores a number of handlers for each event type
+    # This used to implement lots of feat overrides
+    class EventManager:
+        def __init__(self):
+            # For sneak attack, all passive targets,
+            # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
+            self.on_calc_attack = SubscriberList()
+            # Events that fired on start of the turn
+            # on_turn_start(self, combatant: Combatant):
+            self.on_turn_start = SubscriberList()
+            # Events that fired on end of the turn
+            # on_turn_end(self, combatant: Combatant):
+            self.on_turn_end = SubscriberList()
+            # Events that fired on end of the round
+            # on_round_end(self, combatant: Combatant):
+            self.on_round_end = SubscriberList()
+            # Events that fired when combatant is hit
+            # on_get_hit(self, combatant, effect, **kwargs):
+            self.on_get_hit = SubscriberList()
+            # Called when effect is applied
+            self.on_effect_apply = SubscriberList()
+
+            # Called when character rolls saving throw
+            # on_save_will(self, combatant, effect, **kwargs):
+            self.on_save_will = SubscriberList()
+            # on_save_fort(self, combatant, effect, **kwargs):
+            self.on_save_fort = SubscriberList()
+            # on_save_ref(self, combatant, effect, **kwargs):
+            self.on_save_ref = SubscriberList()
+            # on_change_stat(self, combatant, effect, old, new):
+            # Called when stats are changed. Some feats produce stat-dependent bonuses, so we need to notify them
+            self.on_change_str = SubscriberList()
+            self.on_change_dex = SubscriberList()
+            self.on_change_con = SubscriberList()
+            self.on_change_int = SubscriberList()
+            self.on_change_wis = SubscriberList()
+            self.on_change_cha = SubscriberList()
+
+        # Forbid setting new field values
+        def __set__(self, instance, value):
+            pass
+
+
+    # Any sort of effect, that can change stat or any mechanic
+    class StatusEffect(object):
+        def __init__(self):
+            self._duration = -1
+
+        # Get effect name
+        def name(self):
+            return "unknown"
+
+        # Get effect duration
+        def get_duration(self):
+            return self._duration
+
+        def set_duration(self, duration):
+            self._duration = duration
+
+        # Called when effect has started
+        def on_start(self, combatant, **kwargs):
+            pass
+
+        # Called when effect has finished
+        def on_finish(self, combatant, **kwargs):
+            pass
+
     def __init__(self, name, **kwargs):
         Entity.__init__(self, **kwargs)
         self._name = name
@@ -62,7 +171,7 @@ class Combatant(Entity):
         self._stats = [10, 10, 10, 10, 10, 10]
 
         # List of current status effects, mapping effect->duration
-        self._status_effects = {}
+        self._status_effects = []
         self._status_flags = set()
         self._experience = 0
         self._alignment = 0
@@ -90,7 +199,7 @@ class Combatant(Entity):
         self._ac_deflection = 0
         self.move_speed = 30
         # Penalty to move speed
-        self.move_penalty = 0
+        self._move_penalty = 0
         # Attack bonus for chosen maneuver/style
         self._attack_bonus_style = 0
         # Damage bonus can differ for each weapon
@@ -119,13 +228,20 @@ class Combatant(Entity):
         self._turn_state = TurnState()
 
         self._feats = []
-        self._events = MechanicsEventManager()
+        self._events = Combatant.EventManager()
 
         # Current path. For visualization
         self.path = None
 
         brain = kwargs.get('brain', None)
         self.set_brain(brain)
+
+    def event_manager(self):
+        """
+        Get access to event manager
+        :return:Combatant.EventManager
+        """
+        return self._events
 
     def has_status_flag(self, status):
         return status in self._status_flags
@@ -142,7 +258,7 @@ class Combatant(Entity):
         self._ac_armor = 0
         self._ac_deflection = 0
         self._ac_natural = 0
-        self._max_dex_ac = 0
+        self._max_dex_ac = 100
 
         for slot, item in self._equipped.items():
             item.on_equip(self)
@@ -164,6 +280,15 @@ class Combatant(Entity):
         if stat == STAT_CON:
             self._temp_hp[source] = self.level() * value
 
+    def add_persistent_effect(self, effect, effect_on, effect_off):
+        self._status_effects.append(effect)
+
+    def get_armor_type(self):
+        armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
+        if armor is None:
+            return ARMOR_TYPE_NONE
+        return armor.armor_type()
+
     def remove_stat_mod(self, stat, source):
         if stat == STAT_CON:
             if source in self._temp_hp:
@@ -182,22 +307,29 @@ class Combatant(Entity):
     # Called on start of the turn
     def on_round_start(self):
         state = self._turn_state
-        state.moves_left = self.move_speed
+
+        if self.has_status_flag(STATUS_HEAVY_ARMOR):
+            state.move_penalty = 10
+
+        state.moves_left = self.move_speed - self._move_penalty
+
         state.move_actions = 1
         state.standard_actions = 1
         state.fullround_actions = 1
         state.move_5ft = 1
         state.swift_actions = 1
         self.opportunity_attacks = 1
-
+        self._opportunities_used = []
+        self._ac_dodge = 0
         self._events.on_turn_start(self)
+        pass
 
     # Called when combatant's turn is ended
     def on_round_end(self):
         state = self._turn_state
         # Attacked opportunity targets
-        self._opportunities_used = []
-        self._opportunity_attacks = 1
+        #self._opportunities_used = []
+        #self._opportunity_attacks = 1
         # Clean up attack sequence
         state.attacks = []
         self._events.on_turn_end(self)
@@ -219,11 +351,19 @@ class Combatant(Entity):
         return AC
 
     def opportunities_left(self):
-        return self._opportunity_attacks
+        return self._opportunity_attacks - len(self._opportunities_used)
 
     # Use opportunity attack
     def use_opportunity(self, desc: AttackDesc):
         self._opportunities_used.append(desc)
+
+    def calculate_attack_of_opportinity(self, target):
+        desc = self._turn_state.attack_AoO.copy()
+        desc.update_target(target)
+        desc.opportunity = True
+        self._events.on_calc_attack(self, desc)
+        self.use_opportunity(desc)
+        return desc
 
     def respond_provocation(self, battle, combatant, action=None):
         if self._brain is not None:
@@ -350,7 +490,7 @@ class Combatant(Entity):
 
         # For all effects
         desc = AttackDesc(weapon, attack=attack, damage=damage, **kwargs)
-        self._events.on_calc_attack(self, target, desc)
+        self._events.on_calc_attack(self, desc)
         return desc
 
     # Generate attack chain for full attack action
@@ -378,7 +518,7 @@ class Combatant(Entity):
             attack_chain.append(desc)
             bab -= 5
 
-        twf_attacks = self._twf_skill+1 if two_weapon_fighting else 0
+        twf_attacks = self._twf_skill if two_weapon_fighting else 0
         bab = self._BAB
         if self._twf_skill == 0:
             attack_bonus_style -= 4
@@ -510,7 +650,7 @@ class Combatant(Entity):
 
         :rtype: int
         """
-        return dice.d20.roll() + self.dexterity_mofifier()
+        return d20.roll() + self.dexterity_mofifier()
 
     # Get generator
     def gen_actions(self, battle):
@@ -596,56 +736,6 @@ class TurnState(object):
         return not self.can_attack() and not self.can_move()
 
 
-# Any sort of effect, that can change stat or any mechanic
-class StatusEffect(object):
-    def __init__(self):
-        self._duration = -1
-
-    # Get effect name
-    def name(self):
-        return "unknown"
-
-    # Get effect duration
-    def get_duration(self):
-        return self._duration
-
-    def set_duration(self, duration):
-        self._duration = duration
-
-    # Called when effect has started
-    def on_start(self, combatant, **kwargs):
-        pass
-
-    # Called when effect has finished
-    def on_finish(self, combatant, **kwargs):
-        pass
-
-
-class StatusRage(StatusEffect):
-    def __init__(self, level):
-        StatusEffect.__init__(self)
-        # Rage level
-        self._level = level
-        self._stat_bonus = 4
-
-        if self._level == 1:
-            self._stat_bonus = 6
-        elif self._level == 2:
-            self._stat_bonus = 8
-
-    def on_start(self, combatant: Combatant, **kwargs):
-        combatant.modify_stat(STAT_STR, self._stat_bonus)
-        combatant.modify_stat(STAT_CON, self._stat_bonus)
-        combatant.modify_save_will(2)
-        self.set_duration(2 + combatant.constitution_mofifier())
-
-    def on_finish(self, combatant: Combatant, **kwargs):
-        combatant.modify_stat(STAT_STR, -self._stat_bonus)
-        combatant.modify_stat(STAT_CON, -self._stat_bonus)
-        combatant.modify_save_will(2)
-        self.set_duration(2 + combatant.constitution_mofifier())
-
-
 # Should it be any different from effect?
 class AttackStyle(object):
     def __init__(self):
@@ -657,51 +747,3 @@ class AttackStyle(object):
     def on_finish(self, combatant):
         pass
 
-
-# Manager for DnD system events
-# Stores a number of handlers for each event type
-# This used to implement lots of feat overrides
-class MechanicsEventManager:
-    class SubscriberList:
-        def __init__(self):
-            self._subscribers = []
-
-        def __radd__(self, handler):
-            if not callable(handler):
-                raise ValueError
-            if handler not in self._subscribers:
-                self._subscribers.append(handler)
-
-        def __rsub__(self, handler):
-            if handler in self._subscribers:
-                self._subscribers.remove(handler)
-
-        # Call all subscribers
-        def __call__(self, *args, **kwargs):
-            for handler in self._subscribers:
-                handler(*args, **kwargs)
-
-    def __init__(self):
-        # For sneak attack, all passive targets,
-        # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
-        self.on_calc_attack = MechanicsEventManager.SubscriberList()
-        # Events that fired on start of the turn
-        # on_turn_start(self, combatant: Combatant):
-        self.on_turn_start = MechanicsEventManager.SubscriberList()
-        # Events that fired on end of the turn
-        # on_turn_end(self, combatant: Combatant):
-        self.on_turn_end = MechanicsEventManager.SubscriberList()
-        # Events that fired on end of the round
-        # on_round_end(self, combatant: Combatant):
-        self.on_round_end = MechanicsEventManager.SubscriberList()
-        # Events that fired when combatant is hit
-        # on_get_hit(self, combatant, effect, **kwargs):
-        self.on_get_hit = MechanicsEventManager.SubscriberList()
-        # Called when effect is applied
-        self.on_effect_apply = MechanicsEventManager.SubscriberList()
-        # on_save_will(self, combatant, effect, **kwargs):
-        self.on_save_will = MechanicsEventManager.SubscriberList()
-        # on_save_fort(self, combatant, effect, **kwargs):
-        self.on_save_fort = MechanicsEventManager.SubscriberList()
-        # on_save_ref(self, combatant, effect, **kwargs):
-        self.on_save_ref = MechanicsEventManager.SubscriberList()

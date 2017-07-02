@@ -45,18 +45,50 @@ What is done:
 1. Pathfinding works
 1. Brain picks proper melee attack tile
 1. Game loop properly generates animations for combatant actions
+1. Core classes
+    - Monk. Implemented basic progression and some class feats
+    - Fighter. Implemented basic progression
 
 
 # Plan #
 
 1. Movement speed and armor penalty
+1. Charge attack
+1. Fighting defencively (and skill bonuses)
 1. Feats:
-    1. Rage
-    1. Monk wis to AC
-    1. Flurry of blows
-    1. Rage
-    1. Power attack
-
+    - Rage
+    - Monk AC bonus             OK
+    - Flurry of blows
+    - Power attack
+    - Weapon finisse
+    - Weapon focus
+    - Power critical
+    - Combat reflexes           OK
+    - Deft opportunist          OK
+    - Insightfull strike
+    - Sneak attack
+    - Cleave
+    - Spinning Halberd
+    - Defensive Sweep: If an opponent starts their turn adjacent to you and doesn’t move this round, they provoke an AoO at the end of the turn. PHBII pg 78.
+    - Quick Staff. Or monk is boring
+    - Improved trip
+    - Improved disarm
+1. Ranged attack
+1. Items can lay on ground
+1. Some spells (most interesting for me):
+    - True strike. Remove bonus after the first strike
+    - Shield
+    - Mage armor
+    - Scorching ray
+    - Greater invisibility
+    - Darkness
+    - Grease (skills need to be implemented)
+    - Rhino's rush. Need charge to be implemented
+    - Fireball
+1. Brain can change weapons
+1. Animation for attack and receiving damage. There could be multiple animation effects
+1. Test splitting targets during full attack action
+    - and use 5ft step as well
 
 # Brain #
 

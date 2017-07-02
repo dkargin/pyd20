@@ -9,12 +9,31 @@ UNIT_WEIGHT_KILOGRAM = 0.45359237
 unit_length = UNIT_LENGTH_FEET
 unit_weight = UNIT_WEIGHT_POUND
 
+LOW = 0
+MEDIUM = 1
+HIGH = 2
+
+
+# Some boolean statuses that character can have
+STATUS_PRONE = 1
+STATUS_HEAVY_ARMOR = 2
+STATUS_IGNORE_ARMOR_MOVE = 3
+STATUS_PARALYZED = 4
+STATUS_BLIND = 5        # Should it have simple status, or complex effect?
+STATUS_STUNNED = 6
+STATUS_FLATFOOTED = 7
+
 
 ITEM_SLOT_ARMOR = 0
 ITEM_SLOT_MAIN = 1
 ITEM_SLOT_OFFHAND = 2
 ITEM_SLOT_HEAD = 3
 ITEM_SLOT_FEET = 4
+
+ARMOR_TYPE_NONE = 0
+ARMOR_TYPE_LIGHT = 1
+ARMOR_TYPE_MEDIUM = 2
+ARMOR_TYPE_HEAVY = 3
 
 SIZE_TINY = 1
 SIZE_SMALL = 2
@@ -98,14 +117,13 @@ SIZE_CATEGORIES = [
 ]
 
 
-# Generate attack chain
-def attack_chain(bab):
-    remaining = bab
-    result = [bab]
-    while remaining > 1:
-        result.append(remaining)
-        remaining -= 5
-    return result
+# Action durations
+DURATION_STANDARD = 0
+DURATION_MOVE = 1
+DURATION_FULLROUND = 2
+DURATION_FREE = 3
+DURATION_SWIFT = 4
+
 
 def ability_modifier(value):
     """
@@ -137,43 +155,6 @@ def bonus_spells(value):
         bonus_spells.append(bonus)
         level += 1
     return bonus_spells
-
-
-def attack_bonus(level, bonus_type='good'):
-    """
-    calculates the attack bonus for a given level and bonus type
-    valid type values are: 'good', 'average' and 'poor'
-
-    :rtype: int
-    """
-    bonus = list()
-    base_bonus = 0
-    if bonus_type == 'good':
-        base_bonus = level
-    if bonus_type == 'average':
-        base_bonus = math.ceil(0.75 * level - 0.75)
-    if bonus_type == 'poor':
-        base_bonus = int(level/2)
-    bonus.append(base_bonus)
-    last_bonus = base_bonus
-    while last_bonus > 5:
-        last_bonus -= 5
-        bonus.append(last_bonus)
-    return bonus
-
-
-def save_bonus(level, type='good'):
-    """
-    calculates the save bonus for a given level and bonus type
-    valid type values are: 'good', and 'poor'
-
-    :rtype: int
-    """
-    if type == 'good':
-        return int(level/2) + 2
-    if type == 'poor':
-        return int(level/3)
-    return 0
 
 
 def needed_xp(level):
