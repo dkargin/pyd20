@@ -26,7 +26,6 @@ This is D&D 3.5 battle ground, implemented in python
 
 # Plan #
 
-1. Movement speed and armor penalty
 1. Charge attack
     - draw a line
     - move a line
@@ -36,7 +35,6 @@ This is D&D 3.5 battle ground, implemented in python
     - bow them all
     - reload action
     - crossbow reload
-1. Fighting defencively
 1. Status effects and ways to toggle them
 1. Simple feats:
     - Monk AC bonus                     OK

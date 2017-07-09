@@ -52,7 +52,7 @@ class Battle(object):
         combatant.x = x
         combatant.y = y
         combatant.recalculate()
-        combatant.on_round_start()
+        combatant.on_round_start(self)
         self._combatants.append(combatant)
         self.grid.register_entity(combatant)
         combatant.fix_visual()
@@ -93,7 +93,7 @@ class Battle(object):
     # Process turn for selected combatant
     def combatant_make_turn(self, combatant):
         # print(combatant, "'s turn")
-        combatant.on_round_start()
+        combatant.on_round_start(self)
 
         # Hard limit on action generator
         iteration_limit = 20
@@ -225,43 +225,3 @@ class Battle(object):
             yield battle.actions.MoveAction(combatant, tiles_moved)
 
         state.use_move()
-
-    # Execute strike action
-    def do_action_strike(self, combatant, desc: AttackDesc):
-        yield animation.AttackStart(combatant, desc.get_target())
-        attack, roll = desc.roll_attack()
-        # Roll for critical confirmation
-        crit_confirm, crit_confirm_roll = desc.roll_attack()
-        target = desc.get_target()
-
-        # TODO: run events for on_strike_begin(desc, target)
-        armor_class = target.get_touch_armor_class(target) if desc.touch else target.get_armor_class(target)
-
-        # TODO: run events for critical hit
-        has_crit = desc.is_critical(roll) and (crit_confirm + desc.critical_confirm_bonus >= armor_class or crit_confirm_roll == 20)
-        hit = attack >= armor_class
-        if roll == 20:
-            hit = True
-        if roll == 1:
-            hit = False
-
-        attack_text = "misses"
-        total_damage = 0
-
-        if hit:
-            damage = desc.roll_damage()
-            bonus_damage = desc.roll_bonus_damage()
-            if has_crit:
-                damage *= desc.weapon.crit_mult
-                attack_text = "critically hits"
-            else:
-                attack_text = "hits"
-            total_damage = damage + bonus_damage
-
-        print("%s %s %s with roll %d(%d+%d) vs AC=%d" %
-              (combatant.get_name(), attack_text, target.get_name(), attack, roll, attack-roll, armor_class))
-        if hit:
-            target.receive_damage(damage, combatant)
-
-        yield animation.AttackFinish(combatant, target)
-        # TODO: run events for on_strike_finish()

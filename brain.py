@@ -4,6 +4,122 @@ from battle.actions import *
 from battle.combatant import *
 
 
+# Estimate fight probabilities against specified enemy
+def estimate_attack_round(attacker: Combatant, defender: Combatant):
+    attacks = attacker.generate_bab_chain(defender)
+    total_dmg = 0
+    for strike in attacks:
+        dam, prob = strike.estimated_damage(attacker, defender)
+        strike.prob = 100*prob
+        total_dmg += dam
+    return attacks, total_dmg
+
+
+class StrikeExchange:
+    def __init__(self, a: Combatant, b: Combatant, data):
+        attacks_a, dmg_a = estimate_attack_round(a, b)
+        self.a = a
+        self.attacks_a = attacks_a
+        self.dmg_a = dmg_a
+        self.rounds_a = b.health / dmg_a if dmg_a > 0 else 1000
+
+        attacks_b, dmg_b = estimate_attack_round(b, a)
+        self.b = b
+        self.attacks_b = attacks_b
+        self.dmg_b = dmg_b
+        self.rounds_b = a.health / dmg_b if dmg_b > 0 else 1000
+
+        self.data = data
+
+    def delta(self):
+        return self.dmg_a - self.dmg_b
+
+    # Make score for exchange
+    def score(self):
+        return self.rounds_b - self.rounds_a
+
+    def seq_str(self, seqence):
+        text = ""
+        for strike in seqence:
+            text += "\n\t%s" % str(strike)
+        return text
+
+    def __str__(self):
+        seq_a = self.seq_str(self.attacks_a)
+        seq_b = self.seq_str(self.attacks_b)
+        text = ""
+        text += "A strikes vs AC=%d: %s" % (self.b.get_armor_class(self.a), seq_a)
+        text += "\nB strikes vs AC=%d: %s" % (self.a.get_armor_class(self.b), seq_b)
+        return text
+
+
+# Estimating battle between combatant 'a' and 'b'
+def estimate_battle(a: Combatant, b: Combatant):
+    # Estimate attack a to b
+    attacks_a, dmg_a = estimate_attack_round(a, b)
+    rounds_a = b.health / dmg_a if dmg_a > 0 else 1000
+    # Estimate attack b to a
+    attacks_b, dmg_b = estimate_attack_round(b, a)
+    rounds_b = a.health / dmg_b if dmg_b > 0 else 1000
+
+    return dmg_a - dmg_b, min(rounds_a, rounds_b), attacks_a, attacks_b
+
+
+class StyleSet:
+    def __init__(self, styles):
+        self.styles = styles
+
+    def activate(self, combatant: Combatant):
+        for style in self.styles:
+            combatant.activate_style(style)
+
+    def deactivate(self, combatant: Combatant):
+        for style in self.styles:
+            combatant.deactivate_style(style)
+
+    def __str__(self):
+        return str(self.styles)
+
+
+def pick_by_bitmask(data, bitmask, max):
+    result = []
+    for i in range(0, max):
+        if bitmask & (1 << i):
+            result.append(data[i])
+    return result
+
+
+# Generate style variations
+def style_variations(a: Combatant):
+    style_list = list(a._known_styles)
+    max_choice = 1 << len(style_list)
+
+    for mask in range(0, max_choice):
+        styles = pick_by_bitmask(style_list, mask, len(style_list))
+        yield StyleSet(styles)
+
+
+def find_best_style(a: Combatant, b: Combatant):
+    best_style = None
+    best_exchange = None
+    best_score = 0
+    for variation in style_variations(a):
+
+        variation.activate(a)
+        exchange = StrikeExchange(a,b, variation)
+        score = exchange.score()
+
+        print("Checking style %s. Score=%f" % (str(variation), score))
+
+        variation.deactivate(a)
+        if best_style is None or score > best_score:
+            best_style = variation
+            best_exchange = exchange
+            best_score = score
+
+    return best_style, best_exchange, best_score
+
+
 class Brain(object):
     """
     Base class for combatant AI
@@ -17,16 +133,26 @@ class Brain(object):
         # Path to follow
         self.path = None
 
-    # To be overriden
+    # Prepare to start a turn
+    # Used for selecting fighting styles, activating feats and so on
+    def prepare_turn(self, battle):
+        # Trying iteratively use all turn actions
+        if self.find_enemy_target(battle):
+            style, exchange, score = find_best_style(self.slave, self.target)
+            print("Best style %s provides %+f delta damage" % (str(style), score))
+            print(str(exchange))
+
+    # Brain make its turn right here
     def make_turn(self, battle):
         pass
 
-    def respond_provocation(self, battle, target : Combatant, action=None):
+    # Called when someone provokes attack of opportunity
+    def respond_provocation(self, battle, target: Combatant, action=None):
         state = self.get_turn_state()
         if self.slave.opportunities_left() > 0 and state.attack_AoO is not None:
-            print("%s uses opportinity to attack %s" % (self.slave.get_name(), target.get_name()))
+            print("%s uses opportunity to attack %s" % (self.slave.get_name(), target.get_name()))
             desc = self.slave.calculate_attack_of_opportunity(target)
-            yield from battle.do_action_strike(self.slave, desc)
+            yield from self.slave.do_action_strike(desc)
 
     def get_turn_state(self) -> TurnState:
         return self.slave.get_turn_state()
@@ -38,8 +164,7 @@ class Brain(object):
         total_dmg = 0
         strikes = []
         for strike in attacks:
-            prob = 100*strike.hit_probability(AC)
-            dam = strike.estimated_damage(enemy)
+            dam, prob = strike.estimated_damage(self.slave, enemy)
             total_dmg += dam
             strikes.append("prob=%d;dam=%0.3f"%(prob,dam))
         print("Estimated strikes=[%s]. Round damage=%.2f" % (str(strikes), total_dmg))
@@ -50,6 +175,8 @@ class Brain(object):
             if self.target is not None:
                 print("%s found enemy: %s" % (self.slave.get_name(), str(self.target)))
                 self.estimate_battle(self.target)
+                return True
+        return False
 
 
 # Brain for simple movement and attacking
@@ -60,8 +187,7 @@ class MoveAttackBrain(Brain):
 
     def make_turn(self, battle):
         state = self.get_turn_state()
-        # Trying iteratively use all turn actions
-        self.find_enemy_target(battle)
+
 
         if self.target is None:
             print("%s has no targets" % self.slave.get_name())

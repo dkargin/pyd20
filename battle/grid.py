@@ -114,7 +114,7 @@ class Grid(object):
         if len(free) > 0:
             index = random.randint(0, len(free)-1)
             tile = free[index]
-            return (tile.x, tile.y)
+            return tile.x, tile.y
         else:
             return None
 
@@ -140,7 +140,7 @@ class Grid(object):
         template = entity.get_occupation_template()
         if not isinstance(template, OccupationTemplate):
             # Generate new occupation template
-            template = self.get_occupancy_template(entity.get_size(), entity.natural_reach(), entity.has_reach_near(), entity.has_reach_far())
+            template = self.get_occupancy_template(entity)
             entity.set_occupation_template(template)
 
         def offset_tile(coord) -> Tile:
@@ -151,16 +151,16 @@ class Grid(object):
             tile = offset_tile(offset)
             if tile is not None and entity not in tile.occupation:
                 tile.occupation.append(entity)
-                if tile not in entity._occupied_tiles:
-                    entity._occupied_tiles.append(tile)
+                if tile not in entity.occupied_tiles:
+                    entity.occupied_tiles.append(tile)
 
         # Mark threatened area
         for offset in template.tiles_threatened:
             tile = offset_tile(offset)
             if tile is not None and entity not in tile.threaten:
                 tile.threaten.append(entity)
-                if tile not in entity._threatened_tiles:
-                    entity._threatened_tiles.append(tile)
+                if tile not in entity.threatened_tiles:
+                    entity.threatened_tiles.append(tile)
 
     # Remove entity from grid.
     # Removes all the references, and tile threatening as well
@@ -173,10 +173,9 @@ class Grid(object):
             tile.occupation.remove(entity)
         entity._occupied_tiles = []
 
-
     # Set terrain type for a tile
     def set_terrain(self, x, y, type):
-        tile = self.get_tile(x,y)
+        tile = self.get_tile(x, y)
         tile.set_terrain(type)
 
     # Get tile reference
@@ -188,7 +187,7 @@ class Grid(object):
         :param int y: the y coordinate of the tile
         :rtype: Tile
         """
-        if self.is_inside(x,y):
+        if self.is_inside(x, y):
             return self.__grid[x + y * self._width]
         return None
 
@@ -216,7 +215,12 @@ class Grid(object):
 
     # Get occupancy template for specified parameters
     # This templates are cached
-    def get_occupancy_template(self, size, base_reach, near, far):
+    def get_occupancy_template(self, entity):
+        size = entity.get_size()
+        base_reach = entity.natural_reach()
+        near = entity.has_reach_near()
+        far = entity.has_reach_far()
+
         key = (size, base_reach, near, far)
 
         if key in self._occupancy_templates:
@@ -298,8 +302,8 @@ class Tile(object):
     def get_coord(self):
         return Point(x=self.x, y=self.y)
 
-    def set_terrain(self, type):
-        self.terrain = type
+    def set_terrain(self, t):
+        self.terrain = t
 
     def has_occupation(self, thing):
         """
@@ -361,10 +365,6 @@ class OccupationTemplate:
         if self.far:
             far_reach *= 2
 
-
-        def classify(self, x, y):
-            return False
-
         # Returns if cell is occupied by this creature
         def occupy(x, y):
             return x in range(0, size) and y in range(0, size)
@@ -385,19 +385,19 @@ class OccupationTemplate:
 
         for x in range(-far_reach, size + far_reach):
             for y in range(-far_reach, size + far_reach):
-                type = 0
+                t = 0
                 if occupy(x,y):
-                    type |= self.MARK_OCCUPY
+                    t |= self.MARK_OCCUPY
                     self.tiles_occupied.append((x, y))
                 elif threaten_near(x,y):
                     if self.near:
-                        type |= self.MARK_THREATEN_NEAR
+                        t |= self.MARK_THREATEN_NEAR
                         self.tiles_threatened.append((x,y))
                 elif self.far and threaten_far(x,y):
-                    type |= self.MARK_THREATEN_FAR
+                    t |= self.MARK_THREATEN_FAR
                     self.tiles_threatened.append((x, y))
 
-                tile = (x, y, type)
+                tile = (x, y, t)
                 self.template.append(tile)
         pass
 
@@ -423,9 +423,5 @@ class OccupationTemplate:
             result += row_str
         return result
 
-    """
-    def __repr__(self):
-        return str(self)
-    """
 
 

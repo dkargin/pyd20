@@ -3,6 +3,7 @@ from battle.dice import *
 import battle.item
 from .entity import Entity
 import copy
+import animation
 
 
 class AttackDesc:
@@ -20,6 +21,8 @@ class AttackDesc:
         self.damage = kwargs.get('damage', Dice())
         # Diced bonus damage, like sneak attack, elemental damage and so on
         self.bonus_damage = Dice()
+        # Estimated strike probability
+        self.prob = 0
         self.damage_multiplier = 1
         self.critical_confirm_bonus = 0
         self.two_handed = kwargs.get('two_handed', False)
@@ -41,8 +44,13 @@ class AttackDesc:
     def text(self):
         dmg_min, dmg_max = self.damage.get_range()
         weapon_name = self.weapon.name if self.weapon is not None else "null weapon"
-        return "attack with %s, roll=%d dam=%s->%d-%d" % \
-               (weapon_name, self.attack, str(self.damage), dmg_min, dmg_max)
+        if self.prob != 0:
+            return "attack with %s roll=%d prob=%d dam=%s->%d-%d" % \
+                   (weapon_name, self.attack, self.prob, str(self.damage), dmg_min, dmg_max)
+        else:
+            return "attack with %s roll=%d dam=%s->%d-%d" % \
+                   (weapon_name, self.attack, str(self.damage), dmg_min, dmg_max)
+
 
     def roll_attack(self):
         result = d20.roll()
@@ -64,11 +72,12 @@ class AttackDesc:
         return delta / 20.0
 
     # Calculate estimated damage per round
-    def estimated_damage(self, target):
-        prob = self.hit_probability(target.get_armor_class())
+    def estimated_damage(self, source, target):
+        ac = target.get_touch_armor_class(source) if self.touch else target.get_armor_class(source)
+        prob = self.hit_probability(ac)
         # TODO: calculate critical damage bonus
         damage = self.damage.mean() + self.bonus_damage.mean()
-        return prob * damage
+        return prob * damage, prob
 
     def is_critical(self, roll):
         return self.weapon.is_critical(roll)
@@ -185,6 +194,23 @@ class Combatant(Entity):
         def on_finish(self, combatant, **kwargs):
             pass
 
+        def __repr__(self):
+            return str(self)
+
+        def __str__(self):
+            return self.name
+
+        def __hash__(self):
+            return hash(self.name)
+
+        def __eq__(self, other):
+            return self.name == other.name
+
+        def __ne__(self, other):
+            # Not strictly necessary, but to avoid having both x==y and x!=y
+            # True at the same time
+            return not (self == other)
+
     def __init__(self, name, **kwargs):
         size_type = kwargs.get('csize', SIZE_MEDIUM)
         if 'size' not in kwargs:
@@ -236,12 +262,14 @@ class Combatant(Entity):
         self._move_penalty = 0
         # Attack bonus for chosen maneuver/style
         self._attack_bonus_style = 0
+        self._two_hand_wield = False
+        self._many_weapon_wield = False
         # Damage bonus can differ for each weapon
         self._damage_bonus_style = 0
         # Full round attack set
         self._weapon_strikes = []
         self._natural_strikes = {}
-        self._additional_strikes = {}
+        self._additional_strikes = []
 
         self._carry_weight = 0
         self._carry_weight_limit = 0
@@ -258,6 +286,9 @@ class Combatant(Entity):
 
         self._turn_state = TurnState()
 
+        self._known_styles = set()
+        self._active_styles = []
+
         self._feats = []
         self._events = Combatant.EventManager()
 
@@ -266,6 +297,8 @@ class Combatant(Entity):
 
         brain = kwargs.get('brain', None)
         self.set_brain(brain)
+
+        self.allow_effect_activation(StyleDefenciveFight())
 
     def event_manager(self):
         """
@@ -301,7 +334,7 @@ class Combatant(Entity):
         self._ac_armor += mod
 
     def modify_ac_dodge(self, mod):
-        self._ac_armor += mod
+        self._ac_dodge += mod
 
     def modify_ac_dex(self, mod):
         self._max_dex_ac = min(self._max_dex_ac, mod)
@@ -333,11 +366,17 @@ class Combatant(Entity):
         return self._turn_state
 
     # Called on start of the turn
-    def on_round_start(self):
+    def on_round_start(self, battle):
         state = self._turn_state
 
+        # Stop styles from previous turns
+        for style in self._active_styles:
+            style.on_finish(self)
+
+        self.check_weapon_wield()
+
         if self.has_status_flag(STATUS_HEAVY_ARMOR):
-            state.move_penalty = 10
+            self._move_penalty = 10
 
         state.moves_left = self.move_speed - self._move_penalty
 
@@ -346,11 +385,10 @@ class Combatant(Entity):
         state.full_round_actions = 1
         state.move_5ft = 1
         state.swift_actions = 1
-        #self.opportunity_attacks = 1
         self._opportunities_used = []
         self._ac_dodge = 0
         self._events.on_turn_start(self)
-        pass
+        self._brain.prepare_turn(battle)
 
     # Called when combatant's turn is ended
     def on_round_end(self):
@@ -368,6 +406,14 @@ class Combatant(Entity):
         self._equipped[slot] = item
         item.on_equip(self)
         self._carry_weight_limit += item.weight()
+
+    def activate_style(self, style):
+        self._active_styles.append(style)
+        style.on_start(self)
+
+    def deactivate_style(self, style):
+        style.on_finish(self)
+        self._active_styles.remove(style)
 
     def opportunities_left(self):
         return self._opportunity_attacks - len(self._opportunities_used)
@@ -534,6 +580,13 @@ class Combatant(Entity):
     def health_max(self):
         return self._health_max
 
+    # Add bonus attack, from feat, style or status effect
+    def add_bonus_strike(self, bab, weapon, source=None):
+        attack = self._BAB + bab + self._attack_bonus_style
+        desc = self.generate_attack(attack, weapon, target=None)
+        self._additional_strikes.append(desc)
+        return desc
+
     # Get current attack bonus
     def get_attack(self, target=None):
         return self._BAB + self.strength_modifier()
@@ -545,10 +598,19 @@ class Combatant(Entity):
         return self._equipped.get(ITEM_SLOT_OFFHAND, default)
 
     # Fill in attack for specified weapon and wield
-    def generate_attack(self, attack, weapon, two_handed, target, **kwargs):
+    def generate_attack(self, attack, weapon, target, **kwargs):
+        """
+        :param attack: attack bonus, bab+circumstances
+        :param weapon: used weapon
+        :param target: attack target. Can be unavailable at this stage
+        :param kwargs: additional parameters
+        :rtype: AttackDesc generated attack description
+        """
         damage = weapon.damage(self, target)
         damage_mod = 0
         str_mod = self.strength_modifier()
+
+        two_handed = self._two_hand_wield
 
         if weapon.is_light(self) and not two_handed:
             damage_mod += int(str_mod / 2)
@@ -556,13 +618,6 @@ class Combatant(Entity):
             damage_mod += int(str_mod * 1.5)
         else:
             damage_mod += int(str_mod)
-
-        """
-        if self._has_finisse:
-            attack += max(str_mod, self.dexterity_modifier())
-        else:
-            attack += str_mod
-        """
 
         if damage_mod != 0:
             damage.add_die(1, int(damage_mod))
@@ -572,19 +627,39 @@ class Combatant(Entity):
         self._events.on_calc_attack(self, desc)
         return desc
 
-    # Generate attack chain for full attack action
+    def check_weapon_wield(self):
+        """
+        Checks weapon wielding style
+        """
+        two_handed = False
+        two_weapon_fighting = False
+
+        weapon = self.get_main_weapon()
+        if weapon is not None:
+            two_handed = weapon.is_two_handed()
+            weapon_offhand = self.get_offhand_weapon()
+            if weapon_offhand is not None and weapon_offhand.is_weapon():
+                two_handed = False
+                two_weapon_fighting = True
+
+        self._two_hand_wield = two_handed
+        self._many_weapon_wield = two_weapon_fighting
+
     def generate_bab_chain(self, target=None, **kwargs):
+        """
+        Generate attack chain for full attack action
+
+        :param target: target to be attacked
+        :return: list of AttackDesc
+        """
         attack_chain = []
         bab = self._BAB
         weapon = self.get_main_weapon()
-        two_handed = weapon.is_two_handed()
+
         weapon_offhand = self.get_offhand_weapon()
-        two_weapon_fighting = False
         attack_bonus_style = self._attack_bonus_style
 
-        if weapon_offhand is not None and weapon_offhand.is_weapon():
-            two_handed = False
-            two_weapon_fighting = True
+        if self._many_weapon_wield:
             attack_bonus_style -= (4 if weapon_offhand.is_light(self) else 6)
             if self._twf_skill > 0:
                 attack_bonus_style += 2
@@ -592,21 +667,21 @@ class Combatant(Entity):
         # Get attacks from main slot
         while bab >= 0:
             attack = bab + attack_bonus_style
-            desc = self.generate_attack(attack, weapon, two_handed, target, **kwargs)
-            attack_chain.append(desc)
+            attack_chain.append(self.generate_attack(attack, weapon, target, **kwargs))
             bab -= 5
 
-        twf_attacks = self._twf_skill if two_weapon_fighting else 0
+        twf_attacks = self._twf_skill if self._many_weapon_wield else 0
         bab = self._BAB
         if self._twf_skill == 0:
             attack_bonus_style -= 4
 
+        # TODO: more attacks can be provided by the feats
         while twf_attacks > 0:
-            desc = self.generate_attack(bab + attack_bonus_style, weapon_offhand, False, target, **kwargs)
-            attack_chain.append(desc)
+            attack_chain.append(self.generate_attack(bab + attack_bonus_style, weapon_offhand, target, **kwargs))
             twf_attacks -= 1
             bab -= 5
 
+        attack_chain.extend(self._additional_strikes)
         return attack_chain
 
     # Check if combatant is absolutely dead
@@ -632,7 +707,8 @@ class Combatant(Entity):
 
     # Any feat is implemented by activating certain 'effects' on a combatant
     def allow_effect_activation(self, effect, source=None):
-        pass
+        if effect not in self._known_styles:
+            self._known_styles.add(effect)
 
     def constitution(self):
         return self._stats[STAT_CON]
@@ -726,6 +802,52 @@ class Combatant(Entity):
         if self._brain is not None:
             yield from self._brain.make_turn(battle)
 
+    # Execute strike action
+    def do_action_strike(self, desc: AttackDesc):
+        yield animation.AttackStart(self, desc.get_target())
+        attack, roll = desc.roll_attack()
+        # Roll for critical confirmation
+        crit_confirm, crit_confirm_roll = desc.roll_attack()
+        target = desc.get_target()
+
+        # TODO: run events for on_strike_begin(desc, target)
+        armor_class = target.get_touch_armor_class(target) if desc.touch else target.get_armor_class(target)
+
+        # TODO: run events for critical hit
+        has_crit = desc.is_critical(roll) and (crit_confirm + desc.critical_confirm_bonus >= armor_class or crit_confirm_roll == 20)
+        hit = attack >= armor_class
+        if roll == 20:
+            hit = True
+        if roll == 1:
+            hit = False
+
+        attack_text = "misses"
+        total_damage = 0
+
+        if hit:
+            damage = desc.roll_damage()
+            bonus_damage = desc.roll_bonus_damage()
+            if has_crit:
+                damage *= desc.weapon.crit_mult
+                attack_text = "critically hits"
+            else:
+                attack_text = "hits"
+            total_damage = damage + bonus_damage
+
+        print("%s %s %s with roll %d(%d%+d) vs AC=%d" %
+              (self.name, attack_text, target.get_name(), attack, roll, attack - roll, armor_class))
+        if hit:
+            target.receive_damage(damage, self)
+
+        self._expend_attack(desc)
+
+        yield animation.AttackFinish(self, target)
+
+    def _expend_attack(self, desc):
+        if desc in self._turn_state.attacks:
+            self._turn_state.attacks.remove(desc)
+        if desc in self._additional_strikes:
+            self._additional_strikes.remove(desc)
 
 # Encapsulates current turn state
 class TurnState(object):
@@ -787,14 +909,44 @@ class TurnState(object):
         return not self.can_attack() and not self.can_move()
 
 
-# Should it be any different from effect?
-class AttackStyle(object):
+class StyleDefenciveFight(Combatant.StatusEffect):
     def __init__(self):
-        pass
+        super(StyleDefenciveFight, self).__init__("Fighting defencively")
+        self.attack_pen = 4
+        self.ac_bonus = 3
 
-    def on_start(self, combatant):
-        pass
+    # Called when effect has started
+    def on_start(self, combatant, **kwargs):
+        combatant._attack_bonus_style -= self.attack_pen
+        combatant.modify_ac_dodge(self.ac_bonus)
 
-    def on_finish(self, combatant):
-        pass
+    # Called when effect has finished
+    def on_finish(self, combatant, **kwargs):
+        combatant._attack_bonus_style += self.attack_pen
+        combatant.modify_ac_dodge(-self.ac_bonus)
 
+    def __str__(self):
+        return "fight_defence"
+
+
+class StyleFlurryOfBlows(Combatant.StatusEffect):
+    def __init__(self, penalty=0, attacks=1):
+        super(StyleFlurryOfBlows, self).__init__("Flurry of blows")
+        self.attack_pen = penalty
+        self.add_attacks = attacks
+        self._attacks = []
+
+    # Called when effect has started
+    def on_start(self, combatant, **kwargs):
+        combatant._attack_bonus_style -= self.attack_pen
+        for a in range(0, self.add_attacks):
+            self._attacks.append(combatant.add_bonus_strike(0, combatant.get_main_weapon()))
+
+    # Called when effect has finished
+    def on_finish(self, combatant, **kwargs):
+        combatant._attack_bonus_style += self.attack_pen
+        for strike in self._attacks:
+            combatant._expend_attack(strike)
+
+    def __str__(self):
+        return "flurry_blows"

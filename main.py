@@ -29,7 +29,7 @@ char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
 
 
 char2 = make_shield_fighter('Roy1')
-char3 = make_twf_fighter('Roy2')
+#char3 = make_twf_fighter('Roy2')
 char4 = make_monk('Monky')
 
 
@@ -38,7 +38,7 @@ char4 = make_monk('Monky')
 battle.add_combatant(char1, center_x, center_y, faction="team red")
 
 #battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
-battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
+#battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
 battle.add_combatant(char4, center_x + 15, center_y-4, faction="team blue")
 """
 battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")

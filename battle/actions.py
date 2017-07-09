@@ -120,7 +120,7 @@ class AttackAction(BattleAction):
 
     def execute(self, battle: Battle):
         desc = self._desc
-        yield from battle.do_action_strike(self._combatant, desc)
+        yield from self._combatant.do_action_strike(desc)
 
     def text(self):
         return " attacks %s" % self._target

@@ -69,9 +69,14 @@ class Weapon(Item):
         # Magic enchantment
         self._enchantment = kwargs.get("enchantment", 0)
         # Throwing range increment
-        self._range = kwargs.get("range", 0)
+        self._range = math.ceil(kwargs.get("range", 0)/5)
         self._finesse = kwargs.get("finesse", False)
         self._trip = kwargs.get("trip", False)
+        # Clip size
+        self._clip = kwargs.get("clip", 1)
+        # Ammo type
+        self._ammo = kwargs.get("ammo", None)
+        self._reload = kwargs.get('reload', DURATION_FREE)
 
     def enchant(self, level):
         self._enchantment = level
@@ -134,7 +139,6 @@ class Armor(Item):
         self._enchantment = 0
         self._deflection_bonus = 0
         self._cover = kwargs.get('cover', False)
-        self._move_penalty = kwargs.get('move_penalty', False)
         self._armor_type = kwargs.get('type', Armor.ARMOR_TYPE_NONE)
 
     def get_dex_bonus(self, dex):
@@ -149,7 +153,7 @@ class Armor(Item):
     def on_equip(self, combatant):
         combatant.modify_ac_armor(self.AC + self._enchantment)
         combatant.modify_ac_dex(self._max_dex)
-        if self._move_penalty:
+        if self._armor_type >= Armor.ARMOR_TYPE_MEDIUM:
             combatant.add_status_flag(STATUS_HEAVY_ARMOR)
 
     def on_remove(self, combatant):

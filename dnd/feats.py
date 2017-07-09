@@ -8,7 +8,6 @@ class TwoWeaponFighting(Feat):
         Feat.__init__(self, "twf1")
 
     def apply(self, combatant):
-        #events = combatant.event_manager()
         combatant._twf_skill += 1
 
 
@@ -17,7 +16,6 @@ class ImprovedTwoWeaponFighting(Feat):
         Feat.__init__(self, "twf2")
 
     def apply(self, combatant):
-        #events = combatant.event_manager()
         combatant._twf_skill += 1
 
 
@@ -66,15 +64,14 @@ class MonkBonusAC(Feat):
     def apply(self, combatant:Character):
         events = combatant.event_manager()
         events.on_turn_start += self.on_start
-        #combatant.(self, MonkBonusAC.Effect(self))
 
     # Called when effect has started
     def on_start(self, combatant, **kwargs):
         armor = combatant.get_armor_type()
         new_bonus = self._bonus
         if armor == Armor.ARMOR_TYPE_NONE:
-            mlevels = combatant.get_class_level("monk")
-            new_bonus = math.floor(mlevels / 5) + combatant.wisdom_modifier()
+            monk_levels = combatant.get_class_level("monk")
+            new_bonus = math.floor(monk_levels / 5) + combatant.wisdom_modifier()
         else:
             new_bonus = 0
 
@@ -92,7 +89,7 @@ class CombatReflexes(Feat):
     """
     def __init__(self):
         super(CombatReflexes, self).__init__("Combat Reflexes")
-        self._bonus_aoo = 0
+        self._bonus_attacks = 0
 
     def apply(self, combatant:Character):
         events = combatant.event_manager()
@@ -122,12 +119,11 @@ class DeftOpportunist(Feat):
         self.description_benefit = "You get a +4 bonus on attack rolls when making attacks of opportunity."
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_calc_opportinity_attack += self.on_calculate_attack
+        def event(c, desc: AttackDesc):
+            if desc.opportunity:
+                desc.attack += 4
 
-    def on_calculate_attack(self, combatant, desc: AttackDesc):
-        if desc.opportunity:
-            print("%s is using feat %s" % (combatant.get_name(), self.name))
-            desc.attack += 4
+        combatant.event_manager().on_calc_opportinity_attack += event
 
 
 class InsightfulStrike(Feat):
@@ -135,12 +131,11 @@ class InsightfulStrike(Feat):
         super(InsightfulStrike, self).__init__("Insightful strike")
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_calc_attack += self.on_calculate_attack
-
-    def on_calculate_attack(self, combatant, desc: AttackDesc):
-        mod = combatant.intellect_modifier()
-        if mod > 0:
-            desc.damage.add_die(1,mod)
+        def event(c, desc: AttackDesc):
+            mod = c.intellect_modifier()
+            if mod > 0:
+                desc.damage.add_die(1, mod)
+        combatant.event_manager().on_calc_attack += event
 
 
 class WeaponFinesse(Feat):
@@ -151,16 +146,16 @@ class WeaponFinesse(Feat):
         super(WeaponFinesse, self).__init__("WeaponFinesse")
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_calc_attack += self.on_calculate_attack
+        def event(c, desc: AttackDesc):
+            dex_mod = c.dexterity_modifier()
+            str_mod = c.strength_modifier()
+            weapon = desc.weapon
 
-    def on_calculate_attack(self, combatant, desc: AttackDesc):
-        dex_mod = combatant.dexterity_modifier()
-        str_mod = combatant.strength_modifier()
-        weapon = desc.weapon
+            if desc.is_melee() and dex_mod > str_mod and weapon.is_finessable(combatant):
+                bonus = dex_mod - str_mod
+                desc.attack += bonus
 
-        if desc.is_melee() and dex_mod > str_mod and weapon.is_finessable(combatant):
-            bonus = dex_mod - str_mod
-            desc.attack += bonus
+        combatant.event_manager().on_calc_attack += event
 
 
 class WeaponFocus(Feat):
