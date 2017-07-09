@@ -28,6 +28,9 @@ class Item(object):
     def is_weapon(self):
         return False
 
+    def is_shield(self):
+        return False
+
     @property
     def name(self):
         return self._name
@@ -96,7 +99,7 @@ class Weapon(Item):
 
     # Check if that weapon is light for that combatant
     def is_light(self, combatant):
-        return self._light <= combatant._size
+        return self._light <= combatant._size_type
 
     # Check if weapon finisse is appliable to a weapon
     def is_finessable(self, combatant):
@@ -117,8 +120,9 @@ class Armor(Item):
     ARMOR_TYPE_LIGHT = 1
     ARMOR_TYPE_MEDIUM = 2
     ARMOR_TYPE_HEAVY = 3
+    ARMOR_TYPE_SHIELD = 4
 
-    def __init__(self, base = None, **kwargs):
+    def __init__(self, base=None, **kwargs):
         Item.__init__(self, base, **kwargs)
         self.AC = kwargs.get("AC", 0)
         self._max_dex = kwargs.get("dex", 100)
@@ -139,6 +143,9 @@ class Armor(Item):
     def armor_type(self):
         return self._armor_type
 
+    def is_shield(self):
+        return self._armor_type == Armor.ARMOR_TYPE_SHIELD
+
     def on_equip(self, combatant):
         combatant.modify_ac_armor(self.AC + self._enchantment)
         combatant.modify_ac_dex(self._max_dex)
@@ -148,3 +155,6 @@ class Armor(Item):
     def on_remove(self, combatant):
         if self._move_penalty:
             combatant.remove_status_flag(STATUS_HEAVY_ARMOR)
+
+    def __str__(self):
+        return "%s (%d:%d)" % (self.name, self.AC+self._enchantment, self._max_dex)

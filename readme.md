@@ -43,7 +43,7 @@ This is D&D 3.5 battle ground, implemented in python
     - Weapon finesse                    OK
     - Weapon focus                      OK
     - Improved critical (doubles crit range)
-    - Power critical (+4 to crit confirm)
+    - Power critical (+4 to crit confirm)   OK
     - Combat reflexes                   OK
     - Deft opportunist                  OK
     - Insightfull strike                OK

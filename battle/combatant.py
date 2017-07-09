@@ -121,6 +121,8 @@ class Combatant(Entity):
             # For sneak attack, all passive targets,
             # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
             self.on_calc_attack = SubscriberList()
+            # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
+            self.on_calc_opportinity_attack = SubscriberList()
             # Events that fired when combatant rolls critical hit
             # on_roll_crit(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
             self.on_roll_crit = SubscriberList()
@@ -184,8 +186,14 @@ class Combatant(Entity):
             pass
 
     def __init__(self, name, **kwargs):
+        size_type = kwargs.get('csize', SIZE_MEDIUM)
+        if 'size' not in kwargs:
+            kwargs['size'] = SIZE_CATEGORIES[size_type].tiles
+
         Entity.__init__(self, name, **kwargs)
 
+        self._size_type = size_type
+        self._size_cat = SIZE_CATEGORIES[size_type]
         self._current_initiative = 0
         self._faction = "none"
 
@@ -309,7 +317,7 @@ class Combatant(Entity):
     def get_armor_type(self):
         armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
         if armor is None:
-            return ARMOR_TYPE_NONE
+            return battle.item.Armor.ARMOR_TYPE_NONE
         return armor.armor_type()
 
     def remove_stat_mod(self, stat, source):
@@ -372,7 +380,7 @@ class Combatant(Entity):
         desc = self._turn_state.attack_AoO.copy()
         desc.update_target(target)
         desc.opportunity = True
-        self._events.on_calc_attack(self, desc)
+        self._events.on_calc_opportinity_attack(self, desc)
         self.use_opportunity(desc)
         return desc
 
@@ -383,12 +391,16 @@ class Combatant(Entity):
     # Get armor class
     def get_armor_class(self, target=None):
         armor_class = self._AC + self._ac_deflection + self._ac_dodge + self._ac_natural + self._ac_armor
+        if self._size_cat is not None:
+            armor_class += self._size_cat.ac_mod
         dex = self.dexterity_modifier()
         armor_class += min(dex, self._max_dex_ac)
         return armor_class
 
     def get_touch_armor_class(self, target=None):
         armor_class = self._AC + self._ac_deflection + self._ac_dodge
+        if self._size_cat is not None:
+            armor_class += self._size_cat.ac_mod
         dex = self.dexterity_modifier()
         armor_class += min(dex, self._max_dex_ac)
         return armor_class
@@ -492,6 +504,16 @@ class Combatant(Entity):
         text += "STR=%d;DEX=%d;CON=%d;INT=%d;WIS=%d;CHA=%d\n" % tuple(self._stats)
         text += "HP=%d/%d AC=%d ATT=%d\n" % (self.health, self.health_max, self.get_armor_class(None), self.get_attack())
         text += "fort=%d ref=%d will=%d\n" % (self.save_fort, self.save_ref, self.save_will)
+
+        armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
+        shield = self._equipped.get(ITEM_SLOT_OFFHAND, None)
+
+        if armor is not None:
+            text += "Protected by %s" % str(armor)
+            if shield is not None and shield.is_shield():
+                text += " and %s\n" % str(shield)
+            else:
+                text += "\n"
 
         chain = self.generate_bab_chain()
         if len(chain) > 0:

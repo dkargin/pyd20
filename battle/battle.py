@@ -226,10 +226,6 @@ class Battle(object):
 
         state.use_move()
 
-    # Make generator for Attack action
-    def make_action_strike(self, combatant: Combatant, state: TurnState, target: Combatant, desc: AttackDesc):
-        yield battle.actions.AttackAction(combatant, desc)
-
     # Execute strike action
     def do_action_strike(self, combatant, desc: AttackDesc):
         yield animation.AttackStart(combatant, desc.get_target())
@@ -242,7 +238,7 @@ class Battle(object):
         armor_class = target.get_touch_armor_class(target) if desc.touch else target.get_armor_class(target)
 
         # TODO: run events for critical hit
-        has_crit = desc.is_critical(roll) and (crit_confirm >= armor_class or crit_confirm_roll == 20)
+        has_crit = desc.is_critical(roll) and (crit_confirm + desc.critical_confirm_bonus >= armor_class or crit_confirm_roll == 20)
         hit = attack >= armor_class
         if roll == 20:
             hit = True

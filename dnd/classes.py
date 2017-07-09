@@ -1,18 +1,10 @@
 from battle.character import *
 import dnd.feats
+import battle.progression as P
 
-Fighter = CharacterClass("fighter", [
-    ProgressionBAB(HIGH),
-    ProgressionHP(10),
-    ProgressionSaveThrow(HIGH, LOW, LOW)])
+Fighter = CharacterClass("fighter", P.Basic(bab=HIGH, hits=10, fort=HIGH, ref=LOW, will=LOW))
 
-Monk = CharacterClass("monk", [
-    ProgressionBAB(HIGH),
-    ProgressionHP(8),
-    ProgressionSaveThrow(HIGH, HIGH, HIGH),
-    ProgressionFeat(dnd.feats.MonkBonusAC(), 1)])
+Monk = CharacterClass("monk", P.Basic(bab=MEDIUM, hits=8, fort=HIGH, ref=HIGH, will=HIGH),
+    P.Feat(dnd.feats.MonkBonusAC(), 1))
 
-Rogue = CharacterClass("rogue", [
-    ProgressionBAB(MEDIUM),
-    ProgressionHP(6),
-    ProgressionSaveThrow(HIGH, LOW, LOW)])
+Rogue = CharacterClass("rogue", P.Basic(bab=MEDIUM, hits=6, fort=LOW, ref=HIGH, will=LOW))

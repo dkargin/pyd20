@@ -122,7 +122,7 @@ class DeftOpportunist(Feat):
         self.description_benefit = "You get a +4 bonus on attack rolls when making attacks of opportunity."
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_calc_attack += self.on_calculate_attack
+        combatant.event_manager().on_calc_opportinity_attack += self.on_calculate_attack
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
         if desc.opportunity:
@@ -174,6 +174,18 @@ class WeaponFocus(Feat):
     def on_calculate_attack(self, combatant, desc: AttackDesc):
         if self._weapon == desc.weapon.get_base_root():
             desc.attack += 1
+
+
+class PowerCritical(Feat):
+    def __init__(self, weapon):
+        self._weapon = weapon.get_base_root()
+
+    def apply(self, combatant: Combatant):
+        combatant.event_manager().on_calc_attack += self.on_calculate_attack
+
+    def on_calculate_attack(self, combatant, desc: AttackDesc):
+        if self._weapon == desc.weapon.get_base_root():
+            desc.critical_confirm_bonus += 4
 
 
 class FlurryOfBlows:

@@ -30,12 +30,6 @@ ITEM_SLOT_OFFHAND = 2
 ITEM_SLOT_HEAD = 3
 ITEM_SLOT_FEET = 4
 
-SIZE_TINY = 1
-SIZE_SMALL = 2
-SIZE_MEDIUM = 3
-SIZE_LARGE = 4
-SIZE_HUGE = 5
-
 # Stat indexes
 STAT_STR = 0
 STAT_DEX = 1
@@ -54,61 +48,31 @@ GENDER_MALE = "male"
 GENDER_FEMALE = "female"
 
 
+class SizeDesc:
+    def __init__(self, **kwargs):
+        self.name = kwargs['name']
+        self.ac_mod = kwargs['ac_mod']
+        self.height = kwargs['height']
+        self.width = kwargs['width']
+        self.tiles = kwargs['tiles']
+
+SIZE_TINY = 2
+SIZE_SMALL = 3
+SIZE_MEDIUM = 4
+SIZE_LARGE = 5
+SIZE_HUGE = 6
+SIZE_GARGANTUAN = 6
+
 SIZE_CATEGORIES = [
-    {
-        "name": "fine",
-        "height": [0, 0.5],
-        "width":  [0, 1/8],
-        "ac_modifier": 8
-    },
-    {
-        "name": "diminutive",
-        "height": [0.5, 1],
-        "width":  [1/8, 1],
-        "ac_modifier": 4
-    },
-    {
-        "name": "tiny",
-        "height": [1, 2],
-        "width":  [1, 8],
-        "ac_modifier": 2
-    },
-    {
-        "name": "small",
-        "height": [2, 4],
-        "width":  [8, 60],
-        "ac_modifier": 1
-    },
-    {
-        "name": "medium",
-        "height": [4, 8],
-        "width":  [60, 500],
-        "ac_modifier": 0
-    },
-    {
-        "name": "large",
-        "height": [8, 16],
-        "width":  [500, 2000],
-        "ac_modifier": -1
-    },
-    {
-        "name": "huge",
-        "height": [16, 32],
-        "width":  [2000, 16000],
-        "ac_modifier": -2
-    },
-    {
-        "name": "gargantuan",
-        "height": [32, 64],
-        "width":  [16000, 125000],
-        "ac_modifier": -4
-    },
-    {
-        "name": "colossal",
-        "height": [64, 9999],
-        "width":  [125000, 999999999],
-        "ac_modifier": -8
-    }
+    SizeDesc(name='fine',       tiles=1, height=[0, 0.5], width=[0, 1/8], ac_mod=8),
+    SizeDesc(name='diminutive', tiles=1, height=[0.5, 1], width=[1/8, 1], ac_mod=4),
+    SizeDesc(name='tiny',       tiles=1, height=[1, 2],   width=[1, 8], ac_mod=2),
+    SizeDesc(name='small',      tiles=1, height=[2, 4],   width=[8, 60], ac_mod=1),
+    SizeDesc(name='medium',     tiles=1, height=[4, 8], width=[60, 500], ac_mod=0),
+    SizeDesc(name='large',      tiles=2, height=[8, 16], width=[500, 2000], ac_mod=-1),
+    SizeDesc(name='huge',       tiles=3, height=[16, 32], width=[2000, 16000], ac_mod=-2),
+    SizeDesc(name='gargantuan', tiles=4, height=[32, 64], width=[16000, 125000], ac_mod=-4),
+    SizeDesc(name='colossal',   tiles=5, height=[64, 9999], width=[125000, 999999999], ac_mod=-8),
 ]
 
 

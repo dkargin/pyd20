@@ -3,8 +3,10 @@ import logging
 from battle.actions import *
 from battle.combatant import *
 
+
 class Brain(object):
     """
+    Base class for combatant AI
     :type slave: Combatant | None
     :type target: Combatant | None
     """
@@ -74,7 +76,8 @@ class MoveAttackBrain(Brain):
                     desc = state.use_attack()
                     desc.update_target(self.target)
                     # TODO: update attack data according to selected target or custom attack
-                    yield from battle.make_action_strike(self.slave, state, self.target, desc)
+                    yield AttackAction(self.slave, desc)
+                    #yield from battle.make_action_strike(self.slave, state, self.target, desc)
                 else:
                     self.target = None
                     break
@@ -113,8 +116,7 @@ class StandAttackBrain(Brain):
                 # Mark that we have used an action
                 desc = state.use_attack()
                 desc.update_target(self.target)
-                # TODO: update attack data according to selected target or custom attack
-                yield from battle.make_action_strike(self.slave, state, self.target, desc)
+                yield AttackAction(self.slave, desc)
             else:
                 self.target = None
                 break

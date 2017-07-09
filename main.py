@@ -17,26 +17,27 @@ battle = Battle(40, 40)
 
 #draw_cross(battle.grid, center_x, center_y, 5)
 
-char1 = Character("Bob", size=2, brain=brain.StandAttackBrain())
+char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain())
 char1.set_stats(18, 16, 16, 10, 10, 10)
 char1.wear_item(dnd.armor.breastplate, ITEM_SLOT_ARMOR)
 char1.wear_item(dnd.weapon.glaive, ITEM_SLOT_MAIN)
 char1.add_class_level(classes.Fighter, 6)
 char1.add_feat(dnd.feats.CombatReflexes())
 char1.add_feat(dnd.feats.DeftOpportunist())
+char1.add_feat(dnd.feats.WeaponFocus(dnd.weapon.glaive))
+char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
 
 
 char2 = make_shield_fighter('Roy1')
 char3 = make_twf_fighter('Roy2')
 char4 = make_monk('Monky')
 
-#char5 = make_shield_fighter('Roy4')
 
 #battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
 battle.add_combatant(char1, center_x, center_y, faction="team red")
 
-battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
+#battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
 battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
 battle.add_combatant(char4, center_x + 15, center_y-4, faction="team blue")
 """

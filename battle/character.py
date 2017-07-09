@@ -315,91 +315,6 @@ class Progression(object):
         pass
 
 
-# Progression for base attack bonus
-class ProgressionBAB(Progression):
-    def __init__(self, speed):
-        self.speed = speed
-
-    def calculate(self, level):
-        if self.speed == 0:
-            return level / 2
-        elif self.speed == 1:
-            return (level * 3) / 4
-        else:
-            return level
-
-    def apply(self, character, level_from, level_to):
-        character._BAB += int(self.calculate(level_to) - self.calculate(level_from))
-
-
-# Progression for saving throws
-class ProgressionSaveThrow(Progression):
-    def __init__(self, fort, ref, will):
-        super(ProgressionSaveThrow, self).__init__()
-        self.fort = fort
-        self.ref = ref
-        self.will = will
-
-    def apply(self, ch: Combatant, level_from, level_to):
-        def calculate(level, flag):
-            if flag == HIGH:
-                result = int(level / 2)
-                if level > 0:
-                    result += 2
-                return result
-            else:
-                return int(level / 3)
-
-        ch.modify_save_fort(calculate(level_to, self.fort) - calculate(level_from, self.fort), True)
-        ch.modify_save_ref(calculate(level_to, self.ref) - calculate(level_from, self.ref), True)
-        ch.modify_save_will(calculate(level_to, self.will) - calculate(level_from, self.will), True)
-
-
-class ProgressionHP(Progression):
-    def __init__(self, dice):
-        super(ProgressionHP, self).__init__()
-        self.dice = dice
-
-    def apply(self, character, level_from, level_to):
-        hit_points = character.constitution_modifier() * (level_to - level_from)
-        if character.current_level() == 0:
-            hit_points += self.dice
-            level_to -= 1
-        dice = Dice()
-        for a in range(level_to):
-            dice.add_die(self.dice)
-
-        hit_points += dice.roll()
-        character._health_max += hit_points
-
-
-# Progression that adds stateless feat on specified level
-class ProgressionFeat(Progression):
-    def __init__(self, feat, level):
-        super(ProgressionFeat, self).__init__()
-        self._feat = feat
-        self._level = level
-
-    def apply(self, character: Character, level_from, level_to):
-        if self._level in range(level_from, level_to):
-            character.add_feat(self._feat)
-
-
-# Adds feat level progression
-class ProgressionFeatLevel(Progression):
-    def __init__(self, feat, levels_upgrade=[], *args, **kwargs):
-        self._feat = feat
-        self._feat_args = args
-        self._feat_kwargs = kwargs
-        self._levels = levels_upgrade
-
-    def apply(self, character: Character, level_from, level_to):
-        # Check if character has fet
-        if not character.get_feat_type(self._feat):
-            feat = self._feat(*self._feat_args, **self._feat_kwargs)
-            character.add_feat(feat)
-
-
 class CharacterClass(object):
     """
     Encapsulates character class
@@ -407,13 +322,16 @@ class CharacterClass(object):
     which define class features
     :type _name: str
     """
-    def __init__(self, name, progressions):
+    def __init__(self, name, *args):
         """
         Creates a Class object
         """
         self._name = name
         self._progressions = []
-        self._progressions.extend(progressions)
+
+        for arg in args:
+            if isinstance(arg, Progression):
+                self._progressions.append(arg)
 
     @property
     def name(self):
