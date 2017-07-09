@@ -1,9 +1,12 @@
 import math
+from battle.entity import Entity
+from battle.grid import Point
 
 
 class Animation(object):
-    def __init__(self):
+    def __init__(self, entity: Entity):
         self._time_start = 0
+        self._entity = entity
 
     def start(self, time):
         self._time_start = time
@@ -20,7 +23,18 @@ class Animation(object):
     def __str__(self):
         return "Animation"
 
-def get_interpolated_coord(path, position):
+    def move_visual(self, coord):
+        self._entity.visual_X = coord.x
+        self._entity.visual_Y = coord.y
+
+
+def get_interpolated_line(src, dst, t):
+    x = src.x + t * (dst.x - src.x)
+    y = src.y + t * (dst.y - src.y)
+    return Point(x=x, y=y)
+
+
+def get_interpolated_path_coord(path, position):
     max_len = len(path)
     if max_len == 0:
         return
@@ -30,18 +44,15 @@ def get_interpolated_coord(path, position):
 
     if index_end > max_len-1:
         tile = path[max_len-1]
-        return tile.x, tile.y
+        return tile.get_coord()
     if index_end == 0:
         tile = path[0]
-        return tile.x, tile.y
+        return tile.get_coord()
 
     src = path[index_start]
     t = position - index_start
     dst = path[math.ceil(position)]
-
-    x = src.x + t * (dst.x - src.x)
-    y = src.y + t * (dst.y - src.y)
-    return x,y
+    return get_interpolated_line(src, dst, t)
 
 
 class MovePath(Animation):
@@ -50,7 +61,7 @@ class MovePath(Animation):
     :type _path: grid.Path
     """
     def __init__(self, entity, path, speed = 10.0):
-        self._entity = entity
+        super(MovePath, self).__init__(entity)
         self._path = path
         self._speed = speed
         self._len = len(path)
@@ -67,44 +78,81 @@ class MovePath(Animation):
 
     def update(self, time):
         self._position = self.position_from_time(time)
-        entity = self._entity
-        (entity.visual_X, entity.visual_Y) = get_interpolated_coord(self._path, self._position)
+        self.move_visual(get_interpolated_path_coord(self._path, self._position))
         #print("%f of path left" % (self._len - self._position))
 
     def __repr__(self):
         return "MovePath(%f)" % self._position
 
+
 class MoveLine(Animation):
     # Shows 'slow' movement from current tile to destination target
-    def __init__(self, combatant, target):
-        self._combatant = combatant
+    def __init__(self, combatant: Entity, target: Point):
+        super(MoveLine, self).__init__(combatant)
         self._target = target
+        self._src = combatant.get_coord()
+        self._dst = target
         self._position = 0.0
+
+    def is_complete(self, time):
+        return self._position >= self._len
+
+    def update(self, time):
+        self._position = self.position_from_time(time)
+        self.move_visual(get_interpolated_line(self.src, self._dst, self._position))
 
     def __str__(self):
         return "MoveLine(%s)" % self._combatant.get_name()
 
 
-# Animation for attack start
+# Animation for melee attack
+# moves attacker towards target
+# Should take about 1sec to complete
 class AttackStart(Animation):
-    def __init__(self, combatant, target):
-        self._combatant = combatant
+    # Distance that character will advance for attack animation
+    ATTACK_MOVE_DISTANCE = 0.5
+
+    def __init__(self, combatant: Entity, target: Entity):
+        super(AttackStart, self).__init__(combatant)
         self._target = target
+        self._offset = combatant.get_coord()-combatant.get_center()
+        self._src = combatant.get_center()
+        self._dst = target.get_center()
+        delta = (self._dst - self._src).normalize()
+        self._move_target = self._src+delta * AttackStart.ATTACK_MOVE_DISTANCE
+        self._t = 0
+        self._duration = 0.2
+
+    def is_complete(self, time):
+        return self.delta_time(time) >= self._duration
 
     def update(self, time):
-        pass
+        self._t = self.delta_time(time) / self._duration
+        coord = get_interpolated_line(self._src, self._move_target, self._t**2)
+        self.move_visual(coord + self._offset)
 
     def __str__(self):
-        return "AttackStart(%s->%s)" % (self._combatant.get_name(), self._target.get_name())
+        return "AttackStart(%s->%s)" % (self._entity.get_name(), self._target.get_name())
 
 
+# Returns to real position
 class AttackFinish(Animation):
     def __init__(self, combatant, target):
-        self._combatant = combatant
+        super(AttackFinish, self).__init__(combatant)
         self._target = target
+        self._src = combatant.get_visial_coord()
+        self._dst = combatant.get_coord()
+        self._duration = 0.3
+
+    def is_complete(self, time):
+        return self.delta_time(time) >= self._duration
 
     def update(self, time):
-        pass
+        self._t = self.delta_time(time) / self._duration
+        coord = get_interpolated_line(self._src, self._dst, self._t)
+        self.move_visual(coord)
+        if self.is_complete(time):
+            self._entity.fix_visual()
 
     def __str__(self):
-        return "AttackFinish(%s->%s)" % (self._combatant.get_name(), self._target.get_name())
+        return "AttackFinish(%s->%s)" % (self._entity.get_name(), self._target.get_name())

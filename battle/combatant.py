@@ -4,14 +4,16 @@ import dnd.weapon
 from .entity import Entity
 import copy
 
+
 # Attack description
 class AttackDesc:
-    def __init__(self, weapon, **kwargs):
+    def __init__(self, weapon: dnd.weapon.Weapon, **kwargs):
         self.attack = kwargs.get('attack', 0)
         self.damage = kwargs.get('damage', Dice())
         # Diced bonus damage, like sneak attack, elemental damage and so on
         self.bonus_damage = Dice()
         self.damage_mult = 1
+        self.crit_confirm_bonus = 0
         self.weapon = weapon
         self.touch = kwargs.get('touch', False)
         # Attack target
@@ -20,6 +22,9 @@ class AttackDesc:
         self.opportunity = False
         self.spellstrike = False
         self.ranged = False
+
+    def is_melee(self):
+        return not self.ranged
 
     def copy(self):
         return copy.copy(self)

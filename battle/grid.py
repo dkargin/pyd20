@@ -8,13 +8,15 @@ TERRAIN_GRASS = 1
 TERRAIN_WALL = 10
 
 
-
 class Point:
+    """
+    Generic 2d point/vector
+    """
     def __init__(self, **kwargs):
         self.x = kwargs.get('x', 0.0)
         self.y = kwargs.get('y', 0.0)
 
-    def make_tuple(self):
+    def tuple(self):
         return self.x, self.y
 
     def __add__(self, other):
@@ -25,6 +27,19 @@ class Point:
 
     def __mul__(self, scale):
         return Point(x=self.x*scale, y=self.y * scale)
+
+    def len(self):
+        return math.sqrt(self.x*self.x + self.y*self.y)
+
+    def normalize(self):
+        """
+        Calculates normalized vector
+        :return: Point - normalized vector
+        """
+        l = self.len()
+        if l == 0:
+            l = 1
+        return Point(x=self.x/l, y=self.y/l)
 
     # Manhattan metric
     def distance_melee(self, b):

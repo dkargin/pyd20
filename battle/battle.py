@@ -260,6 +260,7 @@ class Battle(object):
             yield battle.actions.MoveAction(combatant, tiles_moved)
 
         state.use_move()
+
     # Make generator for Attack action
     def make_action_strike(self, combatant: Combatant, state: TurnState, target: Combatant, desc: AttackDesc):
         yield battle.actions.AttackAction(combatant, desc)

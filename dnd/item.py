@@ -9,7 +9,7 @@ class Item(object):
         self._weight = kwargs.get("weight", 10)
         self._hardiness = 10
         # Base item type
-        self._base = None
+        self._base = base
         self._effects = []
 
     def weight(self):
@@ -26,3 +26,9 @@ class Item(object):
 
     def name(self):
         return self._name
+
+    # Get base item
+    def get_base_root(self):
+        if self._base is None:
+            return self
+        return self._base.get_base_root()

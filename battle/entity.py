@@ -26,6 +26,9 @@ class Entity:
     def get_coord(self) -> Point:
         return Point(x=self.x, y=self.y)
 
+    def get_visial_coord(self) -> Point:
+        return Point(x=self.visual_X, y=self.visual_Y)
+
     def distance_melee(self, other):
         center_self = self.get_center()
         center_other = other.get_center()
