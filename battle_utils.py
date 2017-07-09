@@ -1,12 +1,12 @@
 import brain
-import classes
 import dnd.armor
-import dnd.weapon
 import dnd.feats
-from battle.core import *
-from battle.battle import Battle
-from battle.grid import *
+import dnd.weapon
 from battle.character import Character
+from battle.core import *
+from battle.grid import *
+from dnd import classes
+
 
 def draw_cross(grid, x, y, size):
     for i in range(-size, size+1):

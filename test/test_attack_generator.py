@@ -1,8 +1,11 @@
 from unittest import TestCase
+
 import core
 from character import Character
-import dnd.armor, dnd.weapon
-import classes
+
+import dnd.armor
+import dnd.weapon
+from dnd import classes
 
 char1 = Character("Bob")
 char1.set_stats(18, 13, 16, 10, 10, 10)

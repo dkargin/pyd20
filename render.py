@@ -17,7 +17,8 @@ BLUE  = (  0,   0, 255)
 
 
 class Renderer:
-    def __init__(self, grid, offset = 0):
+    def __init__(self, battle, offset = 0):
+        grid = battle.grid
         self.grid_top = offset
         self.grid_left = offset
 
@@ -67,11 +68,13 @@ class Renderer:
 
         # Draw vertical lines
         for col in range(grid.get_width()+1):
-            pygame.draw.line(self.surface, GREY0, (self.grid_left + col * TILESIZE, self.grid_top), (self.grid_left + col * TILESIZE, self.grid_bottom))
+            pygame.draw.line(self.surface, GREY0, (self.grid_left + col * TILESIZE, self.grid_top),
+                             (self.grid_left + col * TILESIZE, self.grid_bottom))
 
         # Draw horizontal lines
         for row in range(grid.get_height()+1):
-            pygame.draw.line(self.surface, GREY0, (self.grid_left, self.grid_top + row * TILESIZE), (self.grid_right, self.grid_top + row * TILESIZE))
+            pygame.draw.line(self.surface, GREY0, (self.grid_left, self.grid_top + row * TILESIZE),
+                             (self.grid_right, self.grid_top + row * TILESIZE))
 
         # Draw tiles
         for tile in grid.get_tiles():
@@ -112,18 +115,18 @@ class Renderer:
         coord = self.grid_to_screen((u.visual_X + size * 0.5, u.visual_Y + size * 0.5))
 
         # pygame.draw.rect(self.surface, coord, row * TILESIZE, TILESIZE, TILESIZE)
-        pygame.draw.circle(self.surface, color, coord, int(size*TILESIZE *0.5))
+        pygame.draw.circle(self.surface, color, coord, int(size*TILESIZE * 0.5))
         # pygame.draw.
 
         if self._draw_path and u.path is not None:
             self.draw_path(u.path)
 
         if self._draw_threaten:
-            for tile in u._threatened_tiles:
+            for tile in u.threatened_tiles:
                 coord_cur = self.grid_to_screen((tile.x + 0.5, tile.y + 0.5))
                 pygame.draw.line(self.surface, RED, coord, coord_cur)
 
-        text_surface = self.get_text(u.get_name())
+        text_surface = self.get_text(u.name)
         if text_surface:
             text_width = text_surface.get_width()
             text_coord = (coord[0] - text_width / 2, coord[1] - size * TILESIZE)
@@ -134,5 +137,5 @@ class Renderer:
             self.draw_combatant(u)
 
     def draw_battle(self, battle):
-        self.draw_grid(battle.get_grid())
-        self.draw_combatants(battle._combatants)
+        self.draw_grid(battle.grid)
+        self.draw_combatants(battle.combatants)

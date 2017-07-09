@@ -1,26 +1,35 @@
 from .core import *
 from battle.dice import *
-import dnd.weapon
+import battle.item
 from .entity import Entity
 import copy
 
 
-# Attack description
 class AttackDesc:
-    def __init__(self, weapon: dnd.weapon.Weapon, **kwargs):
+    """
+    Attack description structure
+    Keeps all the data that can describe any sort of attack with d20 roll
+    Each AttackDesc passes several stages before actual hit:
+        - Attack is generated as part of BAB chain when character starts its turn
+        - Picked target for an attack. Target-specific feats apply its effects
+        - Resolve attack and on-hit events
+        - Apply damage
+    """
+    def __init__(self, weapon: battle.item.Weapon, **kwargs):
         self.attack = kwargs.get('attack', 0)
         self.damage = kwargs.get('damage', Dice())
         # Diced bonus damage, like sneak attack, elemental damage and so on
         self.bonus_damage = Dice()
-        self.damage_mult = 1
-        self.crit_confirm_bonus = 0
+        self.damage_multiplier = 1
+        self.critical_confirm_bonus = 0
+        self.two_handed = kwargs.get('two_handed', False)
         self.weapon = weapon
         self.touch = kwargs.get('touch', False)
         # Attack target
         self.target = None
         self.source = None
         self.opportunity = False
-        self.spellstrike = False
+        self.spell = False
         self.ranged = False
 
     def is_melee(self):
@@ -31,12 +40,13 @@ class AttackDesc:
 
     def text(self):
         dmg_min, dmg_max = self.damage.get_range()
-        weapon_name = self.weapon._name if self.weapon is not None else "null weapon"
-        return "attack with %s, roll=%d dam=%s->%d-%d" % (weapon_name, self.attack, self.damage.to_string(), dmg_min, dmg_max)
+        weapon_name = self.weapon.name if self.weapon is not None else "null weapon"
+        return "attack with %s, roll=%d dam=%s->%d-%d" % \
+               (weapon_name, self.attack, str(self.damage), dmg_min, dmg_max)
 
     def roll_attack(self):
-        roll = d20.roll()
-        return self.attack + roll, roll
+        result = d20.roll()
+        return self.attack + result, result
 
     def roll_damage(self):
         return self.damage.roll()
@@ -45,8 +55,8 @@ class AttackDesc:
         return self.bonus_damage.roll()
 
     # Calculates hit probability
-    def hit_probability(self, AC):
-        delta = 20 + self.attack - AC
+    def hit_probability(self, armor_class):
+        delta = 20 + self.attack - armor_class
         if delta < 1:
             delta = 1
         if delta > 19:
@@ -55,8 +65,8 @@ class AttackDesc:
 
     # Calculate estimated damage per round
     def estimated_damage(self, target):
-        prob = self.hit_probability(target.get_AC())
-        # TODO: calculate crit damage bonus
+        prob = self.hit_probability(target.get_armor_class())
+        # TODO: calculate critical damage bonus
         damage = self.damage.mean() + self.bonus_damage.mean()
         return prob * damage
 
@@ -96,17 +106,24 @@ class SubscriberList:
             handler(*args, **kwargs)
 
 
-# Contains current combatant characteristics
-# Should be as flat as possible for better performance
 class Combatant(Entity):
-    # Manager for DnD system events
-    # Stores a number of handlers for each event type
-    # This used to implement lots of feat overrides
+    """
+    Combatant class
+    Implement common functionality for characters or monsters
+    """
     class EventManager:
+        """
+        Manager for DnD system events
+        Stores a number of handlers for each event type
+        This used to implement lots of feat overrides
+        """
         def __init__(self):
             # For sneak attack, all passive targets,
             # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
             self.on_calc_attack = SubscriberList()
+            # Events that fired when combatant rolls critical hit
+            # on_roll_crit(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
+            self.on_roll_crit = SubscriberList()
             # Events that fired on start of the turn
             # on_turn_start(self, combatant: Combatant):
             self.on_turn_start = SubscriberList()
@@ -138,19 +155,18 @@ class Combatant(Entity):
             self.on_change_wis = SubscriberList()
             self.on_change_cha = SubscriberList()
 
-        # Forbid setting new field values
-        def __set__(self, instance, value):
-            pass
-
-
-    # Any sort of effect, that can change stat or any mechanic
     class StatusEffect(object):
-        def __init__(self):
+        """
+        Any sort of effect, that can change stat or any mechanic
+        """
+        def __init__(self, name):
             self._duration = -1
+            self._name = name
 
         # Get effect name
+        @property
         def name(self):
-            return "unknown"
+            return self._name
 
         # Get effect duration
         def get_duration(self):
@@ -168,8 +184,8 @@ class Combatant(Entity):
             pass
 
     def __init__(self, name, **kwargs):
-        Entity.__init__(self, **kwargs)
-        self._name = name
+        Entity.__init__(self, name, **kwargs)
+
         self._current_initiative = 0
         self._faction = "none"
 
@@ -194,6 +210,11 @@ class Combatant(Entity):
         self._save_ref_base = 0
         self._save_will_base = 0
 
+        self._save_fort_bonus = 0
+        self._save_ref_bonus = 0
+        self._save_will_bonus = 0
+
+
         # Active attack styles
         self._attack_styles = []
         # Armor class
@@ -209,7 +230,7 @@ class Combatant(Entity):
         self._attack_bonus_style = 0
         # Damage bonus can differ for each weapon
         self._damage_bonus_style = 0
-        # Precalculated full round attack set
+        # Full round attack set
         self._weapon_strikes = []
         self._natural_strikes = {}
         self._additional_strikes = {}
@@ -224,9 +245,6 @@ class Combatant(Entity):
         self._opportunity_attacks_max = 1
         self._opportunities_used = []
         self._natural_reach = 1
-
-        self._has_insightfull_strike = False
-        self._has_finisse = False
         self._has_zen_archery = False
         self._twf_skill = 0
 
@@ -299,9 +317,6 @@ class Combatant(Entity):
             if source in self._temp_hp:
                 self._temp_hp
 
-    def get_name(self):
-        return self._name
-
     def get_turn_state(self):
         strikes = self.generate_bab_chain()
         self._turn_state.set_attacks(strikes)
@@ -320,10 +335,10 @@ class Combatant(Entity):
 
         state.move_actions = 1
         state.standard_actions = 1
-        state.fullround_actions = 1
+        state.full_round_actions = 1
         state.move_5ft = 1
         state.swift_actions = 1
-        self.opportunity_attacks = 1
+        #self.opportunity_attacks = 1
         self._opportunities_used = []
         self._ac_dodge = 0
         self._events.on_turn_start(self)
@@ -333,8 +348,6 @@ class Combatant(Entity):
     def on_round_end(self):
         state = self._turn_state
         # Attacked opportunity targets
-        #self._opportunities_used = []
-        #self._opportunity_attacks = 1
         # Clean up attack sequence
         state.attacks = []
         self._events.on_turn_end(self)
@@ -348,13 +361,6 @@ class Combatant(Entity):
         item.on_equip(self)
         self._carry_weight_limit += item.weight()
 
-    # Get armor class
-    def get_AC(self, target=None):
-        AC = self._AC + self._ac_deflection + self._ac_dodge + self._ac_natural + self._ac_armor
-        dex = self.dexterity_mofifier()
-        AC += min(dex, self._max_dex_ac)
-        return AC
-
     def opportunities_left(self):
         return self._opportunity_attacks - len(self._opportunities_used)
 
@@ -362,7 +368,7 @@ class Combatant(Entity):
     def use_opportunity(self, desc: AttackDesc):
         self._opportunities_used.append(desc)
 
-    def calculate_attack_of_opportinity(self, target):
+    def calculate_attack_of_opportunity(self, target):
         desc = self._turn_state.attack_AoO.copy()
         desc.update_target(target)
         desc.opportunity = True
@@ -374,14 +380,29 @@ class Combatant(Entity):
         if self._brain is not None:
             yield from self._brain.respond_provocation(battle, combatant, action)
 
-    def get_touch_ac(self, target=None):
-        AC = self._AC + self._ac_deflection + self._ac_dodge
-        dex = self.dexterity_mofifier()
-        AC += min(dex, self._max_dex_ac)
-        return AC
+    # Get armor class
+    def get_armor_class(self, target=None):
+        armor_class = self._AC + self._ac_deflection + self._ac_dodge + self._ac_natural + self._ac_armor
+        dex = self.dexterity_modifier()
+        armor_class += min(dex, self._max_dex_ac)
+        return armor_class
 
-    def recieve_damage(self, damage):
+    def get_touch_armor_class(self, target=None):
+        armor_class = self._AC + self._ac_deflection + self._ac_dodge
+        dex = self.dexterity_modifier()
+        armor_class += min(dex, self._max_dex_ac)
+        return armor_class
+
+    def receive_damage(self, damage, source):
+        self._events.on_get_hit(self, source, damage)
         self._health -= damage
+
+        print("%s damages %s for %d damage, %d HP left" % (source.name, self.name, damage, self._health))
+
+        if self._health <= -10:
+            print("%s is dead" % self.name)
+        elif self._health < 0:
+            print("%s is unconsciousness" % self.name)
         return self._health
 
     # Link brain
@@ -417,6 +438,18 @@ class Combatant(Entity):
     def natural_reach(self):
         return self._natural_reach
 
+    @property
+    def save_fort(self):
+        return self._save_fort_base + self._save_fort_bonus
+
+    @property
+    def save_ref(self):
+        return self._save_ref_base + self._save_ref_bonus
+
+    @property
+    def save_will(self):
+        return self._save_will_base + self._save_will_bonus
+
     # Calculate total weapon reach
     def total_reach(self):
         reach = self._natural_reach
@@ -438,13 +471,13 @@ class Combatant(Entity):
 
     def print_character(self):
         text = "Name: %s of %s\n" % (self.get_name(), str(self.get_faction()))
-        text+= "STR=%d;DEX=%d;CON=%d;INT=%d;WIS=%d;CHA=%d\n"%tuple(self._stats)
-        text+= "HP=%d/%d AC=%d ATT=%d\n" % (self.health(), self._health_max, self.get_AC(None), self.get_attack())
-        text+= "fort=%d ref=%d will=%d\n" % (self.save_fort(), self.save_ref(), self.save_will())
+        text += "STR=%d;DEX=%d;CON=%d;INT=%d;WIS=%d;CHA=%d\n" % tuple(self._stats)
+        text += "HP=%d/%d AC=%d ATT=%d\n" % (self.health(), self._health_max, self.get_armor_class(None), self.get_attack())
+        text += "fort=%d ref=%d will=%d\n" % (self.save_fort(), self.save_ref(), self.save_will())
 
         chain = self.generate_bab_chain()
         if len(chain) > 0:
-            text+= "Cycle: \n"
+            text += "Cycle: \n"
             for strike in chain:
                 text += "\t%s\n" % strike.text()
         return text
@@ -460,57 +493,52 @@ class Combatant(Entity):
     def get_attack(self, target=None):
         return self._BAB + self.strength_modifier()
 
-    def get_main_weapon(self, default=None) -> dnd.weapon.Weapon:
+    def get_main_weapon(self, default=None) -> battle.item.Weapon:
         return self._equipped.get(ITEM_SLOT_MAIN, default)
 
-    def get_offhand_weapon(self, default=None)-> dnd.weapon.Weapon:
+    def get_offhand_weapon(self, default=None)-> battle.item.Weapon:
         return self._equipped.get(ITEM_SLOT_OFFHAND, default)
 
     # Fill in attack for specified weapon and wield
-    def generate_attack(self, attack, weapon, twohanded, target, **kwargs):
+    def generate_attack(self, attack, weapon, two_handed, target, **kwargs):
         damage = weapon.damage(self, target)
         damage_mod = 0
         str_mod = self.strength_modifier()
 
-        if weapon.is_light(self) and not twohanded:
+        if weapon.is_light(self) and not two_handed:
             damage_mod += int(str_mod / 2)
-            if self._has_insightfull_strike and self.intellect_mofifier() > 0:
-                damage_mod += self.intellect_mofifier()
-        elif twohanded:
+        elif two_handed:
             damage_mod += int(str_mod * 1.5)
         else:
             damage_mod += int(str_mod)
 
+        """
         if self._has_finisse:
-            attack += max(str_mod, self.dexterity_mofifier())
+            attack += max(str_mod, self.dexterity_modifier())
         else:
             attack += str_mod
-        '''
-        Damage bonus types:
-        str/2, str, str3/2
-        int, wis,
-        '''
+        """
+
         if damage_mod != 0:
             damage.add_die(1, int(damage_mod))
 
         # For all effects
-        desc = AttackDesc(weapon, attack=attack, damage=damage, **kwargs)
+        desc = AttackDesc(weapon, attack=attack, damage=damage, two_handed=two_handed, **kwargs)
         self._events.on_calc_attack(self, desc)
         return desc
 
     # Generate attack chain for full attack action
-    def generate_bab_chain(self, target = None, **kwargs):
+    def generate_bab_chain(self, target=None, **kwargs):
         attack_chain = []
         bab = self._BAB
-        touch=kwargs.get('touch')
         weapon = self.get_main_weapon()
-        twohanded = weapon.is_twohanded()
+        two_handed = weapon.is_two_handed()
         weapon_offhand = self.get_offhand_weapon()
         two_weapon_fighting = False
         attack_bonus_style = self._attack_bonus_style
 
         if weapon_offhand is not None and weapon_offhand.is_weapon():
-            twohanded = False
+            two_handed = False
             two_weapon_fighting = True
             attack_bonus_style -= (4 if weapon_offhand.is_light(self) else 6)
             if self._twf_skill > 0:
@@ -519,7 +547,7 @@ class Combatant(Entity):
         # Get attacks from main slot
         while bab >= 0:
             attack = bab + attack_bonus_style
-            desc = self.generate_attack(attack, weapon, twohanded, target)
+            desc = self.generate_attack(attack, weapon, two_handed, target, **kwargs)
             attack_chain.append(desc)
             bab -= 5
 
@@ -529,7 +557,7 @@ class Combatant(Entity):
             attack_bonus_style -= 4
 
         while twf_attacks > 0:
-            desc = self.generate_attack(bab + attack_bonus_style, weapon_offhand, False, target)
+            desc = self.generate_attack(bab + attack_bonus_style, weapon_offhand, False, target, **kwargs)
             attack_chain.append(desc)
             twf_attacks -= 1
             bab -= 5
@@ -537,6 +565,7 @@ class Combatant(Entity):
         return attack_chain
 
     # Check if combatant is absolutely dead
+    # There are some feats, that can override this condition
     def is_dead(self):
         return self._health <= -10
 
@@ -548,21 +577,17 @@ class Combatant(Entity):
         return self.is_consciousness()
 
     def add_feat(self, feat):
+        """
+        Adds feat to known feat list.
+        This function does not care for feat requirements
+        :param feat:
+        """
         self._feats.append(feat)
         feat.apply(self)
 
     # Any feat is implemented by activating certain 'effects' on a combatant
-    def allow_effect_activation(self, effect, source = None):
+    def allow_effect_activation(self, effect, source=None):
         pass
-
-    def ability(self, abilty_name):
-        """
-        returns the value of the ability with the given name
-
-        :param str abilty_name: The name of the ability
-        :rtype: int
-        """
-        return self.__ABILITIES[abilty_name.lower()]()
 
     def constitution(self):
         return self._stats[STAT_CON]
@@ -582,7 +607,7 @@ class Combatant(Entity):
     def wisdom(self):
         return self._stats[STAT_WIS]  # + age_modifier
 
-    def constitution_mofifier(self):
+    def constitution_modifier(self):
         """
         returns the constitution modifier
 
@@ -590,7 +615,7 @@ class Combatant(Entity):
         """
         return ability_modifier(self.constitution())
 
-    def charisma_mofifier(self):
+    def charisma_modifier(self):
         """
         returns the charisma modifier
 
@@ -598,7 +623,7 @@ class Combatant(Entity):
         """
         return ability_modifier(self.charisma())
 
-    def dexterity_mofifier(self):
+    def dexterity_modifier(self):
         """
         returns the dexterity modifier
 
@@ -606,7 +631,7 @@ class Combatant(Entity):
         """
         return ability_modifier(self.dexterity())
 
-    def intellect_mofifier(self):
+    def intellect_modifier(self):
         """
         returns the intellect modifier
 
@@ -622,7 +647,7 @@ class Combatant(Entity):
         """
         return ability_modifier(self.strength())
 
-    def wisdom_mofifier(self):
+    def wisdom_modifier(self):
         """
         returns the wisdom modifier
 
@@ -634,13 +659,7 @@ class Combatant(Entity):
         """
         Resets the round for this combatant
         """
-        self._is_flat_footed = False
-        self._action_points = 3
         self._current_initiative = self.initiative()
-
-    # Return combatant coordinates
-    def coords(self):
-        return (self.x, self.y)
 
     def current_initiative(self):
         """
@@ -655,30 +674,21 @@ class Combatant(Entity):
 
         :rtype: int
         """
-        return d20.roll() + self.dexterity_mofifier()
+        return d20.roll() + self.dexterity_modifier()
 
     # Get generator
-    def gen_actions(self, battle):
+    def gen_brain_actions(self, battle):
         if self._brain is not None:
-            # Retur
             yield from self._brain.make_turn(battle)
 
-    # Overriden by character
-    def get_name(self):
-        return self._name
-
-    def on_save_throw(self, DC):
-        # TODO: implement it
-        return False
-
     def save_will(self):
-        return self._save_fort_base + self.wisdom_mofifier()
+        return self._save_fort_base + self.wisdom_modifier()
 
     def save_ref(self):
-        return self._save_fort_base + self.dexterity_mofifier()
+        return self._save_fort_base + self.dexterity_modifier()
 
     def save_fort(self):
-        return self._save_fort_base + self.constitution_mofifier()
+        return self._save_fort_base + self.constitution_modifier()
 
 
 # Encapsulates current turn state
@@ -687,7 +697,7 @@ class TurnState(object):
         self.moves_left = 0
         self.move_actions = 1
         self.standard_actions = 1
-        self.fullround_actions = 1
+        self.full_round_actions = 1
         self.move_5ft = 1
         self.swift_actions = 1
         self.made_attack = 0
@@ -712,11 +722,11 @@ class TurnState(object):
     def use_move(self, real_move = True):
         if real_move:
             self.move_5ft = 0
-        self.fullround_actions = 1
+        self.full_round_actions = 1
 
     # Returns true if character has attack actions
     def can_attack(self):
-        return (self.fullround_actions > 0 or self.standard_actions > 0) and len(self.attacks) > 0
+        return (self.full_round_actions > 0 or self.standard_actions > 0) and len(self.attacks) > 0
 
     def can_move(self):
         return self.moves_left > 0 and self.move_actions > 0
@@ -728,13 +738,13 @@ class TurnState(object):
     def use_standard(self, attack=False):
         self.standard_actions = 0
         if not attack:
-            self.fullround_actions = 0
+            self.full_round_actions = 0
             self.made_attack = 1
 
-    # Use fullround action
+    # Use full round action
     def use_full_round(self):
         self.standard_actions = 0
-        self.fullround_actions = 0
+        self.full_round_actions = 0
         self.move_actions = 0
 
     def complete(self):

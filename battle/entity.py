@@ -3,7 +3,8 @@ from .grid import Point
 
 # Grid entity
 class Entity:
-    def __init__(self, **kwargs):
+    def __init__(self, name, **kwargs):
+        self._name = name
         # Current tile coordinates
         self.x = 0
         self.y = 0
@@ -17,6 +18,28 @@ class Entity:
         self._threatened_tiles = []
         self._occupied_tiles = []
 
+    @property
+    def name(self):
+        """
+        Get entity name
+        :return:
+        """
+        return self._name
+
+    @property
+    def threatened_tiles(self):
+        return self._threatened_tiles
+
+    @property
+    def occupied_tiles(self):
+        return self._occupied_tiles
+
+    def get_name(self):
+        """
+        :return: string Entity name
+        """
+        return self._name
+
     def get_size(self):
         return self._size
 
@@ -26,7 +49,7 @@ class Entity:
     def get_coord(self) -> Point:
         return Point(x=self.x, y=self.y)
 
-    def get_visial_coord(self) -> Point:
+    def get_visual_coord(self) -> Point:
         return Point(x=self.visual_X, y=self.visual_Y)
 
     def distance_melee(self, other):
@@ -45,7 +68,7 @@ class Entity:
     def distance_tiles(obj_a, obj_b):
         return math.sqrt((obj_a.x - obj_b.y) ** 2 + (obj_a.y - obj_b.y) ** 2)
 
-    # Check if combatant obj_b is whithin reach of combatant obj_a
+    # Check if combatant obj_b is within reach of combatant obj_a
     def is_adjacent(self, other):
         reach = self.total_reach()
         distance = self.distance_melee(other)
@@ -54,6 +77,11 @@ class Entity:
     def fix_visual(self):
         self.visual_X = self.x
         self.visual_Y = self.y
+
+    def tiles_threatened_by_enemies(self):
+        for tile in self._occupied_tiles:
+            if tile.is_threatened(self):
+                yield tile
 
 
 

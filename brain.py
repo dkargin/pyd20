@@ -23,7 +23,7 @@ class Brain(object):
         state = self.get_turn_state()
         if self.slave.opportunities_left() > 0 and state.attack_AoO is not None:
             print("%s uses opportinity to attack %s" % (self.slave.get_name(), target.get_name()))
-            desc = self.slave.calculate_attack_of_opportinity(target)
+            desc = self.slave.calculate_attack_of_opportunity(target)
             yield from battle.do_action_strike(self.slave, desc)
 
     def get_turn_state(self) -> TurnState:
@@ -31,7 +31,7 @@ class Brain(object):
 
     # Estimate fight probabilities against specified enemy
     def estimate_battle(self, enemy: Combatant):
-        AC = enemy.get_AC()
+        AC = enemy.get_armor_class()
         attacks = self.slave.generate_bab_chain(enemy)
         total_dmg = 0
         strikes = []

@@ -15,20 +15,24 @@ class Battle(object):
 
     :type grid: grid.Grid
     :type _combatants: Combatant[]
+    :type round: int - Current round
     """
     def __init__(self, grid_width, grid_height):
         """
-        Create an instance of a battle.
-
-        :param Grid grid: The grid the battle takes place on
+        Creates an instance of a battle.
         """
-        self.grid = Grid(grid_width, grid_height)
+        self._grid = Grid(grid_width, grid_height)
         self.pathfinder = PathFinder(self.grid)
         self._combatants = []
         self.round = 0
 
-    def get_grid(self):
-        return self.grid
+    @property
+    def grid(self):
+        return self._grid
+
+    @property
+    def combatants(self):
+        return self._combatants
 
     def add_combatant(self, combatant, x, y, **kwargs):
         """
@@ -64,30 +68,20 @@ class Battle(object):
         for ch in self._combatants:
             print(ch.print_character())
 
-    def deal_damage(self, source, victim, damage):
-        new_hp = victim.recieve_damage(damage)
-        print("%s damages %s for %d damage, %d HP left" % (str(source), str(victim), damage, new_hp))
-        if new_hp <= -10:
-            print("%s is dead" % str(victim))
-        elif new_hp < 0:
-            print("%s is unconsciousness" % str(victim))
-
-    # Gather attacks of opportinity, provoked by combatant, standing at specified tile
+    # Gather attacks of opportunity, provoked by combatant, standing at specified tile
     def get_threatening_enemies(self, combatant: Combatant, action):
-        AoOs = []
+        opportunity_attacks = []
         is_enemy = lambda a: self.is_combatant_enemy(a, combatant) and combatant.opportunities_left() > 0
-        for tile in combatant._occupied_tiles:
-            if tile.is_threatened(combatant):
-                for attacker in filter(is_enemy, tile.threaten):
-                    # self.__check_AoO_move(provoke, combatant)
-                    AoOs.append(attacker)
-        return AoOs
+
+        for tile in combatant.tiles_threatened_by_enemies():
+            for attacker in filter(is_enemy, tile.threaten):
+                opportunity_attacks.append(attacker)
+        return opportunity_attacks
 
     def execute_combatant_action(self, action):
         """
         Executes minimal game action
         :param action:
-        :param turn_state:
         :return:
         """
         if action is None:
@@ -95,8 +89,6 @@ class Battle(object):
         ret = action.execute(self)
         if isinstance(ret, types.GeneratorType):
             yield from action.execute(self)
-        #elif callable(action.execute):
-        #    action.execute()
 
     # Process turn for selected combatant
     def combatant_make_turn(self, combatant):
@@ -107,7 +99,7 @@ class Battle(object):
         iteration_limit = 20
 
         # Iterate through all combatant actions during the turn
-        for action in combatant.gen_actions(self):
+        for action in combatant.gen_brain_actions(self):
             yield from self.execute_combatant_action(action)
 
             iteration_limit -= 1
@@ -156,10 +148,10 @@ class Battle(object):
     def is_faction_enemy(self, faction_a, faction_b):
         return faction_a != faction_b
 
-    def path_to_melee_range(self, src, target, range):
+    def path_to_melee_range(self, src, target, attack_range):
         start = self.tile_for_combatant(src)
         near = target.get_size()*0.5
-        far = target.get_size()*0.5 + range
+        far = target.get_size()*0.5 + attack_range
         path = self.pathfinder.path_to_melee_range(start, target.get_center(), near, far)
         return path
 
@@ -175,7 +167,7 @@ class Battle(object):
             return enemies[0]
         return None
 
-    # Reroll initiative for all the objects
+    # Roll initiative for all the objects
     def roll_initiative(self):
         print("Rolling new initiative order")
         for combatant in self._combatants:
@@ -184,57 +176,32 @@ class Battle(object):
             print(combatant, "rolls %d for initiative" % initiative)
             self._combatants.update_priority(combatant, initiative)
 
-    def tile(self, *args, **kwargs):
-        """
-        Returns the tile for a combatant or a position.
-
-        possible arguments are:
-        :param Combatant combatant: The combatant
-        :param int x: Position x
-        :param int y: Position y
-
-        :rtype: Tile
-        """
-        combatant = kwargs.get("combatant", None)
-        x = kwargs.get("x", None)
-        y = kwargs.get("y", None)
-        if combatant is not None:
-            return self.tile_for_combatant(combatant)
-        if x is not None and y is not None:
-            return self.tile_for_position(x, y)
-
     # TODO: Get rid of it
     def tile_for_combatant(self, combatant) -> Tile:
         return self.tile_for_position(combatant.x, combatant.y)
-        #for tile in self.grid.get_tiles():
-        #    if tile.has_occupation(combatant):
-        #        return tile
-        #return None
 
     def tile_for_position(self, x, y):
         return self.grid.get_tile(x, y)
 
     def tile_threatened(self, tile, combatant):
-        if tile == None:
+        if tile is None:
             return False
         for u in tile.threaten:
             if self.is_combatant_enemy(u, combatant):
                 return True
         return False
 
-    def position_threatened(self, combatant, x,y):
+    def position_threatened(self, combatant, x, y):
         dx = x - combatant.x
         dy = y - combatant.y
-        for tile in combatant._occupied_tiles:
+        for tile in combatant.occupied_tiles:
             if self.tile_threatened(self.tile_for_position(tile.x + dx, tile.y + dy), combatant):
                 return True
         return False
 
-
     ############## Action generators ################
     def make_action_move_tiles(self, combatant: Combatant, state: TurnState, path):
         # We should iterate all the tiles
-        #tile_src = self.tile_for_combatant(combatant)
         tiles_moved = []
         combatant.path = path
 
@@ -244,8 +211,6 @@ class Battle(object):
         waypoints = path.get_path()
         while len(waypoints) > 0:
             tile = waypoints.pop(0)
-            #if tile == tile_src:
-            #    continue
             tiles_moved.append(tile)
             if self.position_threatened(combatant, tile.x, tile.y):
                 yield battle.actions.MoveAction(combatant, tiles_moved)
@@ -274,17 +239,17 @@ class Battle(object):
         target = desc.get_target()
 
         # TODO: run events for on_strike_begin(desc, target)
-        AC = target.get_touch_ac(target) if desc.touch else target.get_AC(target)
+        armor_class = target.get_touch_armor_class(target) if desc.touch else target.get_armor_class(target)
 
         # TODO: run events for critical hit
-        has_crit = desc.is_critical(roll) and (crit_confirm >= AC or crit_confirm_roll == 20)
-        hit = attack >= AC
+        has_crit = desc.is_critical(roll) and (crit_confirm >= armor_class or crit_confirm_roll == 20)
+        hit = attack >= armor_class
         if roll == 20:
             hit = True
         if roll == 1:
             hit = False
 
-        attack_text = ""
+        attack_text = "misses"
         total_damage = 0
 
         if hit:
@@ -295,18 +260,12 @@ class Battle(object):
                 attack_text = "critically hits"
             else:
                 attack_text = "hits"
-
             total_damage = damage + bonus_damage
-        else:
-            attack_text = "misses"
 
-        print("%s %s %s with roll %d(%d+%d) vs AC=%d" % (combatant.get_name(),
-                                                      attack_text,
-                                                      target.get_name(),
-                                                      attack, roll, attack-roll, AC))
+        print("%s %s %s with roll %d(%d+%d) vs AC=%d" %
+              (combatant.get_name(), attack_text, target.get_name(), attack, roll, attack-roll, armor_class))
         if hit:
-            self.deal_damage(combatant, target, total_damage)
-
+            target.receive_damage(damage, combatant)
 
         yield animation.AttackFinish(combatant, target)
         # TODO: run events for on_strike_finish()

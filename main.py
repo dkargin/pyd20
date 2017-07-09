@@ -1,17 +1,10 @@
-import pygame
 import logging
-import brain
-import classes
-import dnd.armor
-import dnd.weapon
-import dnd.feats
-from battle.core import *
-from battle.battle import Battle
-from battle.grid import *
-from battle.character import Character
-from render import Renderer
+
+import pygame
 
 from battle_utils import *
+from render import Renderer
+from battle.battle import Battle
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +14,8 @@ center_x = 20
 center_y = 20
 
 battle = Battle(40, 40)
-grid = battle.get_grid()
 
-#draw_cross(grid, center_x, center_y, 5)
+#draw_cross(battle.grid, center_x, center_y, 5)
 
 char1 = Character("Bob", size=2, brain=brain.StandAttackBrain())
 char1.set_stats(18, 16, 16, 10, 10, 10)
@@ -53,7 +45,7 @@ battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")
 
 
 # Drawing attack positions by specifying reach range
-def draw_attack_positions(combatant, reach0, reach1):
+def draw_attack_positions(grid, combatant, reach0, reach1):
     tiles0 = grid.get_tile_range(combatant.get_center(), combatant.get_size()*0.5+reach0)
     tiles1 = grid.get_tile_range(combatant.get_center(), combatant.get_size()*0.5+reach1)
 
@@ -64,8 +56,7 @@ def draw_attack_positions(combatant, reach0, reach1):
 
 battle.print_characters()
 
-
-renderer = Renderer(grid, 20)
+renderer = Renderer(battle, 20)
 
 pygame.display.set_caption("Battlescape")
 
@@ -112,11 +103,10 @@ while not shouldExit:
         if animation is None:
             print("Press key for the next turn")
         else:
-            logger.info("Got animation: %s" % str(animation) )
+            logger.info("Got animation: %s" % str(animation))
 
             animation.start(get_time())
         wait_turn = animation is None
-
 
     renderer.clear()
     renderer.draw_battle(battle)

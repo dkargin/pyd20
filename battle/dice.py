@@ -98,6 +98,9 @@ class Dice(object):
     def __repr__(self):
         return self.to_string()
 
+    def __str__(self):
+        return self.to_string()
+
     def to_string(self):
         result = ""
         first = True
@@ -147,7 +150,7 @@ class Dice(object):
         return summ1
 
 
-def roll(dice_sting):
+def make_roll(dice_sting):
     """
     rolls dice that are represented by a string in the form:
     <amount>d<sides>[<+/-><value>]

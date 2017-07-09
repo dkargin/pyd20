@@ -59,11 +59,7 @@ class Character(Combatant):
         # Maps class type to a level
         self._classes = {}
         self._items = {}
-
-        # Main weapon
-        self._weapon_main = None
-        # Offhand weapon
-        self._weapon_off = None
+        self._race = None
 
     def __repr__(self):
         return "<" + self._name + ">"
@@ -128,7 +124,7 @@ class Character(Combatant):
         :rtype: Class | None
         """
         for class_ in self._classes:
-            if class_._name == class_name:
+            if class_.name == class_name:
                 return class_
         return None
 
@@ -152,18 +148,6 @@ class Character(Combatant):
             if class_.can_learn_skill(skill_name, self):
                 return True
         return False
-
-    def can_learn_feat(self, feat_name):
-        """
-        checks whether a feat can be learned
-
-        :param str feat_name: The name of the skill
-        :rtype: bool
-        """
-        feat = Feat.with_name(feat_name)
-        if feat is None:
-            return False
-        return feat.has_prerequisites(self) and self._feat_skill_points > 0
 
     def use_skill(self, skill_name):
         """
@@ -206,17 +190,6 @@ class Character(Combatant):
             return
         lowest_cost_class.learn_skill(skill_name, self)
         self.learn_skill(skill_name, times - 1)
-
-    def learn_feat(self, feat_name):
-        """
-        learns a feat
-
-        :param str feat_name: The name of the feat
-        """
-        if not self.can_learn_feat(feat_name):
-            return
-        self._feat_skill_points -= 1
-        self._feats.append(Feat.with_name(feat_name))
 
     def starting_age(self, starting_age_type):
         """
@@ -319,7 +292,7 @@ class Character(Combatant):
         """
         armor_bonus = 0     # TODO: implement equipment
         shield_bonus = 0    # TODO: implement equipment
-        return 10 + armor_bonus + shield_bonus + ac_size_modifier(self._height) + self.dexterity_mofifier()
+        return 10 + armor_bonus + shield_bonus + ac_size_modifier(self._height) + self.dexterity_modifier()
 
     def size_category(self):
         """
@@ -375,7 +348,7 @@ class ProgressionSaveThrow(Progression):
         else:
             return int(level / 3)
 
-    def apply(self, character, level_from, level_to):
+    def apply(self, character: Character, level_from, level_to):
         character._save_fort_base += (self.calculate(level_to, self.fort) - self.calculate(level_from, self.fort))
         character._save_ref_base += (self.calculate(level_to, self.ref) - self.calculate(level_from, self.ref))
         character._save_will_base += (self.calculate(level_to, self.will) - self.calculate(level_from, self.will))
@@ -387,7 +360,7 @@ class ProgressionHP(Progression):
         self.dice = dice
 
     def apply(self, character, level_from, level_to):
-        HP = character.constitution_mofifier() * (level_to - level_from)
+        HP = character.constitution_modifier() * (level_to - level_from)
         if character.current_level() == 0:
             HP += self.dice
             level_to-= 1
@@ -523,7 +496,7 @@ class CharacterClass(object):
         return False
 
     def __increase_skill_points(self, character):
-        skill_points = (self._skill_modifier + character.intellect_mofifier())
+        skill_points = (self._skill_modifier + character.intellect_modifier())
         # only the first class gets the initial skill bonus
         if self._level == 1 and len(character._classes) == 1:
             skill_points *= 4
@@ -532,7 +505,7 @@ class CharacterClass(object):
         self._skill_points += skill_points
 
     def __increase_health(self, character):
-        const_mod = character.constitution_mofifier()
+        const_mod = character.constitution_modifier()
         if const_mod < 0:
             const_mod = 0
         hp_bonus = self._hit_die.roll() + const_mod

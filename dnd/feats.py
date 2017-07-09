@@ -1,7 +1,6 @@
 from battle.character import Feat, Character
 from battle.combatant import Combatant, AttackDesc
-from battle.core import *
-from battle.dice import *
+from battle.item import *
 
 
 class TwoWeaponFighting(Feat):
@@ -39,13 +38,13 @@ class Rage(Feat):
             combatant.modify_stat(STAT_STR, self._stat_bonus)
             combatant.modify_stat(STAT_CON, self._stat_bonus)
             combatant.modify_save_will(2)
-            self.set_duration(2 + combatant.constitution_mofifier())
+            self.set_duration(2 + combatant.constitution_modifier())
 
         def on_finish(self, combatant: Combatant, **kwargs):
             combatant.modify_stat(STAT_STR, -self._stat_bonus)
             combatant.modify_stat(STAT_CON, -self._stat_bonus)
             combatant.modify_save_will(2)
-            self.set_duration(2 + combatant.constitution_mofifier())
+            self.set_duration(2 + combatant.constitution_modifier())
 
     def __init__(self):
         Feat.__init__(self, "b_rage")
@@ -73,9 +72,9 @@ class MonkBonusAC(Feat):
     def on_start(self, combatant, **kwargs):
         armor = combatant.get_armor_type()
         new_bonus = self._bonus
-        if armor == ARMOR_TYPE_NONE:
+        if armor == Armor.ARMOR_TYPE_NONE:
             mlevels = combatant.get_class_level("monk")
-            new_bonus = math.floor(mlevels / 5) + combatant.wisdom_mofifier()
+            new_bonus = math.floor(mlevels / 5) + combatant.wisdom_modifier()
         else:
             new_bonus = 0
 
@@ -107,7 +106,7 @@ class CombatReflexes(Feat):
         combatant._opportunity_attacks += delta
 
     def on_start(self, combatant):
-        self._bonus_attacks = max(combatant.dexterity_mofifier(), 1)
+        self._bonus_attacks = max(combatant.dexterity_modifier(), 1)
         combatant._opportunity_attacks = self._bonus_attacks
 
 
@@ -139,7 +138,7 @@ class InsightfulStrike(Feat):
         combatant.event_manager().on_calc_attack += self.on_calculate_attack
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
-        mod = combatant.intellect_mofifier()
+        mod = combatant.intellect_modifier()
         if mod > 0:
             desc.damage.add_die(1,mod)
 
@@ -155,11 +154,11 @@ class WeaponFinesse(Feat):
         combatant.event_manager().on_calc_attack += self.on_calculate_attack
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
-        dex_mod = combatant.dexterity_mofifier()
+        dex_mod = combatant.dexterity_modifier()
         str_mod = combatant.strength_modifier()
         weapon = desc.weapon
 
-        if desc.is_melee() and dex_mod > str_mod and weapon.is_finissable(combatant):
+        if desc.is_melee() and dex_mod > str_mod and weapon.is_finessable(combatant):
             bonus = dex_mod - str_mod
             desc.attack += bonus
 

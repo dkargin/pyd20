@@ -140,7 +140,7 @@ class AttackFinish(Animation):
     def __init__(self, combatant, target):
         super(AttackFinish, self).__init__(combatant)
         self._target = target
-        self._src = combatant.get_visial_coord()
+        self._src = combatant.get_visual_coord()
         self._dst = combatant.get_coord()
         self._duration = 0.3
 
