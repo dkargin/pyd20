@@ -59,6 +59,7 @@ class Character(Combatant):
         # Maps class type to a level
         self._classes = {}
         self._items = {}
+        self._skills = {}
         self._race = None
 
     def __repr__(self):
@@ -339,19 +340,19 @@ class ProgressionSaveThrow(Progression):
         self.ref = ref
         self.will = will
 
-    def calculate(self, level, flag):
-        if flag == HIGH:
-            result = int(level / 2)
-            if level > 0:
-                result += 2
-            return result
-        else:
-            return int(level / 3)
+    def apply(self, ch: Combatant, level_from, level_to):
+        def calculate(level, flag):
+            if flag == HIGH:
+                result = int(level / 2)
+                if level > 0:
+                    result += 2
+                return result
+            else:
+                return int(level / 3)
 
-    def apply(self, character: Character, level_from, level_to):
-        character._save_fort_base += (self.calculate(level_to, self.fort) - self.calculate(level_from, self.fort))
-        character._save_ref_base += (self.calculate(level_to, self.ref) - self.calculate(level_from, self.ref))
-        character._save_will_base += (self.calculate(level_to, self.will) - self.calculate(level_from, self.will))
+        ch.modify_save_fort(calculate(level_to, self.fort) - calculate(level_from, self.fort), True)
+        ch.modify_save_ref(calculate(level_to, self.ref) - calculate(level_from, self.ref), True)
+        ch.modify_save_will(calculate(level_to, self.will) - calculate(level_from, self.will), True)
 
 
 class ProgressionHP(Progression):
@@ -360,16 +361,16 @@ class ProgressionHP(Progression):
         self.dice = dice
 
     def apply(self, character, level_from, level_to):
-        HP = character.constitution_modifier() * (level_to - level_from)
+        hit_points = character.constitution_modifier() * (level_to - level_from)
         if character.current_level() == 0:
-            HP += self.dice
-            level_to-= 1
+            hit_points += self.dice
+            level_to -= 1
         dice = Dice()
         for a in range(level_to):
             dice.add_die(self.dice)
 
-        HP += dice.roll()
-        character._health_max += HP
+        hit_points += dice.roll()
+        character._health_max += hit_points
 
 
 # Progression that adds stateless feat on specified level
@@ -380,22 +381,22 @@ class ProgressionFeat(Progression):
         self._level = level
 
     def apply(self, character: Character, level_from, level_to):
-        if level_from < self._level and level_to >= self._level:
+        if self._level in range(level_from, level_to):
             character.add_feat(self._feat)
 
 
 # Adds feat level progression
 class ProgressionFeatLevel(Progression):
-    def __init__(self, feat, levels_upgrade = [], *kargs, **kwargs):
+    def __init__(self, feat, levels_upgrade=[], *args, **kwargs):
         self._feat = feat
-        self._feat_kargs = kargs
+        self._feat_args = args
         self._feat_kwargs = kwargs
         self._levels = levels_upgrade
 
     def apply(self, character: Character, level_from, level_to):
         # Check if character has fet
         if not character.get_feat_type(self._feat):
-            feat = self._feat(*self._feat_kargs, **self._feat_kwargs)
+            feat = self._feat(*self._feat_args, **self._feat_kwargs)
             character.add_feat(feat)
 
 
@@ -503,14 +504,6 @@ class CharacterClass(object):
             if skill_points < 4:
                 skill_points = 4
         self._skill_points += skill_points
-
-    def __increase_health(self, character):
-        const_mod = character.constitution_modifier()
-        if const_mod < 0:
-            const_mod = 0
-        hp_bonus = self._hit_die.roll() + const_mod
-        character._hit_points["maximum"] += hp_bonus
-        character._hit_points["current"] += hp_bonus
 
     def __repr__(self):
         return "<" + self._name + " Level " + str(self._level) + ">"

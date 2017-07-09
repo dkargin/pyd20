@@ -3,7 +3,7 @@ import math
 from battle.combatant import Combatant
 from battle.grid import *
 # Pixel size for a tile
-TILESIZE=16
+TILESIZE=20
 
 # set up the colors
 BLACK = (  0,   0,   0)
@@ -17,7 +17,15 @@ BLUE  = (  0,   0, 255)
 
 
 class Renderer:
-    def __init__(self, battle, offset = 0):
+    class Sprite:
+        """
+        Wrapper for surface object
+        """
+        def __init__(self, coord, surface):
+            self.coord = coord
+            self.surface = surface
+
+    def __init__(self, battle, offset=0):
         grid = battle.grid
         self.grid_top = offset
         self.grid_left = offset
@@ -30,19 +38,19 @@ class Renderer:
 
         self.surface = pygame.display.set_mode((self.screen_width, self.screen_height))
 
-        self.font = pygame.font.Font(None, 24)
+        self.font = pygame.font.Font(None, 16)
 
         self._draw_names = True
         self._draw_reach = False
         self._draw_path = True
         self._draw_threaten = False
-
         self.char_names = {}
+        self._text_layer = []
 
     # Convert grid coordinates to screen
     def grid_to_screen(self, pt):
         if len(pt) == 2:
-            return (int(self.grid_left + pt[0] * TILESIZE), int(self.grid_top + pt[1] * TILESIZE))
+            return int(self.grid_left + pt[0] * TILESIZE), int(self.grid_top + pt[1] * TILESIZE)
         else:
             return (int(self.grid_left + pt[0] * TILESIZE),
                     int(self.grid_top + pt[1] * TILESIZE),
@@ -86,7 +94,6 @@ class Renderer:
             rect = (*tile.coords(), 1, 1)
             pygame.draw.rect(self.surface, color, self.grid_to_screen(rect))
 
-
     # Draw tiled path
     def draw_path(self, path, color=GREEN):
         prev = None
@@ -113,9 +120,20 @@ class Renderer:
 
         size = u.get_size()
         coord = self.grid_to_screen((u.visual_X + size * 0.5, u.visual_Y + size * 0.5))
-
         # pygame.draw.rect(self.surface, coord, row * TILESIZE, TILESIZE, TILESIZE)
-        pygame.draw.circle(self.surface, color, coord, int(size*TILESIZE * 0.5))
+        #pygame.draw.circle(self.surface, RED, coord, int(size*TILESIZE * 0.5))
+        pygame.draw.circle(self.surface, color, coord, math.ceil(size*TILESIZE * 0.5))
+        rect = self.grid_to_screen((u.visual_X, u.visual_Y, size, size))
+
+        arc_width = 2
+        percent = u.health / u.health_max
+        if percent < 0:
+            percent = 0
+        angle = 2*math.pi*percent
+        if percent > 0:
+            pygame.draw.arc(self.surface, GREEN0, rect, 0, angle, arc_width)
+        if percent < 1.0:
+            pygame.draw.arc(self.surface, RED, rect, angle, math.pi*2, arc_width)
         # pygame.draw.
 
         if self._draw_path and u.path is not None:
@@ -130,12 +148,16 @@ class Renderer:
         if text_surface:
             text_width = text_surface.get_width()
             text_coord = (coord[0] - text_width / 2, coord[1] - size * TILESIZE)
-            self.surface.blit(text_surface, text_coord)
+            self._text_layer.append(Renderer.Sprite(text_coord, text_surface))
+            #self.surface.blit(text_surface, text_coord)
 
     def draw_combatants(self, combatants):
         for u in combatants:
             self.draw_combatant(u)
 
     def draw_battle(self, battle):
+        self._text_layer = []
         self.draw_grid(battle.grid)
         self.draw_combatants(battle.combatants)
+        for text in self._text_layer:
+            self.surface.blit(text.surface, text.coord)

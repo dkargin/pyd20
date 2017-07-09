@@ -47,7 +47,7 @@ class Brain(object):
             self.target = battle.find_enemy(self.slave)
             if self.target is not None:
                 print("%s found enemy: %s" % (self.slave.get_name(), str(self.target)))
-            self.estimate_battle(self.target)
+                self.estimate_battle(self.target)
 
 
 # Brain for simple movement and attacking

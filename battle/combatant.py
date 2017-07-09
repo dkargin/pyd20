@@ -440,15 +440,33 @@ class Combatant(Entity):
 
     @property
     def save_fort(self):
-        return self._save_fort_base + self._save_fort_bonus
+        return self._save_fort_base + self._save_fort_bonus + self.constitution_modifier()
 
     @property
     def save_ref(self):
-        return self._save_ref_base + self._save_ref_bonus
+        return self._save_ref_base + self._save_ref_bonus + self.dexterity_modifier()
 
     @property
     def save_will(self):
-        return self._save_will_base + self._save_will_bonus
+        return self._save_will_base + self._save_will_bonus + self.wisdom_modifier()
+
+    def modify_save_fort(self, mod, base=False):
+        if base:
+            self._save_fort_base += mod
+        else:
+            self._save_fort_bonus += mod
+
+    def modify_save_ref(self, mod, base=False):
+        if base:
+            self._save_ref_base += mod
+        else:
+            self._save_ref_bonus += mod
+
+    def modify_save_will(self, mod, base=False):
+        if base:
+            self._save_will_base += mod
+        else:
+            self._save_will_bonus += mod
 
     # Calculate total weapon reach
     def total_reach(self):
@@ -472,8 +490,8 @@ class Combatant(Entity):
     def print_character(self):
         text = "Name: %s of %s\n" % (self.get_name(), str(self.get_faction()))
         text += "STR=%d;DEX=%d;CON=%d;INT=%d;WIS=%d;CHA=%d\n" % tuple(self._stats)
-        text += "HP=%d/%d AC=%d ATT=%d\n" % (self.health(), self._health_max, self.get_armor_class(None), self.get_attack())
-        text += "fort=%d ref=%d will=%d\n" % (self.save_fort(), self.save_ref(), self.save_will())
+        text += "HP=%d/%d AC=%d ATT=%d\n" % (self.health, self.health_max, self.get_armor_class(None), self.get_attack())
+        text += "fort=%d ref=%d will=%d\n" % (self.save_fort, self.save_ref, self.save_will)
 
         chain = self.generate_bab_chain()
         if len(chain) > 0:
@@ -483,11 +501,16 @@ class Combatant(Entity):
         return text
 
     # Return effective health
+    @property
     def health(self):
         hp = self._health
         for effect, value in self._health_temporary:
             hp += value
         return hp
+
+    @property
+    def health_max(self):
+        return self._health_max
 
     # Get current attack bonus
     def get_attack(self, target=None):
@@ -680,15 +703,6 @@ class Combatant(Entity):
     def gen_brain_actions(self, battle):
         if self._brain is not None:
             yield from self._brain.make_turn(battle)
-
-    def save_will(self):
-        return self._save_fort_base + self.wisdom_modifier()
-
-    def save_ref(self):
-        return self._save_fort_base + self.dexterity_modifier()
-
-    def save_fort(self):
-        return self._save_fort_base + self.constitution_modifier()
 
 
 # Encapsulates current turn state
