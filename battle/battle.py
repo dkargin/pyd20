@@ -5,7 +5,7 @@ from battle.pathfinder import PathFinder
 from .combatant import Combatant, TurnState, AttackDesc
 
 import battle.actions
-import animation
+import battle.events as events
 
 
 class Battle(object):
@@ -108,6 +108,7 @@ class Battle(object):
 
         # Commit turn changes?
         combatant.on_round_end()
+        yield events.TurnEnd(combatant)
 
     def battle_generator(self):
         """
@@ -135,7 +136,8 @@ class Battle(object):
                     continue
                 yield from self.combatant_make_turn(combatant)
 
-            yield None
+            yield events.RoundEnd(self.round)
+
 
         print(" ----==== Round %d is complete ====---- " % self.round)
 

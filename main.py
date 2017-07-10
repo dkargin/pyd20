@@ -4,7 +4,8 @@ import pygame
 
 from battle_utils import *
 from render import Renderer
-from battle.battle import Battle
+import battle.battle as battle
+import battle.events as events
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ pygame.init()
 center_x = 20
 center_y = 20
 
-battle = Battle(40, 40)
+battle = battle.Battle(40, 40)
 
 #draw_cross(battle.grid, center_x, center_y, 5)
 
@@ -100,14 +101,17 @@ while not shouldExit:
             animation = None
 
     if animation is None and ((wait_turn and make_turn) or not wait_turn):
-        animation = next(turn_generator)
-        if animation is None:
+        battle_event = next(turn_generator)
+        if isinstance(battle_event, events.RoundEnd):
             print("Press key for the next turn")
-        else:
+            wait_turn = True
+        elif isinstance(battle_event, events.AnimationEvent):
             logger.info("Got animation: %s" % str(animation))
-
+            animation = battle_event.animation
             animation.start(get_time())
-        wait_turn = animation is None
+            wait_turn = False
+        else:
+            wait_turn = False
 
     renderer.clear()
     renderer.draw_battle(battle)

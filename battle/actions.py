@@ -1,6 +1,8 @@
 #!/usr/local/env python3
 from .battle import *
+from .core import *
 import animation
+import battle.events as events
 
 ACTION_RESULT_SUCCESS = 0
 ACTION_RESULT_FAILED = 1
@@ -174,7 +176,7 @@ class MoveAction(BattleAction):
         combatant.y = self._finish.y
 
         battle.grid.register_entity(combatant)
-        yield animation.MovePath(combatant, self._path)
+        yield events.AnimationEvent(animation.MovePath(combatant, self._path))
         combatant.fix_visual()
 
     def text(self):

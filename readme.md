@@ -2,6 +2,22 @@
 
 This is D&D 3.5 battle ground, implemented in python
 
+# Installation #
+
+p20dnd requires pygame to render battlescape
+
+```
+pip install pygame
+```
+
+# How to use #
+
+Look at main.py.
+
+1. Create battle instance
+1. Generate characters and add them to battle:
+1. Keep iterating turns until battle is resolved
+
 # What is implemented #
 
 1. Basic actions:
@@ -81,21 +97,6 @@ This is D&D 3.5 battle ground, implemented in python
     - brain should know how to deal with it
 1. More threat estimation for AI
 1. Monster template
-
-# Brain #
-
-Brain update is implemented as generator/coroutine function. It iteratively returns next 'mini-action'. After mini-action is resolved, control returns to generator
-
-I have the following brains implemented:
-
-- aggressive warrior. Moves to target and attacks it. Implemented in class MoveAttackBrain
-- standing warrior. No movement is allowed for him. But will attack any target in range. Implemented in class StandAttackBrain
-
-Brains to be implemented:
-
-- evasive ranger. Move away + attack.
-- manual (player). Asks for a move on each turn
-- planning bitch.
 
 
 

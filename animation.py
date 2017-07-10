@@ -108,18 +108,18 @@ class MoveLine(Animation):
 # Animation for melee attack
 # moves attacker towards target
 # Should take about 1sec to complete
-class AttackStart(Animation):
+class MeleeAttackStart(Animation):
     # Distance that character will advance for attack animation
     ATTACK_MOVE_DISTANCE = 0.5
 
     def __init__(self, combatant: Entity, target: Entity):
-        super(AttackStart, self).__init__(combatant)
+        super(MeleeAttackStart, self).__init__(combatant)
         self._target = target
         self._offset = combatant.get_coord()-combatant.get_center()
         self._src = combatant.get_center()
         self._dst = target.get_center()
         delta = (self._dst - self._src).normalize()
-        self._move_target = self._src+delta * AttackStart.ATTACK_MOVE_DISTANCE
+        self._move_target = self._src+ delta * MeleeAttackStart.ATTACK_MOVE_DISTANCE
         self._t = 0
         self._duration = 0.2
 
@@ -136,9 +136,9 @@ class AttackStart(Animation):
 
 
 # Returns to real position
-class AttackFinish(Animation):
+class MeleeAttackFinish(Animation):
     def __init__(self, combatant, target):
-        super(AttackFinish, self).__init__(combatant)
+        super(MeleeAttackFinish, self).__init__(combatant)
         self._target = target
         self._src = combatant.get_visual_coord()
         self._dst = combatant.get_coord()

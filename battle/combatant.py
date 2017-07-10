@@ -5,6 +5,8 @@ from .entity import Entity
 import copy
 import animation
 
+from battle.events import AnimationEvent
+
 
 class AttackDesc:
     """
@@ -804,7 +806,7 @@ class Combatant(Entity):
 
     # Execute strike action
     def do_action_strike(self, desc: AttackDesc):
-        yield animation.AttackStart(self, desc.get_target())
+        yield AnimationEvent(animation.MeleeAttackStart(self, desc.get_target()))
         attack, roll = desc.roll_attack()
         # Roll for critical confirmation
         crit_confirm, crit_confirm_roll = desc.roll_attack()
@@ -839,15 +841,16 @@ class Combatant(Entity):
         if hit:
             target.receive_damage(damage, self)
 
-        self._expend_attack(desc)
+        self.expend_attack(desc)
 
-        yield animation.AttackFinish(self, target)
+        yield AnimationEvent(animation.MeleeAttackFinish(self, target))
 
-    def _expend_attack(self, desc):
+    def expend_attack(self, desc):
         if desc in self._turn_state.attacks:
             self._turn_state.attacks.remove(desc)
         if desc in self._additional_strikes:
             self._additional_strikes.remove(desc)
+
 
 # Encapsulates current turn state
 class TurnState(object):
@@ -946,7 +949,7 @@ class StyleFlurryOfBlows(Combatant.StatusEffect):
     def on_finish(self, combatant, **kwargs):
         combatant._attack_bonus_style += self.attack_pen
         for strike in self._attacks:
-            combatant._expend_attack(strike)
+            combatant.expend_attack(strike)
 
     def __str__(self):
         return "flurry_blows"
