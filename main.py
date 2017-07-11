@@ -3,13 +3,12 @@ import cProfile, pstats
 import pygame
 
 from battle_utils import *
-from render import Renderer
+from render.render import Renderer
 import battle.battle as battle
 import battle.events as events
 
 logger = logging.getLogger(__name__)
 
-pygame.init()
 
 center_x = 15
 center_y = 15
@@ -59,67 +58,74 @@ def draw_attack_positions(grid, combatant, reach0, reach1):
             continue
         tile.set_terrain(TERRAIN_GRASS)
 
-battle.print_characters()
-
-renderer = Renderer(battle, 20)
-
-pygame.display.set_caption("Battlescape")
-
-shouldExit = False
-animation = None
-
 
 # Get current time, in seconds
 def get_time():
     return pygame.time.get_ticks()*0.001
 
-turn_generator = battle.battle_generator()
-wait_turn = True
 
-while not shouldExit:
-    make_turn = False
-    pygame.time.wait(30)
-    move_dir = None
-    # Collect events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            shouldExit = True
-            break
+def main():
+    battle.print_characters()
+    renderer = Renderer(battle, 20)
 
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            make_turn = True
-        '''
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-            move_dir = ( 0,-1)
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-            move_dir = ( 0, 1)
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-            move_dir = ( 1, 0)
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-            move_dir = (-1, 0)
-        '''
+    pygame.display.set_caption("Battlescape")
 
-    if animation is not None:
-        time = get_time()
-        animation.update(time)
-        if animation.is_complete(time):
-            logging.info("%s is complete" % animation)
-            animation = None
+    shouldExit = False
+    animation = None
 
-    if animation is None and ((wait_turn and make_turn) or not wait_turn):
-        battle_event = next(turn_generator)
-        wait_turn = False
-        if isinstance(battle_event, events.RoundEnd):
-            print("Press key for the next turn")
-            wait_turn = True
-        elif isinstance(battle_event, events.AnimationEvent):
-            logger.info("Got animation: %s" % str(animation))
-            animation = battle_event.animation
-            animation.start(get_time())
+    turn_generator = battle.battle_generator()
+    wait_turn = True
 
-    renderer.clear()
-    renderer.draw_battle(battle)
-    pygame.display.flip()
+    while not shouldExit:
+        make_turn = False
+        pygame.time.wait(30)
+        move_dir = None
+        # Collect events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                shouldExit = True
+                break
 
-print("Done")
-pygame.quit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                make_turn = True
+            '''
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                move_dir = ( 0,-1)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                move_dir = ( 0, 1)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                move_dir = ( 1, 0)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                move_dir = (-1, 0)
+            '''
+
+        if animation is not None:
+            time = get_time()
+            animation.update(time)
+            if animation.is_complete(time):
+                logging.info("%s is complete" % animation)
+                animation = None
+
+        if animation is None and ((wait_turn and make_turn) or not wait_turn):
+            battle_event = next(turn_generator)
+            wait_turn = False
+            if isinstance(battle_event, events.RoundEnd):
+                print("Press key for the next turn")
+                wait_turn = True
+            elif isinstance(battle_event, events.AnimationEvent):
+                logger.info("Got animation: %s" % str(animation))
+                animation = battle_event.animation
+                animation.start(get_time())
+
+        renderer.clear()
+        renderer.draw_battle(battle)
+        pygame.display.flip()
+
+    print("Done")
+    pygame.quit()
+
+if __name__ == '__main__':
+    cProfile.run('main()', 'restats')
+    print("Preparing profiler statistics")
+    stats = pstats.Stats('restats')
+    stats.strip_dirs().sort_stats(1).print_stats()
