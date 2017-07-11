@@ -3,6 +3,7 @@ import random
 import math
 from .core import unit_length
 
+TERRAIN_OUTSIDE = -1
 TERRAIN_FREE = 0
 TERRAIN_GRASS = 1
 TERRAIN_WALL = 10

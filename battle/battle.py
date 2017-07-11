@@ -52,7 +52,7 @@ class Battle(object):
         combatant.x = x
         combatant.y = y
         combatant.recalculate()
-        combatant.on_round_start(self)
+        #combatant.on_turn_start(self)
         self._combatants.append(combatant)
         self.grid.register_entity(combatant)
         combatant.fix_visual()
@@ -93,7 +93,7 @@ class Battle(object):
     # Process turn for selected combatant
     def combatant_make_turn(self, combatant):
         # print(combatant, "'s turn")
-        combatant.on_round_start(self)
+        combatant.on_turn_start(self)
 
         # Hard limit on action generator
         iteration_limit = 20
@@ -107,7 +107,7 @@ class Battle(object):
                 break
 
         # Commit turn changes?
-        combatant.on_round_end()
+        combatant.on_turn_end()
         yield events.TurnEnd(combatant)
 
     def battle_generator(self):

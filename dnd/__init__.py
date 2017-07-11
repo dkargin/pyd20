@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 #from character import *
 
+from battle.character import Race
+
 '''
 Class.load("dnd/classes.json")
 Skill.load("dnd/skills.json")
@@ -19,6 +21,7 @@ rogue = Class.with_name('rogue')
 monk = Class.with_name('monk')
 paladin = Class.with_name('paladin')
 fighter = Class.with_name('fighter')
+'''
 
 # Races
 human = Race.with_name('human')
@@ -28,4 +31,3 @@ gnome = Race.with_name('gnome')
 half_elf = Race.with_name('half-elf')
 half_orc = Race.with_name('half-orc')
 halfling = Race.with_name('halfling')
-'''

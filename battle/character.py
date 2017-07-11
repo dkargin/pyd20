@@ -551,6 +551,11 @@ class Feat(object):
     """
     __ALL_FEATS = list()
 
+    REQUIRE_FEATS = 1
+    REQUIRE_BAB = 2
+    REQUIRE_STAT = 3
+    REQUIRE_SKILL = 4
+
     def __init__(self, name=None, prerequisites=list(), benefit=None):
         """
         Creates a Feat object

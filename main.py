@@ -1,5 +1,5 @@
 import logging
-
+import cProfile, pstats
 import pygame
 
 from battle_utils import *
@@ -11,12 +11,15 @@ logger = logging.getLogger(__name__)
 
 pygame.init()
 
-center_x = 20
-center_y = 20
+center_x = 15
+center_y = 15
 
-battle = battle.Battle(40, 40)
+battle = battle.Battle(30, 30)
 
-#draw_cross(battle.grid, center_x, center_y, 5)
+draw_cross(battle.grid, center_x, center_y, 5)
+draw_cross(battle.grid, center_x+1, center_y, 5)
+draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
+
 
 char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain())
 char1.set_stats(18, 16, 16, 10, 10, 10)
@@ -36,11 +39,11 @@ char4 = make_monk('Monky')
 
 #battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
-battle.add_combatant(char1, center_x, center_y, faction="team red")
+battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
 
 #battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
 #battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
-battle.add_combatant(char4, center_x + 15, center_y-4, faction="team blue")
+battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
 """
 battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")
 """
@@ -82,8 +85,10 @@ while not shouldExit:
         if event.type == pygame.QUIT:
             shouldExit = True
             break
+
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             make_turn = True
+        '''
         if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
             move_dir = ( 0,-1)
         if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
@@ -92,6 +97,7 @@ while not shouldExit:
             move_dir = ( 1, 0)
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
             move_dir = (-1, 0)
+        '''
 
     if animation is not None:
         time = get_time()
@@ -102,6 +108,7 @@ while not shouldExit:
 
     if animation is None and ((wait_turn and make_turn) or not wait_turn):
         battle_event = next(turn_generator)
+        wait_turn = False
         if isinstance(battle_event, events.RoundEnd):
             print("Press key for the next turn")
             wait_turn = True
@@ -109,9 +116,6 @@ while not shouldExit:
             logger.info("Got animation: %s" % str(animation))
             animation = battle_event.animation
             animation.start(get_time())
-            wait_turn = False
-        else:
-            wait_turn = False
 
     renderer.clear()
     renderer.draw_battle(battle)

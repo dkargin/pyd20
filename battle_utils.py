@@ -15,6 +15,12 @@ def draw_cross(grid, x, y, size):
         grid.set_terrain(x+ i, y, TERRAIN_WALL)
 
 
+def draw_block(grid, type, x0, y0, width, height):
+    for x in range(x0, x0+width):
+        for y in range(y0, y0 + height):
+            grid.set_terrain(x, y, type)
+
+
 # Create shield fighter
 def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
     char = Character(name, brain=brain.MoveAttackBrain())
@@ -36,6 +42,19 @@ def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
     char.add_class_level(classes.Fighter, 6)
     char.add_feat(dnd.feats.TwoWeaponFighting())
     char.add_feat(dnd.feats.ImprovedTwoWeaponFighting())
+    return char
+
+# Create dual weapons fighter
+def make_archer(name, stats=[13, 18, 16, 10, 10, 10]):
+    char = Character(name, brain=brain.MoveAttackBrain())
+    char.set_stats(*stats)
+    char.add_class_level(classes.Fighter, 6)
+    char.add_feat(dnd.feats.WeaponFocus(dnd.weapon.longbow_composite))
+    char.add_feat(dnd.feats.ImprovedTwoWeaponFighting())
+
+    char.wear_item(dnd.armor.banded_mail, ITEM_SLOT_ARMOR)
+    char.wear_item(dnd.weapon.longbow_composite, ITEM_SLOT_MAIN)
+
     return char
 
 

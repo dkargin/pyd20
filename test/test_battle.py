@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from battle.actions import *
 from battle.grid import Grid
-
+import battle.events as events
 
 class BattleTest(TestCase):
 
@@ -15,6 +15,10 @@ class BattleTest(TestCase):
         battle = Battle(Grid.create_with_dimension(6, 6))
         battle.add_combatant(self.random_character(), 1, 1)
         battle.add_combatant(self.random_character(), 5, 5)
-        print(battle)
-        battle.next_round()
-        print(battle)
+
+        for event in battle.battle_generator():
+            if isinstance(event, events.RoundEnd):
+                alive = [c for c in battle.combatants if c.is_active()]
+                if len(alive) <= 1:
+                    print("Battle has concluded. Alive=%s" % str(alive))
+

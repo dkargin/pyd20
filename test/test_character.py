@@ -1,13 +1,13 @@
 from unittest import TestCase
-from battle.ki import KiCharacter
-from character import *
-from dice import d6
+from battle.character import Character, Feat
+from battle.core import *
+import battle.dice as dice
 import dnd
 import random
 import math
 
-core.unit_length = core.UNIT_LENGTH_METER
-core.unit_weight = core.UNIT_WEIGHT_KILOGRAM
+unit_length = UNIT_LENGTH_METER
+unit_weight = UNIT_WEIGHT_KILOGRAM
 
 
 class CharacterTest(TestCase):
@@ -15,7 +15,7 @@ class CharacterTest(TestCase):
     def __roll_ability_score(self):
         results = list()
         for i in range(0, 3):
-            results.append(d6.roll())
+            results.append(dice.d6.roll())
         results.sort(reverse=True)
         return sum(results[:3])
 
@@ -43,7 +43,7 @@ class CharacterTest(TestCase):
         return feats[math.floor(random.random() * len(feats))]
 
     def random_character(self):
-        random_character = KiCharacter("Random Character")
+        random_character = Character("Random Character")
         random_character.set_race(self.__random_race())
 
         # apply base stats
@@ -76,7 +76,7 @@ class CharacterTest(TestCase):
     def test_character(self):
         for i in range(0, 10):
             char = self.random_character()
-            print(char)
+            print(char.print_character())
 
         """
         print("str\t\t", tenlon.strength())

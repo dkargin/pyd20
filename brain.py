@@ -36,7 +36,10 @@ class StrikeExchange:
 
     # Make score for exchange
     def score(self):
-        return self.rounds_b - self.rounds_a
+        if self.rounds_a < self.rounds_b:
+            return self.rounds_a * self.dmg_b, True
+        else:
+            return self.rounds_b * self.dmg_a, False
 
     def seq_str(self, seqence):
         text = ""
@@ -109,7 +112,7 @@ def find_best_style(a: Combatant, b: Combatant):
         exchange = StrikeExchange(a,b, variation)
         score = exchange.score()
 
-        print("Checking style %s. Score=%f" % (str(variation), score))
+        print("Checking style %s. Score=%s" % (str(variation), str(score)))
 
         variation.deactivate(a)
         if best_style is None or score > best_score:
@@ -139,7 +142,7 @@ class Brain(object):
         # Trying iteratively use all turn actions
         if self.find_enemy_target(battle):
             style, exchange, score = find_best_style(self.slave, self.target)
-            print("Best style %s provides %+f delta damage" % (str(style), score))
+            print("Best style %s provides %s damage" % (str(style), str(score)))
             print(str(exchange))
 
     # Brain make its turn right here

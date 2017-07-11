@@ -36,9 +36,15 @@ class AttackDesc:
         self.opportunity = False
         self.spell = False
         self.ranged = False
+        self.range = 0
 
+    # Is melee attack
     def is_melee(self):
         return not self.ranged
+
+    # If ranged attack
+    def is_ranged(self):
+        return self.ranged
 
     def copy(self):
         return copy.copy(self)
@@ -53,10 +59,11 @@ class AttackDesc:
             return "attack with %s roll=%d dam=%s->%d-%d" % \
                    (weapon_name, self.attack, str(self.damage), dmg_min, dmg_max)
 
-
+    '''
     def roll_attack(self):
         result = d20.roll()
         return self.attack + result, result
+    '''
 
     def roll_damage(self):
         return self.damage.roll()
@@ -129,11 +136,14 @@ class Combatant(Entity):
         This used to implement lots of feat overrides
         """
         def __init__(self):
-            # For sneak attack, all passive targets,
-            # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
+            # Called when attack is prepared
+            # handler(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
             self.on_calc_attack = SubscriberList()
-            # modify_attack_desc(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
-            self.on_calc_opportinity_attack = SubscriberList()
+            # Called when selected target for opportunity attack
+            # handler(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
+            #self.on_calc_opportinity_attack = SubscriberList()
+            # Called when picked attack target
+            self.on_select_attack_target = SubscriberList()
             # Events that fired when combatant rolls critical hit
             # on_roll_crit(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
             self.on_roll_crit = SubscriberList()
@@ -249,7 +259,6 @@ class Combatant(Entity):
         self._save_fort_bonus = 0
         self._save_ref_bonus = 0
         self._save_will_bonus = 0
-
 
         # Active attack styles
         self._attack_styles = []
@@ -368,7 +377,7 @@ class Combatant(Entity):
         return self._turn_state
 
     # Called on start of the turn
-    def on_round_start(self, battle):
+    def on_turn_start(self, battle):
         state = self._turn_state
 
         # Stop styles from previous turns
@@ -393,7 +402,7 @@ class Combatant(Entity):
         self._brain.prepare_turn(battle)
 
     # Called when combatant's turn is ended
-    def on_round_end(self):
+    def on_turn_end(self):
         state = self._turn_state
         # Attacked opportunity targets
         # Clean up attack sequence
@@ -428,7 +437,6 @@ class Combatant(Entity):
         desc = self._turn_state.attack_AoO.copy()
         desc.update_target(target)
         desc.opportunity = True
-        self._events.on_calc_opportinity_attack(self, desc)
         self.use_opportunity(desc)
         return desc
 
@@ -476,10 +484,6 @@ class Combatant(Entity):
         if brain is not None:
             brain.slave = self
         self._brain = brain
-
-    # Execute an attack
-    def do_attack(self, attack_desc):
-        pass
 
     # Check if combatant has near reach
     def has_reach_near(self):
@@ -805,23 +809,30 @@ class Combatant(Entity):
             yield from self._brain.make_turn(battle)
 
     # Execute strike action
+    # All data is already set. Attack can be resolved right now
     def do_action_strike(self, desc: AttackDesc):
-        yield AnimationEvent(animation.MeleeAttackStart(self, desc.get_target()))
-        attack, roll = desc.roll_attack()
-        # Roll for critical confirmation
-        crit_confirm, crit_confirm_roll = desc.roll_attack()
+        def hits(attack, roll, dc):
+            if roll == 1:
+                return False
+            if roll == 20:
+                return True
+            return attack+roll >= dc
+
         target = desc.get_target()
+        self._events.on_select_attack_target(self, desc)
+        yield AnimationEvent(animation.MeleeAttackStart(self, target))
 
-        # TODO: run events for on_strike_begin(desc, target)
+        roll, crit_confirm_roll = d20.roll(), d20.roll()
+        # Roll for critical confirmation
+
         armor_class = target.get_touch_armor_class(target) if desc.touch else target.get_armor_class(target)
+        has_crit = False
 
-        # TODO: run events for critical hit
-        has_crit = desc.is_critical(roll) and (crit_confirm + desc.critical_confirm_bonus >= armor_class or crit_confirm_roll == 20)
-        hit = attack >= armor_class
-        if roll == 20:
-            hit = True
-        if roll == 1:
-            hit = False
+        if desc.is_critical(roll):
+            self._events.on_roll_crit(desc)
+            has_crit = hits(desc.attack + desc.critical_confirm_bonus, crit_confirm_roll, armor_class)
+
+        hit = hits(desc.attack, roll, armor_class)
 
         attack_text = "misses"
         total_damage = 0
@@ -837,7 +848,7 @@ class Combatant(Entity):
             total_damage = damage + bonus_damage
 
         print("%s %s %s with roll %d(%d%+d) vs AC=%d" %
-              (self.name, attack_text, target.get_name(), attack, roll, attack - roll, armor_class))
+              (self.name, attack_text, target.get_name(), desc.attack+roll, roll, desc.attack, armor_class))
         if hit:
             target.receive_damage(damage, self)
 

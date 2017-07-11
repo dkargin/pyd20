@@ -42,41 +42,24 @@ Look at main.py.
 
 # Plan #
 
-1. Charge attack
-    - draw a line
-    - move a line
-    - can be interrupted!
-1. Ranged attack
-    - move to range
-    - bow them all
-    - reload action
-    - crossbow reload
+1. Complete pathfinder
+    - proper path cost
+    - check creature size
+    - move to firing range
+    - move away from target
+    - move pathfinding to brain
+1. Custom attacks:
+    1. Charge attack
+        - draw a line
+        - move a line
+        - can be interrupted!
+    1. Ranged attack
+        - move to range
+        - bow them all
+        - reload action
+        - crossbow reload
 1. Status effects and ways to toggle them
-1. Simple feats:
-    - Monk AC bonus                     OK
-    - Weapon finesse                    OK
-    - Weapon focus                      OK
-    - Improved critical (doubles crit range)
-    - Power critical (+4 to crit confirm)   OK
-    - Combat reflexes                   OK
-    - Deft opportunist                  OK
-    - Insightfull strike                OK
-    - Defensive Sweep: If an opponent starts their turn adjacent to you and doesn’t move this round, they provoke an AoO at the end of the turn. PHBII pg 78.
-    - Quick Staff. Or monk is boring
-    - Improved trip
-    - Improved disarm
-1. Feats providing additional attacks:
-    - Two weapon fighting       OK
-    - Bow feat series
-    - Spinning Halberd
-    - Cleave
-1. Feats with unique progression (Sneak attack, Flurry of blows, Barbarian Rage)
-    - Sneak attack
-    - Skirmish
-1. Feats that provide 'combat styles'
-    - Flurry of blows
-    - Power attack
-    - Combat expertise
+
 1. Items can lay on ground and can be picked
 1. Vision stuff
 1. Some spells (most interesting for me):

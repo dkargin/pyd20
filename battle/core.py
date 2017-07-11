@@ -83,6 +83,9 @@ DURATION_FULLROUND = 2
 DURATION_FREE = 3
 DURATION_SWIFT = 4
 
+GENDER_NONE = 0
+GENDER_FEMALE = 1
+GENDER_MALE = 2
 
 def ability_modifier(value):
     """

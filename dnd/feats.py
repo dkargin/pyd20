@@ -123,7 +123,7 @@ class DeftOpportunist(Feat):
             if desc.opportunity:
                 desc.attack += 4
 
-        combatant.event_manager().on_calc_opportinity_attack += event
+        combatant.event_manager().on_select_attack_target += event
 
 
 class InsightfulStrike(Feat):
@@ -160,8 +160,9 @@ class WeaponFinesse(Feat):
 
 class WeaponFocus(Feat):
     def __init__(self, weapon):
-        super(WeaponFocus, self).__init__("Weapon focus")
-        self._weapon = weapon.get_base_root()
+        weapon_root = weapon.get_base_root()
+        super(WeaponFocus, self).__init__("Weapon focus (%s)" % weapon_root.name)
+        self._weapon = weapon_root
 
     def apply(self, combatant: Combatant):
         combatant.event_manager().on_calc_attack += self.on_calculate_attack
@@ -173,7 +174,9 @@ class WeaponFocus(Feat):
 
 class PowerCritical(Feat):
     def __init__(self, weapon):
-        self._weapon = weapon.get_base_root()
+        weapon_root = weapon.get_base_root()
+        super(PowerCritical, self).__init__("Power critical (%s)" % weapon_root.name)
+        self._weapon = weapon_root
 
     def apply(self, combatant: Combatant):
         combatant.event_manager().on_calc_attack += self.on_calculate_attack
@@ -183,6 +186,39 @@ class PowerCritical(Feat):
             desc.critical_confirm_bonus += 4
 
 
+class PointBlankShot(Feat):
+    def __init__(self):
+        super(PointBlankShot, self).__init__("Point blank shot")
+
+    def apply(self, combatant: Combatant):
+        combatant.event_manager().on_select_attack_target += self.on_calculate_attack
+
+    def on_calculate_attack(self, combatant, desc: AttackDesc):
+        if desc.ranged() and desc.range < 30:
+            desc.attack += 1
+
+
+class PreciseShot(Feat):
+    def __init__(self):
+        super(PointBlankShot, self).__init__("Point blank shot")
+
+    def apply(self, combatant: Combatant):
+        combatant.event_manager().on_select_attack_target += self.on_calculate_attack
+
+    def on_calculate_attack(self, combatant, desc: AttackDesc):
+        # Fixing -4 penalty
+        if desc.ranged() and desc.range < 5:
+            desc.attack += 4
+
+
+class SpinningHalberd(Feat):
+    def __init__(self):
+        super(SpinningHalberd, self).__init__("Spinning halberd")
+
+
 class FlurryOfBlows:
     def __init__(self):
+        super(FlurryOfBlows, self).__init__("Flurry of blows")
+
+    def apply(self, combatant: Combatant):
         pass
