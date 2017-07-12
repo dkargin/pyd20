@@ -1,7 +1,8 @@
 import heapq
 import math
 
-from .grid import Grid, Tile
+from .grid import *
+
 
 # Default cost function for pathfinder
 def default_cost(src, dst):
@@ -10,10 +11,66 @@ def default_cost(src, dst):
 
 # Does pathfinding stuff
 class PathFinder(object):
-    def __init__(self, grid):
+
+    class Node:
+        """
+        Node for search tree
+        """
+        def __init__(self):
+            self.g = 0
+            self.h = 0
+            self.lh = 0
+            self.predecessor = None
+            self.pathstate = 0
+
+    def __init__(self, grid, objsize = 1):
         self.grid = grid
         self.open_list = []
         self.search_index = 0
+        self._objsize = 1
+        self._occupation = []
+        for y in range(0, self._objsize*2-1):
+            for x in range(0, self._objsize * 2 - 1):
+                self._occupation.append((x, y))
+
+        size = grid.get_width()*grid.get_height()
+
+        self._width = grid.get_width()
+        self._height = grid.get_height()
+        # Node index
+        self._node_index = [None] * size
+        # Costs for each tile
+        self._costmap = [0] * size
+
+    # Search PF node by a coordinates
+    def get_tile_node(self, x, y):
+        return self._node_index[x + y * self._width]
+
+    # Update local obstacle map
+    def sync_grid(self, grid):
+        self._width = grid.get_width()
+        self._height = grid.get_height()
+        size = grid.get_width() * grid.get_height()
+        if len(self._costmap) != size:
+            print('Map size has changed to %dx%d' % (self._width, self._height))
+            self._costmap = [0] * size
+
+        index = 0
+        for tile in grid.get_tiles():
+            terrain = tile.terrain
+            cost = 0
+            if terrain == TERRAIN_WALL:
+                cost += 100
+
+            self._costmap[index] = cost
+            index += 1
+
+    # TODO: implement it in cython
+    def sum_obstacle(self, x0, y0):
+        cost = 0
+        for adj in self._occupation:
+            index = x0 + x0 + (y0+adj[1])*self._width
+            cost += self._costmap[index]
 
     def expand_tile(self, tile, costfn = default_cost):
         """
@@ -34,9 +91,9 @@ class PathFinder(object):
             #self.open_list.append(next, next._g)
         pass
 
-    def push_node(self, tile):
-        tile._pathstate = self.get_wave_index()
-        heapq.heappush(self.open_list, (tile._g, tile))
+    def push_node(self, node):
+        node._pathstate = self.get_wave_index()
+        heapq.heappush(self.open_list, (node._g, node))
 
     def pop_node(self):
         return heapq.heappop(self.open_list)[1]
@@ -45,35 +102,15 @@ class PathFinder(object):
     def compile_path(self, start):
         path = Path(self.grid)
         # Building reversed path
-        current_tile = start
+        current_node = start
         path.append(start)
-        while current_tile._predecessor is not None:
-            current_tile = current_tile._predecessor
-            if current_tile != start:
-                path.append(current_tile)
+        while current_node._predecessor is not None:
+            current_node = current_node._predecessor
+            if current_node != start:
+                path.append(current_node)
         # Flipping back reversed path
         path.reverse()
         return path
-
-    def path_to(self, start_tile, dest_functor):
-        self.search_index += 2
-
-        start_tile._g = 0
-        start_tile._predecessor = None
-        self.open_list = []
-        self.push_node(start_tile)
-
-        iteration = 0
-
-        while len(self.open_list) > 0:
-            # cost, current_tile = self.open_list.pop()
-            cost, current_tile = heapq.heappop(self.open_list)
-            if dest_functor(current_tile):
-                return self.compile_path(current_tile)
-
-            self.expand_tile(current_tile)
-            iteration += 1
-        return None
 
     def get_wave_index(self):
         return self.search_index

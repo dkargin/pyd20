@@ -243,7 +243,7 @@ class Combatant(Entity):
         self._experience = 0
         self._alignment = 0
         self._BAB = 0
-
+        self.model = kwargs.get('model', 'naked')
         # Base max hp
         self._health_max = 0
         # Temporary HP, mappinf from effect to hp
@@ -696,7 +696,7 @@ class Combatant(Entity):
         return self._health <= -10
 
     def is_consciousness(self):
-        return self._health > 0
+        return self._health >= 0
 
     # If combatant is making turns
     def is_active(self):

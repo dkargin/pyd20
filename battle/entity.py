@@ -1,6 +1,11 @@
 import math
 from .grid import Point
 
+DIRECTION_FRONT = 0
+DIRECTION_LEFT = 1
+DIRECTION_RIGHT = 2
+DIRECTION_BACK = 3
+
 # Grid entity
 class Entity:
     def __init__(self, name, **kwargs):
@@ -11,6 +16,7 @@ class Entity:
         # Current visual coordinates. Most of time it is equal to tile coordinates
         self.visual_X = 0.0
         self.visual_Y = 0.0
+        self.visual_dir = DIRECTION_FRONT
         # Body size, in tiles
         self._size = kwargs.get('size', 1)
         self._occupation_template = None

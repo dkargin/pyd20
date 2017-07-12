@@ -1,5 +1,5 @@
 import math
-from battle.entity import Entity
+from battle.entity import *
 from battle.grid import Point
 
 
@@ -23,9 +23,18 @@ class Animation(object):
     def __str__(self):
         return "Animation"
 
-    def move_visual(self, coord):
+    def move_visual(self, coord, change_dir=True):
+        deltaX = coord.x - self._entity.visual_X
+        deltaY = coord.y - self._entity.visual_Y
         self._entity.visual_X = coord.x
         self._entity.visual_Y = coord.y
+
+        if change_dir:
+            if abs(deltaX) >= abs(deltaY):
+                self._entity.visual_dir = DIRECTION_RIGHT if deltaX > 0 else DIRECTION_LEFT
+            else:
+                self._entity.visual_dir = DIRECTION_FRONT if deltaY > 0 else DIRECTION_BACK
+
 
 
 def get_interpolated_line(src, dst, t):
@@ -37,7 +46,7 @@ def get_interpolated_line(src, dst, t):
 def get_interpolated_path_coord(path, position):
     max_len = len(path)
     if max_len == 0:
-        return
+        return None
 
     index_start = math.floor(position)
     index_end = math.ceil(position)
@@ -150,7 +159,7 @@ class MeleeAttackFinish(Animation):
     def update(self, time):
         self._t = self.delta_time(time) / self._duration
         coord = get_interpolated_line(self._src, self._dst, self._t)
-        self.move_visual(coord)
+        self.move_visual(coord, change_dir=False)
         if self.is_complete(time):
             self._entity.fix_visual()
 

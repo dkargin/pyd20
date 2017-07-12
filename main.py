@@ -20,7 +20,7 @@ draw_cross(battle.grid, center_x+1, center_y, 5)
 draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
 
 
-char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain())
+char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain(), model='type2')
 char1.set_stats(18, 16, 16, 10, 10, 10)
 char1.wear_item(dnd.armor.breastplate, ITEM_SLOT_ARMOR)
 char1.wear_item(dnd.weapon.glaive, ITEM_SLOT_MAIN)
@@ -32,6 +32,7 @@ char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
 
 
 char2 = make_shield_fighter('Roy1')
+char2.model = 'type2'
 #char3 = make_twf_fighter('Roy2')
 char4 = make_monk('Monky')
 
@@ -40,7 +41,7 @@ char4 = make_monk('Monky')
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
 battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
 
-#battle.add_combatant(char2, center_x + 15, center_y, faction="team blue")
+battle.add_combatant(char2, center_x + 10, center_y, faction="team blue")
 #battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
 battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
 """

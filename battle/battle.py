@@ -134,7 +134,8 @@ class Battle(object):
                     dead.append(combatant)
                 elif not combatant.is_consciousness():
                     continue
-                yield from self.combatant_make_turn(combatant)
+                else:
+                    yield from self.combatant_make_turn(combatant)
 
             yield events.RoundEnd(self.round)
 

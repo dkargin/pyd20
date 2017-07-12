@@ -12,7 +12,6 @@ def cross(x, y):
     yield (x, y-1)
 
 
-
 def surrounded(validator):
     def check(x0, y0, access):
         for (x, y) in cross(x0,y0):
@@ -137,8 +136,8 @@ class Tiler:
     def _use_tile(self, x, y, tx, ty):
         self._picked_tiles[x + y*self.width] = self.tile_rect(tx, ty)
 
-    def draw_tile(self, surface, dst, x, y):
-        src_rect = self._picked_tiles[x + y*self.width]
+    def draw_tile(self, surface, dst, index):
+        src_rect = self._picked_tiles[index]
         if src_rect is None:
             return
         surface.blit(self.surface, dst, area=src_rect)

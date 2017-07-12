@@ -3,6 +3,7 @@ import math
 from battle.combatant import Combatant
 from battle.grid import *
 from .tiler import Tiler
+from .model import ModelDrawer
 
 # Pixel size for a tile
 TILESIZE=32
@@ -17,6 +18,13 @@ GREEN = (  0, 255,   0)
 GREEN0 = (  16, 128,  16)
 BLUE  = (  0,   0, 255)
 
+model_desc = {
+    'naked': (0, range(0, 4), range(0, 0), range(8, 12)),
+    'type1': (1, range(0, 4), range(4, 8), range(8, 12)),
+    'type2': (2, range(0, 4), range(4, 8), range(8, 11)),
+    'type3': (3, range(0, 4), range(4, 8), range(8, 11)),
+    'type4': (4, range(0, 4), range(4, 8), range(8, 11)),
+}
 
 class Renderer:
     class Sprite:
@@ -31,6 +39,7 @@ class Renderer:
         pygame.init()
         grid = battle.grid
         self._tiler = Tiler(grid.get_width(), grid.get_height(), 32, 'data/peasanttiles02.png')
+        self._modeller = ModelDrawer(32, 'data/RPGCharacterSprites32x32_alpha.png', model_desc)
         self.grid_top = offset
         self.grid_left = offset
 
@@ -105,9 +114,19 @@ class Renderer:
     def draw_tiles(self, grid):
         self._tiler.update(grid)
         # Draw tiles
-        for tile in grid.get_tiles():
-            dst_rect = self.grid_to_screen((tile.x, tile.y-0.5, 1.0, 1.0))
-            self._tiler.draw_tile(self.surface, dst_rect, tile.x, tile.y)
+        index = 0
+        for y in range(0, grid.get_height()):
+            dst_rect = self.grid_to_screen((0, y - 0.5, 1.0, 1.0))
+            left = dst_rect[0]
+            top = dst_rect[1]
+            for x in range(0, grid.get_width()):
+                self._tiler.draw_tile(self.surface, (left, top, TILESIZE, TILESIZE), index)
+                index += 1
+                left += TILESIZE
+
+        #for tile in grid.get_tiles():
+        #    dst_rect = self.grid_to_screen((tile.x, tile.y-0.5, 1.0, 1.0))
+        #    self._tiler.draw_tile(self.surface, dst_rect, tile.x, tile.y)
 
     # Draw tiled path
     def draw_path(self, path, color=GREEN):
@@ -135,11 +154,17 @@ class Renderer:
 
         size = u.get_size()
         coord = self.grid_to_screen((u.visual_X + size * 0.5, u.visual_Y + size * 0.5))
-        # pygame.draw.rect(self.surface, coord, row * TILESIZE, TILESIZE, TILESIZE)
-        #pygame.draw.circle(self.surface, RED, coord, int(size*TILESIZE * 0.5))
-        pygame.draw.circle(self.surface, color, coord, math.ceil(size*TILESIZE * 0.5))
+
+        #self._modeller.draw_combatant(u)
+        sprite = self._modeller.get_combatant_sprite(u)
+        if sprite is not None:
+            #self.surface.set_colorkey(self._modeller._colorkey)
+            self.surface.blit(sprite, self.grid_to_screen((u.visual_X, u.visual_Y)))
+        else:
+            pygame.draw.circle(self.surface, color, coord, math.ceil(size*TILESIZE * 0.5))
         rect = self.grid_to_screen((u.visual_X, u.visual_Y, size, size))
 
+        # Draw HP circle
         arc_width = 2
         percent = u.health / u.health_max
         if percent < 0:
@@ -149,7 +174,6 @@ class Renderer:
             pygame.draw.arc(self.surface, GREEN0, rect, 0, angle, arc_width)
         if percent < 1.0:
             pygame.draw.arc(self.surface, RED, rect, angle, math.pi*2, arc_width)
-        # pygame.draw.
 
         if self._draw_path and u.path is not None:
             self.draw_path(u.path)

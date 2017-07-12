@@ -42,12 +42,11 @@ Look at main.py.
 
 # Plan #
 
-1. Complete pathfinder
-    - proper path cost
-    - check creature size
-    - move to firing range
-    - move away from target
-    - move pathfinding to brain
+1. Finish the pathfinder
+1. Combatant sprite model
+    - load tile set
+    - show any tile
+    - show direction
 1. Custom attacks:
     1. Charge attack
         - draw a line
@@ -58,9 +57,9 @@ Look at main.py.
         - bow them all
         - reload action
         - crossbow reload
-1. Status effects and ways to toggle them
-
-1. Items can lay on ground and can be picked
+1. Test splitting targets during full attack action
+    - and use 5ft step as well. Especially for dervish
+1. Brain should switch weapons according to situation and distance to enemy
 1. Vision stuff
 1. Some spells (most interesting for me):
     - True strike. Remove bonus after the first strike
@@ -73,13 +72,7 @@ Look at main.py.
     - Grease (skills need to be implemented)
     - Rhino's rush. Need charge to be implemented
     - Fireball
-1. Brain should change weapons according to target range and estimated arrival to melee range
-1. Test splitting targets during full attack action
-    - and use 5ft step as well. Especially for dervish
 1. Invisibility
     - brain should know how to deal with it
 1. More threat estimation for AI
 1. Monster template
-
-
-
