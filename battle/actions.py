@@ -156,7 +156,7 @@ class MoveAction(BattleAction):
         combatant = self._combatant
         state = self._get_turn_state()
 
-        print("moving %s from %s to %s" % (str(combatant), str(combatant.get_coord()), str(self._finish.get_coord())))
+        print("moving %s from %s to %s" % (str(combatant), str(combatant.get_coord()), str(self._finish)))
         # AoO can interupt movement
         # 5ft step still can provoke
         # Not moving still can provoke

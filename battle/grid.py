@@ -72,6 +72,7 @@ class Grid(object):
         self.set_tilesize(5.0)
         self._width = width
         self._height = height
+        self._revision = 0
         self.__grid = []
 
         # Maps tuple (size, reach, near, far) -> OccupancyTemplate
@@ -163,6 +164,8 @@ class Grid(object):
                 if tile not in entity.threatened_tiles:
                     entity.threatened_tiles.append(tile)
 
+        self._revision += 1
+
     # Remove entity from grid.
     # Removes all the references, and tile threatening as well
     def unregister_entity(self, entity):
@@ -174,10 +177,18 @@ class Grid(object):
             tile.occupation.remove(entity)
         entity._occupied_tiles = []
 
+        self._revision += 1
+
+    @property
+    def revision(self):
+        return self._revision
+
     # Set terrain type for a tile
     def set_terrain(self, x, y, type):
         tile = self.get_tile(x, y)
-        tile.set_terrain(type)
+
+        if tile.set_terrain(type):
+            self._revision += 1
 
     # Get tile reference
     def get_tile(self, x, y):
@@ -278,17 +289,9 @@ class Tile(object):
         self.y = y
         # Max size allowed to be in this tile
         self._max_size = 10
-        # Do we need to store pathfinding info right here?
-        # Let it be for now
-        self._g = 0
-        self._successor = None
-        self._predecessor = None
 
         self.occupation = []
         self.terrain = TERRAIN_FREE
-        # Pathfinder search index
-        self._pathstate = 0
-        self._target_mark = 0
         # Objects that threaten this tile
         self.threaten = []
 

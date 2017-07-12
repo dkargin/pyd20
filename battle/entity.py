@@ -90,4 +90,15 @@ class Entity:
                 yield tile
 
 
+def get_coord_range(center, distance):
+    """
+    :param center: - center tile
+    :param distance: - tile range
+    :return: [] array of coordinates of selected tiles
+    """
+    tiles = []
+    for y in range(math.floor(center.y - distance), math.ceil(center.y + distance)):
+        for x in range(math.floor(center.x - distance), math.ceil(center.x + distance)):
+            tiles.append((x,y))
+    return tiles
 

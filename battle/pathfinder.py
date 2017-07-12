@@ -2,6 +2,7 @@ import heapq
 import math
 
 from .grid import *
+from .entity import *
 
 
 # Default cost function for pathfinder
@@ -16,12 +17,21 @@ class PathFinder(object):
         """
         Node for search tree
         """
-        def __init__(self):
-            self.g = 0
-            self.h = 0
-            self.lh = 0
-            self.predecessor = None
-            self.pathstate = 0
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+            self._g = 0
+            self._h = 0
+            self._lh = 0
+            self._predecessor = None
+            self._pathstate = 0
+            self._target_mark = 0
+
+        def __lt__(self, other):
+            return self._g < other._g
+
+        def __hash__(self):
+            return id(self)
 
     def __init__(self, grid, objsize = 1):
         self.grid = grid
@@ -29,6 +39,9 @@ class PathFinder(object):
         self.search_index = 0
         self._objsize = 1
         self._occupation = []
+
+        self._revision = grid.revision - 1
+
         for y in range(0, self._objsize*2-1):
             for x in range(0, self._objsize * 2 - 1):
                 self._occupation.append((x, y))
@@ -48,6 +61,8 @@ class PathFinder(object):
 
     # Update local obstacle map
     def sync_grid(self, grid):
+        if self._revision == grid.revision:
+            return
         self._width = grid.get_width()
         self._height = grid.get_height()
         size = grid.get_width() * grid.get_height()
@@ -65,12 +80,35 @@ class PathFinder(object):
             self._costmap[index] = cost
             index += 1
 
+        self._revision = grid.revision
+
     # TODO: implement it in cython
     def sum_obstacle(self, x0, y0):
         cost = 0
         for adj in self._occupation:
-            index = x0 + x0 + (y0+adj[1])*self._width
+            index = x0 + adj[0] + (y0+adj[1])*self._width
             cost += self._costmap[index]
+        return cost
+
+    def _get_node(self, x, y):
+        index = x + y*self._width;
+        node = self._node_index[index]
+        if node is None:
+            self._node_index[index] = node = PathFinder.Node(x,y)
+        return node
+
+    def is_inside(self, x, y):
+        return x in range(0, self._width - self._objsize + 1) and y in range(0, self._height - self._objsize + 1)
+
+    def _get_adjacent(self, src, x, y):
+        def check_adjacent(x, y, base):
+            if self.is_inside(x, y) and self.sum_obstacle(x, y) == 0:
+                yield self._get_node(x, y), base
+
+        yield from check_adjacent(x+1, y, 5)
+        yield from check_adjacent(x-1, y, 5)
+        yield from check_adjacent(x, y+1, 5)
+        yield from check_adjacent(x, y-1, 5)
 
     def expand_tile(self, tile, costfn = default_cost):
         """
@@ -78,17 +116,14 @@ class PathFinder(object):
         :param costfn: function for calculating tile cost
         :return:
         """
-        adjacent = self.grid.get_adjacent_tiles(tile)
-        for next in adjacent:
-            if not next.is_empty():
-                continue
+        # Check diagonals
+        for next, cellcost in self._get_adjacent(tile, tile.x, tile.y):
             # Skip nodes that are already visited
             if next._pathstate == self.search_index:
                 continue
-            next._g = tile._g + costfn(tile, next)
+            next._g = tile._g + costfn(tile, next) + cellcost
             next._predecessor = tile
             self.push_node(next)
-            #self.open_list.append(next, next._g)
         pass
 
     def push_node(self, node):
@@ -107,7 +142,7 @@ class PathFinder(object):
         while current_node._predecessor is not None:
             current_node = current_node._predecessor
             if current_node != start:
-                path.append(current_node)
+                path.append(Point(x=current_node.x, y=current_node.y))
         # Flipping back reversed path
         path.reverse()
         return path
@@ -137,7 +172,8 @@ class PathFinder(object):
             iteration += 1
         return None
 
-    def path_to_melee_range(self, start_tile, dest, range0, range1):
+    def path_to_melee_range(self, start_pos, dest, range0, range1):
+        self.sync_grid(self.grid)
         """
         Calculate path to any tile in range of dest_tile
         :param start_tile: starting tile
@@ -151,16 +187,21 @@ class PathFinder(object):
             range0 = range1
             range1 = tmp
         # Mark destination tiles
-        tiles_near = self.grid.get_tile_range(dest, range0)
-        tiles_far = self.grid.get_tile_range(dest, range1)
+        tiles_near = get_coord_range(dest, range0)
+        tiles_far = get_coord_range(dest, range1)
         for tile in tiles_far:
             if tile in tiles_near:
                 continue
-            tile._target_mark = self.get_target_index()
+            node = self._get_node(*tile)
+            if node is not None:
+                node._target_mark = self.get_target_index()
 
-        return self.run_wave(start_tile, lambda x: x._target_mark == self.get_target_index())
+        start_node = self._get_node(start_pos.x, start_pos.y)
+
+        return self.run_wave(start_node, lambda x: x._target_mark == self.get_target_index())
 
     def path_between_tiles(self, start_tile, dest_tile):
+        self.sync_grid(self.grid)
         """
         Get direct path between tiles
         :rtype: Path

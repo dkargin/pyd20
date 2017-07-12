@@ -151,11 +151,11 @@ class Battle(object):
     def is_faction_enemy(self, faction_a, faction_b):
         return faction_a != faction_b
 
-    def path_to_melee_range(self, src, target, attack_range):
+    def path_to_melee_range(self, src: Combatant, target, attack_range):
         start = self.tile_for_combatant(src)
         near = target.get_size()*0.5
         far = target.get_size()*0.5 + attack_range
-        path = self.pathfinder.path_to_melee_range(start, target.get_center(), near, far)
+        path = self.pathfinder.path_to_melee_range(src.get_coord(), target.get_center(), near, far)
         return path
 
     # Find best enemy

@@ -53,10 +53,10 @@ def get_interpolated_path_coord(path, position):
 
     if index_end > max_len-1:
         tile = path[max_len-1]
-        return tile.get_coord()
+        return tile
     if index_end == 0:
         tile = path[0]
-        return tile.get_coord()
+        return tile
 
     src = path[index_start]
     t = position - index_start

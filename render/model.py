@@ -75,11 +75,7 @@ int row, int front, int back, int right
 
 class ModelDrawer:
     def __init__(self, size, path, mdesc):
-        #super(ModelDrawer, self).__init__(size, path)
-
         self._sprite_sheet = SpriteSheet(size, path)
-        self._colorkey = (255, 2, 255)
-        self._sprite_sheet.surface.set_colorkey(self._colorkey)
         """
         :param size: - tile size
         :param path: - path to tileset image
@@ -115,6 +111,8 @@ class ModelDrawer:
 
         models = self._models[mtype]
         model = None
+
+        # Get sprite set acoording to entity size
         monsize = combatant.get_size()
 
         if monsize not in models:
@@ -137,8 +135,6 @@ class ModelDrawer:
                 surface = model.back[0]
         except:
             pass
-
-        #surface.set_colorkey(self._colorkey)
 
         return surface
 
