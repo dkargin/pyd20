@@ -54,6 +54,8 @@ class PathFinder(object):
         self._node_index = [None] * size
         # Costs for each tile
         self._costmap = [0] * size
+        # Contains distance transform result
+        self._distance = [0] * size
 
     # Search PF node by a coordinates
     def get_tile_node(self, x, y):
@@ -76,13 +78,15 @@ class PathFinder(object):
             cost = 0
             if terrain == TERRAIN_WALL:
                 cost += 100
+            if not tile.is_empty():
+                cost += 5
 
             self._costmap[index] = cost
             index += 1
 
         self._revision = grid.revision
 
-    # TODO: implement it in cython
+    # TODO: should move costmap to cython
     def sum_obstacle(self, x0, y0):
         cost = 0
         for adj in self._occupation:
@@ -97,18 +101,37 @@ class PathFinder(object):
             self._node_index[index] = node = PathFinder.Node(x,y)
         return node
 
+    # Check if coordinates are valid for creature and it is is inside the map
     def is_inside(self, x, y):
         return x in range(0, self._width - self._objsize + 1) and y in range(0, self._height - self._objsize + 1)
 
+    # Iterates adjacent cells
     def _get_adjacent(self, src, x, y):
         def check_adjacent(x, y, base):
             if self.is_inside(x, y) and self.sum_obstacle(x, y) == 0:
-                yield self._get_node(x, y), base
+                return self._get_node(x, y), base
 
-        yield from check_adjacent(x+1, y, 5)
-        yield from check_adjacent(x-1, y, 5)
-        yield from check_adjacent(x, y+1, 5)
-        yield from check_adjacent(x, y-1, 5)
+        moves = [check_adjacent(x+1, y, 5),
+                 check_adjacent(x-1, y, 5),
+                 check_adjacent(x, y+1, 5),
+                 check_adjacent(x, y-1, 5)]
+        # Allow diagonals
+        if moves[0] is not None and moves[2] is not None:
+            moves.append(check_adjacent(x + 1, y + 1, 5))
+
+        if moves[0] is not None and moves[3] is not None:
+            moves.append(check_adjacent(x + 1, y - 1, 5))
+
+        if moves[1] is not None and moves[2] is not None:
+            moves.append(check_adjacent(x - 1, y + 1, 5))
+
+        if moves[1] is not None and moves[3] is not None:
+            moves.append(check_adjacent(x - 1, y - 1, 5))
+
+        for move in moves:
+            if move is not None:
+                yield move
+
 
     def expand_tile(self, tile, costfn = default_cost):
         """

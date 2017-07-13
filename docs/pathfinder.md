@@ -6,12 +6,12 @@ Each combatant uses its own pathfinder
 
 Creature sizes:
 
--------------------------------------------------------
-    1 tile  | Regular pathfinding
--------------------------------------------------------
-    2 tiles |  Grow obstacle map for creatures of size 1 and larger
-------------------------------------------------------
-    3 tiles | Use distance transform?
+| Creature size | Mode
+| ---------- | ---------------------------------------- |
+|    1 tile  | Regular pathfinding                      |
+|    2 tiles | Grow obstacle map for creatures of size 1 and larger |
+|    3 tiles | Use distance transform? |
+|    4 tiles | Size3 + grow obstacle map |
 
 # Current tasks #
 

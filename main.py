@@ -20,7 +20,7 @@ draw_cross(battle.grid, center_x+1, center_y, 5)
 draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
 
 
-char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain(), model='type2')
+char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain(), model='type3')
 char1.set_stats(18, 16, 16, 10, 10, 10)
 char1.wear_item(dnd.armor.breastplate, ITEM_SLOT_ARMOR)
 char1.wear_item(dnd.weapon.glaive, ITEM_SLOT_MAIN)
