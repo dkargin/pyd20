@@ -71,10 +71,14 @@ greatsword = Weapon(name='Greatsword',
                     crit_mult=2, crit_range=2, weight=8)
 
 scythe = Weapon(name='Scythe',
-                    damage=Dice("1d4"),
+                    damage=Dice("2d4"),
                     light=SIZE_HUGE,
                     two_handed=True,
                     crit_mult=4, crit_range=1, weight=10)
+# Exotic
+bastard_sword = Weapon(name='bastard sword', damage=d10, light=SIZE_LARGE,
+                   crit_mult=2, crit_range=2,
+                   range=0, weight=4)
 
 # Simple ranged weapons
 crossbow_heavy = Weapon(name='Heavy crossbow',
@@ -85,6 +89,7 @@ crossbow_heavy = Weapon(name='Heavy crossbow',
 crossbow_light = Weapon(name='Light crossbow',
                        damage=Dice("1d8"),
                        light=SIZE_HUGE, two_handed=True,
+
                        crit_range=2, crit_mult=2, range=80, reload=DURATION_FULLROUND, weight=4)
 
 # Martial ranged weapons

@@ -6,6 +6,7 @@ DIRECTION_LEFT = 1
 DIRECTION_RIGHT = 2
 DIRECTION_BACK = 3
 
+
 # Grid entity
 class Entity:
     def __init__(self, name, **kwargs):

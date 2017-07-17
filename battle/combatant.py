@@ -17,6 +17,10 @@ class AttackDesc:
         - Picked target for an attack. Target-specific feats apply its effects
         - Resolve attack and on-hit events
         - Apply damage
+
+    :type target: Combatant
+    :type damage: Dice
+    :type bonus_damage: Dice
     """
     def __init__(self, weapon: battle.item.Weapon, **kwargs):
         self.attack = kwargs.get('attack', 0)
@@ -32,11 +36,20 @@ class AttackDesc:
         self.touch = kwargs.get('touch', False)
         # Attack target
         self.target = None
-        self.source = None
         self.opportunity = False
         self.spell = False
         self.ranged = False
         self.range = 0
+        # Should this attack provoke AoO, i.e unarmed or ranged attack in melee
+        self.provoke = False
+        # Custom attack method
+        self.method = "strike"
+        # Value for opposed check. Used for:
+        # - trip attacks
+        # - bull rush
+        # - disarm
+        # - sunder
+        self.check = 0
 
     # Is melee attack
     def is_melee(self):
@@ -92,7 +105,14 @@ class AttackDesc:
         return self.weapon.is_critical(roll)
 
     def get_target(self):
+        """
+        Get target of attack
+        :return: Combatant
+        """
         return self.target
+
+    def attack_roll_info(self, roll, ac):
+        return "%d(%d%+d) vs AC=%d" % (self.attack + roll, roll, self.attack, ac)
 
     def update_target(self, target):
         self.target = target
@@ -292,7 +312,6 @@ class Combatant(Entity):
         self._opportunity_attacks_max = 1
         self._opportunities_used = []
         self._natural_reach = 1
-        self._has_zen_archery = False
         self._twf_skill = 0
 
         self._turn_state = TurnState()
@@ -377,7 +396,7 @@ class Combatant(Entity):
         return self._turn_state
 
     # Called on start of the turn
-    def on_turn_start(self, battle):
+    def on_turn_start(self, battle, brain=True):
         state = self._turn_state
 
         # Stop styles from previous turns
@@ -399,7 +418,8 @@ class Combatant(Entity):
         self._opportunities_used = []
         self._ac_dodge = 0
         self._events.on_turn_start(self)
-        self._brain.prepare_turn(battle)
+        if brain:
+            self._brain.prepare_turn(battle)
 
     # Called when combatant's turn is ended
     def on_turn_end(self):
@@ -698,6 +718,9 @@ class Combatant(Entity):
     def is_consciousness(self):
         return self._health >= 0
 
+    def is_prone(self):
+        return self.has_status_flag(STATUS_PRONE)
+
     # If combatant is making turns
     def is_active(self):
         return self.is_consciousness()
@@ -808,31 +831,41 @@ class Combatant(Entity):
         if self._brain is not None:
             yield from self._brain.make_turn(battle)
 
+    def _set_attack_target(self, desc, target):
+        self._events.on_select_attack_target(self, desc)
+
+        armor_class = target.get_touch_armor_class(target) if desc.touch else target.get_armor_class(target)
+
+        # Apply penalties for being prone
+        if target.has_status_flag(STATUS_PRONE):
+            if desc.is_melee():
+                armor_class -= 4
+            if desc.is_ranged():
+                armor_class += 4
+
+        if self.has_status_flag(STATUS_PRONE):
+            desc.attack -= 4
+
+        return armor_class
+
     # Execute strike action
     # All data is already set. Attack can be resolved right now
     def do_action_strike(self, desc: AttackDesc):
-        def hits(attack, roll, dc):
-            if roll == 1:
-                return False
-            if roll == 20:
-                return True
-            return attack+roll >= dc
-
         target = desc.get_target()
-        self._events.on_select_attack_target(self, desc)
-        yield AnimationEvent(animation.MeleeAttackStart(self, target))
+        armor_class = self._set_attack_target(desc, target)
 
         roll, crit_confirm_roll = d20.roll(), d20.roll()
-        # Roll for critical confirmation
 
-        armor_class = target.get_touch_armor_class(target) if desc.touch else target.get_armor_class(target)
+        # Roll for critical confirmation
         has_crit = False
 
         if desc.is_critical(roll):
             self._events.on_roll_crit(desc)
-            has_crit = hits(desc.attack + desc.critical_confirm_bonus, crit_confirm_roll, armor_class)
+            has_crit = roll_hits(desc.attack + desc.critical_confirm_bonus, crit_confirm_roll, armor_class)
 
-        hit = hits(desc.attack, roll, armor_class)
+        hit = roll_hits(desc.attack, roll, armor_class)
+
+        yield AnimationEvent(animation.MeleeAttackStart(self, target))
 
         attack_text = "misses"
         total_damage = 0
@@ -847,10 +880,51 @@ class Combatant(Entity):
                 attack_text = "hits"
             total_damage = damage + bonus_damage
 
-        print("%s %s %s with roll %d(%d%+d) vs AC=%d" %
-              (self.name, attack_text, target.get_name(), desc.attack+roll, roll, desc.attack, armor_class))
+        print("%s %s %s with roll %s" %
+              (self.name, attack_text, target.get_name(), desc.attack_roll_info(roll, armor_class)))
         if hit:
             target.receive_damage(damage, self)
+
+        self.expend_attack(desc)
+
+        yield AnimationEvent(animation.MeleeAttackFinish(self, target))
+
+    def _make_roll_d20(self, **kwargs):
+        # Make d20 roll. There are some feats that allow to reroll result
+        # TODO: Brain also can alter some decisions as well
+        self._events
+        return d20.roll()
+
+    # Execute trip attack  action
+    # All data is already set. Attack can be resolved right now
+    def do_action_trip_attack(self, desc: AttackDesc):
+        target = desc.get_target()
+        desc.check = (target._size_type - self._size_type) * 4
+        desc.check += self.strength_modifier() - max(target.strength_modifier(), target.dexterity_modifier())
+
+        # 1. Resolve attack. Unarmed attack can provoke AoO
+        # 2. Opposed trip check
+        armor_class = self._set_attack_target(desc)
+
+        roll_attack = self._make_roll_d20()
+
+        hit = roll_hits(desc.attack, roll_attack, armor_class)
+
+        yield AnimationEvent(animation.MeleeAttackStart(self, target))
+
+        roll_info = desc.attack_roll_info(roll_attack, armor_class)
+
+        if hit:
+            roll_trip = self._make_roll_d20()
+            opposed_roll = target._make_roll_d20(source=self, attack=desc)
+            if roll_trip + desc.check > opposed_roll:
+                attack_text = "trips"
+                target.add_status_flag(STATUS_PRONE)
+                print("%s trips %s with roll %s" % (self.name, target.get_name(), roll_info))
+            else:
+                print("%s fails to trip %s with roll %s" % (self.name, target.get_name(), roll_info))
+        else:
+            print("%s misses its trip attack %s with roll %s" % (self.name, target.get_name(), roll_info))
 
         self.expend_attack(desc)
 

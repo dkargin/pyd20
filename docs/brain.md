@@ -12,3 +12,10 @@ Brains to be implemented:
 - evasive ranger. Move away + attack.
 - manual (player). Asks for a move on each turn
 - planning bitch.
+
+Custom attacks
+
+- Trip. Touch attack + roll contest
+    - Stand up
+- Disarm
+- Sunder

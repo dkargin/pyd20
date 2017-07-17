@@ -181,6 +181,9 @@ class Brain(object):
                 return True
         return False
 
+    def on_make_attack(self, desc):
+        pass
+
 
 # Brain for simple movement and attacking
 class MoveAttackBrain(Brain):
@@ -191,27 +194,32 @@ class MoveAttackBrain(Brain):
     def make_turn(self, battle):
         state = self.get_turn_state()
 
-
         if self.target is None:
             print("%s has no targets" % self.slave.get_name())
             return
 
+        if self.slave.has_status_flag(STATUS_PRONE):
+            yield StandUpAction(self.slave)
+
         # 2. If enemy is in range - full round attack
         if self.slave.is_adjacent(self.target):
             self.logger.debug("target is near, can attack")
+            # Use all the attacks
             while state.can_attack():
                 if self.target.is_consciousness():
                     # Mark that we have used an action
                     desc = state.use_attack()
                     desc.update_target(self.target)
+                    self.on_make_attack(desc)
                     # TODO: update attack data according to selected target or custom attack
                     yield AttackAction(self.slave, desc)
                     #yield from battle.make_action_strike(self.slave, state, self.target, desc)
                 else:
                     self.target = None
                     break
-        elif state.can_move():
-            self.logger.debug("farget %s is away. Finding path" % self.target.get_name())
+
+        if state.can_move() and self.target is not None:
+            self.logger.debug("farget %s is away. Finding path" % self.target.name)
             path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
             self.logger.debug("found path of %d feet length" % path.length())
             yield from battle.make_action_move_tiles(self.slave, state, path)
@@ -233,6 +241,9 @@ class StandAttackBrain(Brain):
             print("%s has no targets" % self.slave.get_name())
             #yield WaitAction(self.slave)
             return
+
+        if self.slave.has_status_flag(STATUS_PRONE):
+            yield StandUpAction(self.slave)
 
         # 2. If enemy is in range - full round attack
         if not self.slave.is_adjacent(self.target):

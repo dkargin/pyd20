@@ -117,21 +117,20 @@ class PathFinder(object):
                  check_adjacent(x, y-1, 5)]
         # Allow diagonals
         if moves[0] is not None and moves[2] is not None:
-            moves.append(check_adjacent(x + 1, y + 1, 5))
+            moves.append(check_adjacent(x + 1, y + 1, 7))
 
         if moves[0] is not None and moves[3] is not None:
-            moves.append(check_adjacent(x + 1, y - 1, 5))
+            moves.append(check_adjacent(x + 1, y - 1, 7))
 
         if moves[1] is not None and moves[2] is not None:
-            moves.append(check_adjacent(x - 1, y + 1, 5))
+            moves.append(check_adjacent(x - 1, y + 1, 7))
 
         if moves[1] is not None and moves[3] is not None:
-            moves.append(check_adjacent(x - 1, y - 1, 5))
+            moves.append(check_adjacent(x - 1, y - 1, 7))
 
         for move in moves:
             if move is not None:
                 yield move
-
 
     def expand_tile(self, tile, costfn = default_cost):
         """
@@ -176,11 +175,11 @@ class PathFinder(object):
     def get_target_index(self):
         return self.search_index+1
 
-    def run_wave(self, start_tile, finish_check):
-        start_tile._g = 0
-        start_tile._predecessor = None
+    def run_wave(self, start_node, finish_check):
+        start_node._g = 0
+        start_node._predecessor = None
         self.open_list = []
-        self.push_node(start_tile)
+        self.push_node(start_node)
 
         iteration = 0
 

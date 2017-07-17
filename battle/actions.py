@@ -50,12 +50,14 @@ class BattleAction(object):
     possibly taken during a battle including, but not limited to:
     Moving, Attacking and using an Ability, Skill or Trait.
     """
-    def __init__(self, combatant: Combatant):
+    def __init__(self, combatant: Combatant, **kwargs):
         self._combatant = combatant
+        self._duration = kwargs.get('duration', DURATION_STANDARD)
 
     # Get duration of the action
+    @property
     def duration(self):
-        return DURATION_STANDARD
+        return self._duration
 
     def can_execute(self, combatant):
         return False
@@ -134,6 +136,56 @@ class AttackAction(BattleAction):
         return False
 
 
+class TripAttackAction(BattleAction):
+    def __init__(self, combatant, attack_desc: Combatant):
+        super(AttackAction, self).__init__(combatant)
+        self._desc = attack_desc
+
+    def execute(self, battle: Battle):
+        desc = self._desc
+        yield from self._combatant.do_action_trip_attack(desc)
+
+    def text(self):
+        return " attacks %s" % self._target
+
+    def is_attack_action(self):
+        return True
+
+    def is_move_action(self):
+        return False
+
+# Stand up from prone position
+class StandUpAction(BattleAction):
+    """
+    Implements animation for a single attack
+    """
+    def __init__(self, combatant):
+        super(StandUpAction, self).__init__(combatant)
+        self._provoke = True
+
+    def execute(self, battle: Battle):
+        combatant = self._combatant
+        combatant.remove_status_flag(STATUS_PRONE)
+        success = True
+        if self._provoke:
+            enemies = battle.get_threatening_enemies(combatant, self)
+            for enemy in enemies:
+                yield from enemy.respond_provocation(battle, self._combatant, self)
+                # TODO: roll AoO and check if it really interrupts
+
+        if not success:
+            return False
+
+    def text(self):
+        return " attacks %s" % self._target
+
+    def is_attack_action(self):
+        return False
+
+    def is_move_action(self):
+        return True
+
+
 class MoveAction(BattleAction):
     """
     Implements an action that moves a combatant
@@ -143,11 +195,21 @@ class MoveAction(BattleAction):
 
     #TODO: each movement should cause attack of opportunity
     """
-    def __init__(self, combatant, tiles, provoke = True):
+    def __init__(self, combatant, tiles, provoke = True, **kwargs):
         super(MoveAction, self).__init__(combatant)
-        self._finish = tiles[len(tiles)-1]
+        self._finish = tiles[len(tiles)-1][0]
         self._path = tiles
         self._provoke = provoke
+
+    def cost(self):
+        result = 0
+        for tile, cost in self._path:
+            result += cost
+        return result
+
+    @property
+    def regular_path(self):
+        return [tile for tile, cost in self._path]
 
     def duration(self):
         return DURATION_MOVE
@@ -156,7 +218,7 @@ class MoveAction(BattleAction):
         combatant = self._combatant
         state = self._get_turn_state()
 
-        print("moving %s from %s to %s" % (str(combatant), str(combatant.get_coord()), str(self._finish)))
+        print("moving %s from %s to %s, moves=%d, tiles=%d" % (str(combatant), str(combatant.get_coord()), str(self._finish), self.cost(), len(self._path)))
         # AoO can interupt movement
         # 5ft step still can provoke
         # Not moving still can provoke
@@ -176,7 +238,7 @@ class MoveAction(BattleAction):
         combatant.y = self._finish.y
 
         battle.grid.register_entity(combatant)
-        yield events.AnimationEvent(animation.MovePath(combatant, self._path))
+        yield events.AnimationEvent(animation.MovePath(combatant, self.regular_path))
         combatant.fix_visual()
 
     def text(self):

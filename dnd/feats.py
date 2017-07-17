@@ -18,6 +18,14 @@ class ImprovedTwoWeaponFighting(Feat):
     def apply(self, combatant):
         combatant._twf_skill += 1
 
+class ImprovedTwoWeaponFighting(Feat):
+    def __init__(self):
+        Feat.__init__(self, "twf2")
+
+    def apply(self, combatant):
+        combatant._twf_skill += 1
+
+
 
 class Rage(Feat):
     class Effect(Combatant.StatusEffect):

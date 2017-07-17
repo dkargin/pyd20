@@ -82,10 +82,21 @@ DURATION_MOVE = 1
 DURATION_FULLROUND = 2
 DURATION_FREE = 3
 DURATION_SWIFT = 4
+# Expends attack action slot. Can be standard action,
+# one of full round attacks, or one of attacks of opportunity
+DURATION_ATTACK = 5
 
 GENDER_NONE = 0
 GENDER_FEMALE = 1
 GENDER_MALE = 2
+
+
+def roll_hits(base, roll, dc):
+    if roll == 1:
+        return False
+    if roll == 20:
+        return True
+    return base + roll >= dc
 
 def ability_modifier(value):
     """

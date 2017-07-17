@@ -60,6 +60,12 @@ class ModelSet:
         for surf in self.right:
             result.right.append(transform.scale2x(surf))
 
+        for surf in self.ground_up:
+            result.ground_up.append(transform.scale2x(surf))
+
+        for surf in self.ground_down:
+            result.ground_down.append(transform.scale2x(surf))
+
         return result
 
 
@@ -100,6 +106,10 @@ class ModelDrawer:
             model.right.append(ss)
             left = transform.flip(ss, True, False)
             model.left.append(left)
+            down = transform.rotate(ss, 90)
+            model.ground_down.append(down)
+            up = transform.rotate(ss, -90)
+            model.ground_up.append(up)
 
         return model
 
@@ -125,7 +135,11 @@ class ModelDrawer:
         surface = model.front[0]
 
         try:
-            if combatant.visual_dir == DIRECTION_LEFT:
+            if not combatant.is_consciousness():
+                surface = model.ground_up[0]
+            elif combatant.is_prone():
+                surface = model.ground_down[0]
+            elif combatant.visual_dir == DIRECTION_LEFT:
                 surface = model.left[0]
             elif combatant.visual_dir == DIRECTION_RIGHT:
                 surface = model.right[0]

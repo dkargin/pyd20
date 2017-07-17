@@ -52,9 +52,10 @@ class Battle(object):
         combatant.x = x
         combatant.y = y
         combatant.recalculate()
-        #combatant.on_turn_start(self)
         self._combatants.append(combatant)
         self.grid.register_entity(combatant)
+        combatant.on_turn_start(self)
+
         combatant.fix_visual()
 
     def remove_combatant(self, combatant):
@@ -214,12 +215,13 @@ class Battle(object):
         waypoints = path.get_path()
         while len(waypoints) > 0:
             tile = waypoints.pop(0)
-            tiles_moved.append(tile)
+            cost = 5
+            tiles_moved.append((tile, cost))
             if self.position_threatened(combatant, tile.x, tile.y):
                 yield battle.actions.MoveAction(combatant, tiles_moved)
                 tiles_moved = []
 
-            state.moves_left -= 5
+            state.moves_left -= cost
             if state.moves_left <= 0:
                 break
 

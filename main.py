@@ -6,8 +6,39 @@ from battle_utils import *
 from render.render import Renderer
 import battle.battle as battle
 import battle.events as events
+from battle.dice import d20
 
 logger = logging.getLogger(__name__)
+
+char = Character("dummy")
+
+
+def remove_min(stats):
+    min_stat = stats[0]
+    for i in stats:
+        if i < min_stat:
+            min_stat = i
+    stats.remove(min_stat)
+    return sorted(stats)
+
+generated = 0
+while generated < 3:
+    stats = remove_min([d20.roll() for i in range(0, 7)])
+    char.set_stats(*tuple(stats))
+    sum_mod = 0
+
+    sum_mod += char.strength_modifier()
+    sum_mod += char.dexterity_modifier()
+    sum_mod += char.constitution_modifier()
+    sum_mod += char.intellect_modifier()
+    sum_mod += char.wisdom_modifier()
+    sum_mod += char.charisma_modifier()
+
+    if sum_mod <= 1:
+        print("%s - rejected, sum_mod=%d" % (stats, sum_mod))
+    else:
+        print("%s - sum_mod=%d" % (stats, sum_mod))
+        generated+=1
 
 
 center_x = 15
@@ -19,7 +50,18 @@ draw_cross(battle.grid, center_x, center_y, 5)
 draw_cross(battle.grid, center_x+1, center_y, 5)
 draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
 
+char1 = Character("Bob", brain=brain.StandAttackBrain(), model='type3')
+char1.set_stats(18, 18, 16, 10, 10, 10)
+char1.wear_item(dnd.armor.chain_shirt, ITEM_SLOT_ARMOR)
+char1.wear_item(dnd.weapon.bastard_sword, ITEM_SLOT_MAIN)
+char1.wear_item(dnd.weapon.longsword, ITEM_SLOT_OFFHAND)
+char1.add_class_level(classes.Fighter, 8)
+char1.add_feat(dnd.feats.TwoWeaponFighting())
+char1.add_feat(dnd.feats.ImprovedTwoWeaponFighting())
+char1.add_feat(dnd.feats.WeaponFocus(dnd.weapon.bastard_sword))
+char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
 
+'''
 char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain(), model='type3')
 char1.set_stats(18, 16, 16, 10, 10, 10)
 char1.wear_item(dnd.armor.breastplate, ITEM_SLOT_ARMOR)
@@ -29,6 +71,7 @@ char1.add_feat(dnd.feats.CombatReflexes())
 char1.add_feat(dnd.feats.DeftOpportunist())
 char1.add_feat(dnd.feats.WeaponFocus(dnd.weapon.glaive))
 char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
+'''
 
 
 char2 = make_shield_fighter('Roy1')
@@ -111,6 +154,8 @@ def main():
             battle_event = next(turn_generator)
             wait_turn = False
             if isinstance(battle_event, events.RoundEnd):
+                # Make character prone, to test 'StandUp'
+                # char1.add_status_flag(STATUS_PRONE)
                 print("Press key for the next turn")
                 wait_turn = True
             elif isinstance(battle_event, events.AnimationEvent):
@@ -126,7 +171,11 @@ def main():
     pygame.quit()
 
 if __name__ == '__main__':
-    cProfile.run('main()', 'restats')
-    print("Preparing profiler statistics")
-    stats = pstats.Stats('restats')
-    stats.strip_dirs().sort_stats(1).print_stats()
+    profile = False
+    if profile:
+        cProfile.run('main()', 'restats')
+        print("Preparing profiler statistics")
+        stats = pstats.Stats('restats')
+        stats.strip_dirs().sort_stats(1).print_stats()
+    else:
+        main()
