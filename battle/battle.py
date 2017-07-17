@@ -54,7 +54,7 @@ class Battle(object):
         combatant.recalculate()
         self._combatants.append(combatant)
         self.grid.register_entity(combatant)
-        combatant.on_turn_start(self)
+        combatant.on_turn_start(self, False)
 
         combatant.fix_visual()
 
@@ -204,6 +204,11 @@ class Battle(object):
         return False
 
     ############## Action generators ################
+    def provoke_opportunity(self, combatant, action):
+        enemies = self.get_threatening_enemies(combatant, action)
+        for enemy in enemies:
+            yield from enemy.respond_provocation(self, combatant, action)
+
     def make_action_move_tiles(self, combatant: Combatant, state: TurnState, path):
         # We should iterate all the tiles
         tiles_moved = []

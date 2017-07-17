@@ -76,7 +76,13 @@ class Weapon(Item):
         self._clip = kwargs.get("clip", 1)
         # Ammo type
         self._ammo = kwargs.get("ammo", None)
-        self._reload = kwargs.get('reload', DURATION_FREE)
+        self._reload = kwargs.get('reload', ACTION_TYPE_FREE)
+
+    def can_trip(self):
+        return self._trip
+
+    def is_unarmed(self):
+        return False
 
     def enchant(self, level):
         self._enchantment = level

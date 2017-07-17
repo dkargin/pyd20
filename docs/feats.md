@@ -15,17 +15,17 @@ Every combatant has a set of event handlers, that are invoked at different place
     - Quick Staff. Or monk is boring
     - Improved trip
     - Improved disarm
-    - Point blank shot
+    - Point blank shot                  OK
 1. Feats providing additional attacks:
     - Two weapon fighting       OK
-    - Bow feat series
-    - Spinning Halberd
+    - Ranged feat series
+    - Spinning Halberd          OK
     - Cleave
 1. Feats with unique progression (Sneak attack, Flurry of blows, Barbarian Rage)
     - Sneak attack
     - Skirmish
 1. Feats that provide 'combat styles'
-    - Flurry of blows
+    - Flurry of blows                   OK
     - Power attack
     - Combat expertise
 1. AoO feats:

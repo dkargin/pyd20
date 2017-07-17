@@ -84,13 +84,12 @@ bastard_sword = Weapon(name='bastard sword', damage=d10, light=SIZE_LARGE,
 crossbow_heavy = Weapon(name='Heavy crossbow',
                  damage=Dice("1d10"),
                  light=SIZE_HUGE, two_handed=True,
-                 crit_range=2, crit_mult=2, range=120, reload=DURATION_FULLROUND, weight=8)
+                 crit_range=2, crit_mult=2, range=120, reload=ACTION_TYPE_FULLROUND, weight=8)
 
 crossbow_light = Weapon(name='Light crossbow',
                        damage=Dice("1d8"),
                        light=SIZE_HUGE, two_handed=True,
-
-                       crit_range=2, crit_mult=2, range=80, reload=DURATION_FULLROUND, weight=4)
+                       crit_range=2, crit_mult=2, range=80, reload=ACTION_TYPE_MOVE, weight=4)
 
 # Martial ranged weapons
 longbow = Weapon(name='Long bow',

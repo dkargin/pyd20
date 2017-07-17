@@ -42,11 +42,12 @@ Look at main.py.
 
 # Plan #
 
-1. Finish the pathfinder
-1. Combatant sprite model
-    - load tile set
-    - show any tile
-    - show direction
+1. Fix pathfinder
+    - combatant moves less tiles than it should
+    - combatant moves to the same tile sometimes
+1. Fix brain action sequence:
+    - passive brain can attack nearest enemy, if preferred target is far away
+    - aggressive brain does not attack after move action
 1. Custom attacks:
     1. Charge attack
         - draw a line

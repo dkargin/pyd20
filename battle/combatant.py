@@ -39,6 +39,7 @@ class AttackDesc:
         self.opportunity = False
         self.spell = False
         self.ranged = False
+        self.offhand = kwargs.get('offhand', False)
         self.range = 0
         # Should this attack provoke AoO, i.e unarmed or ranged attack in melee
         self.provoke = False
@@ -112,7 +113,7 @@ class AttackDesc:
         return self.target
 
     def attack_roll_info(self, roll, ac):
-        return "%d(%d%+d) vs AC=%d" % (self.attack + roll, roll, self.attack, ac)
+        return "%d(r%d%+d) vs AC=%d" % (self.attack + roll, roll, self.attack, ac)
 
     def update_target(self, target):
         self.target = target
@@ -180,7 +181,8 @@ class Combatant(Entity):
             # on_get_hit(self, combatant, effect, **kwargs):
             self.on_get_hit = SubscriberList()
             # Called when effect is applied
-            self.on_effect_apply = SubscriberList()
+            self.on_effect_start = SubscriberList()
+            self.on_effect_stop = SubscriberList()
 
             # Called when character rolls saving throw
             # on_save_will(self, combatant, effect, **kwargs):
@@ -288,7 +290,8 @@ class Combatant(Entity):
         self._ac_dodge = 0
         self._ac_natural = 0
         self._ac_deflection = 0
-        self.move_speed = 30
+        self._move_speed = 30
+        self._move_speed_bonus = 0
         # Penalty to move speed
         self._move_penalty = 0
         # Attack bonus for chosen maneuver/style
@@ -312,7 +315,6 @@ class Combatant(Entity):
         self._opportunity_attacks_max = 1
         self._opportunities_used = []
         self._natural_reach = 1
-        self._twf_skill = 0
 
         self._turn_state = TurnState()
 
@@ -360,14 +362,17 @@ class Combatant(Entity):
     def __repr__(self):
         return "<" + self.get_name() + ">"
 
-    def modify_ac_armor(self, mod):
+    def modify_ac_armor(self, mod, source=None):
         self._ac_armor += mod
 
-    def modify_ac_dodge(self, mod):
+    def modify_ac_dodge(self, mod, source=None):
         self._ac_dodge += mod
 
     def modify_ac_dex(self, mod):
         self._max_dex_ac = min(self._max_dex_ac, mod)
+
+    def modify_movement(self, mod):
+        self._move_penalty -= mod
 
     def modify_stat(self, stat, value, source=None):
         self._stats[stat] += int(value)
@@ -395,6 +400,13 @@ class Combatant(Entity):
         self._turn_state.attack_AoO = strikes[0]
         return self._turn_state
 
+    def modify_move_speed(self, mod, source=None):
+        self._move_speed_bonus += mod
+
+    @property
+    def move_speed(self):
+        return self._move_speed + self._move_speed_bonus - self._move_penalty
+
     # Called on start of the turn
     def on_turn_start(self, battle, brain=True):
         state = self._turn_state
@@ -403,12 +415,13 @@ class Combatant(Entity):
         for style in self._active_styles:
             style.on_finish(self)
 
+        self._attack_bonus_style = 0
         self.check_weapon_wield()
 
         if self.has_status_flag(STATUS_HEAVY_ARMOR):
             self._move_penalty = 10
 
-        state.moves_left = self.move_speed - self._move_penalty
+        state.moves_left = self.move_speed
 
         state.move_actions = 1
         state.standard_actions = 1
@@ -416,7 +429,7 @@ class Combatant(Entity):
         state.move_5ft = 1
         state.swift_actions = 1
         self._opportunities_used = []
-        self._ac_dodge = 0
+        #self._ac_dodge = 0
         self._events.on_turn_start(self)
         if brain:
             self._brain.prepare_turn(battle)
@@ -607,9 +620,9 @@ class Combatant(Entity):
         return self._health_max
 
     # Add bonus attack, from feat, style or status effect
-    def add_bonus_strike(self, bab, weapon, source=None):
+    def add_bonus_strike(self, bab, weapon, source=None, **kwargs):
         attack = self._BAB + bab + self._attack_bonus_style
-        desc = self.generate_attack(attack, weapon, target=None)
+        desc = self.generate_attack(attack, weapon, target=None, **kwargs)
         self._additional_strikes.append(desc)
         return desc
 
@@ -648,6 +661,14 @@ class Combatant(Entity):
         if damage_mod != 0:
             damage.add_die(1, int(damage_mod))
 
+        if kwargs.get('offhand', False):
+            attack -= 4
+
+        if weapon.is_ranged():
+            attack += self.dexterity_modifier()
+        else:
+            attack += self.strength_modifier()
+
         # For all effects
         desc = AttackDesc(weapon, attack=attack, damage=damage, two_handed=two_handed, **kwargs)
         self._events.on_calc_attack(self, desc)
@@ -670,6 +691,8 @@ class Combatant(Entity):
 
         self._two_hand_wield = two_handed
         self._many_weapon_wield = two_weapon_fighting
+        if self._many_weapon_wield:
+            self._attack_bonus_style -= (4 if weapon_offhand.is_light(self) else 6)
 
     def generate_bab_chain(self, target=None, **kwargs):
         """
@@ -685,10 +708,12 @@ class Combatant(Entity):
         weapon_offhand = self.get_offhand_weapon()
         attack_bonus_style = self._attack_bonus_style
 
-        if self._many_weapon_wield:
-            attack_bonus_style -= (4 if weapon_offhand.is_light(self) else 6)
-            if self._twf_skill > 0:
-                attack_bonus_style += 2
+        """
+        Two weapon fighting:
+        Normal penalties: Main -6     Offhand -10
+        Offhand is light: Main -4     Offhand -8    -> add +2 to both attacks
+        Two-weapon fighting: Main -4    Offhand -4  -> add +2 to main and +6 to offhand
+        """
 
         # Get attacks from main slot
         while bab >= 0:
@@ -696,18 +721,13 @@ class Combatant(Entity):
             attack_chain.append(self.generate_attack(attack, weapon, target, **kwargs))
             bab -= 5
 
-        twf_attacks = self._twf_skill if self._many_weapon_wield else 0
-        bab = self._BAB
-        if self._twf_skill == 0:
-            attack_bonus_style -= 4
-
-        # TODO: more attacks can be provided by the feats
-        while twf_attacks > 0:
-            attack_chain.append(self.generate_attack(bab + attack_bonus_style, weapon_offhand, target, **kwargs))
-            twf_attacks -= 1
-            bab -= 5
+        if self._many_weapon_wield:
+            attack = self._BAB + attack_bonus_style
+            desc = self.generate_attack(attack, weapon_offhand, target, offhand=True, **kwargs)
+            attack_chain.append(desc)
 
         attack_chain.extend(self._additional_strikes)
+        self._additional_strikes = []
         return attack_chain
 
     # Check if combatant is absolutely dead
@@ -850,7 +870,7 @@ class Combatant(Entity):
 
     # Execute strike action
     # All data is already set. Attack can be resolved right now
-    def do_action_strike(self, desc: AttackDesc):
+    def do_action_strike(self, battle, desc: AttackDesc):
         target = desc.get_target()
         armor_class = self._set_attack_target(desc, target)
 
@@ -897,14 +917,31 @@ class Combatant(Entity):
 
     # Execute trip attack  action
     # All data is already set. Attack can be resolved right now
-    def do_action_trip_attack(self, desc: AttackDesc):
+    def do_action_trip_attack(self, battle, desc: AttackDesc):
         target = desc.get_target()
         desc.check = (target._size_type - self._size_type) * 4
         desc.check += self.strength_modifier() - max(target.strength_modifier(), target.dexterity_modifier())
 
         # 1. Resolve attack. Unarmed attack can provoke AoO
+        weapon = desc.weapon
+
+        improved_trip = self.has_status_flag(STATUS_HAS_IMPROVED_TRIP)
+        improved_unarmed = self.has_status_flag(STATUS_HAS_IMPROVED_UNARMED)
+
+        provoke = False
+
+        if weapon.is_unarmed() and not (improved_trip or improved_unarmed):
+            provoke = True
+        elif not (weapon.can_trip() or improved_trip):
+            provoke = False
+
+        if provoke:
+            battle.provoke_opportunity()
+
+        desc.touch = True
+
         # 2. Opposed trip check
-        armor_class = self._set_attack_target(desc)
+        armor_class = self._set_attack_target(desc, target)
 
         roll_attack = self._make_roll_d20()
 
@@ -923,6 +960,7 @@ class Combatant(Entity):
                 print("%s trips %s with roll %s" % (self.name, target.get_name(), roll_info))
             else:
                 print("%s fails to trip %s with roll %s" % (self.name, target.get_name(), roll_info))
+            print("%s rolls %d, %s rolls %d" % (self.name, roll_trip+desc.check, target.get_name(), opposed_roll))
         else:
             print("%s misses its trip attack %s with roll %s" % (self.name, target.get_name(), roll_info))
 
@@ -941,9 +979,8 @@ class Combatant(Entity):
 class TurnState(object):
     def __init__(self):
         self.moves_left = 0
-        self.move_actions = 1
+        self.move_actions = 2
         self.standard_actions = 1
-        self.full_round_actions = 1
         self.move_5ft = 1
         self.swift_actions = 1
         self.made_attack = 0
@@ -956,7 +993,10 @@ class TurnState(object):
         self.attacks = attacks
 
     # Use attack from generated attack list
-    def use_attack(self):
+    def use_attack(self) -> AttackDesc:
+        """
+        :return: AttackDesc
+        """
         if len(self.attacks) > 0:
             attack = self.attacks.pop(0)
             self.made_attack += 1
@@ -968,30 +1008,35 @@ class TurnState(object):
     def use_move(self, real_move = True):
         if real_move:
             self.move_5ft = 0
-        self.full_round_actions = 1
+        self.move_actions -= 1
 
     # Returns true if character has attack actions
     def can_attack(self):
-        return (self.full_round_actions > 0 or self.standard_actions > 0) and len(self.attacks) > 0
+        return self.standard_actions > 0 and len(self.attacks) > 0
 
     def can_move(self):
-        return self.moves_left > 0 and self.move_actions > 0
+        return self.move_actions > 0 or self.standard_actions > 0
 
     def can_5ft_step(self):
         return self.move_5ft > 0
 
     # Use standard action
     def use_standard(self, attack=False):
-        self.standard_actions = 0
-        if not attack:
-            self.full_round_actions = 0
+        if not attack and self.standard_actions > 0:
             self.made_attack = 1
+            self.move_actions -= 1
+            self.standard_actions -= 1
+        elif attack and self.made_attack > 0:
+            self.move_actions = 0
+        self.standard_actions = 0
 
     # Use full round action
     def use_full_round(self):
-        self.standard_actions = 0
-        self.full_round_actions = 0
-        self.move_actions = 0
+        if self.standard_actions > 0 and self.move_actions > 0:
+            self.standard_actions -= 1
+            self.move_actions -= 1
+            return True
+        return False
 
     def complete(self):
         return not self.can_attack() and not self.can_move()

@@ -10,6 +10,7 @@ from battle.dice import d20
 
 logger = logging.getLogger(__name__)
 
+"""
 char = Character("dummy")
 
 
@@ -39,15 +40,15 @@ while generated < 3:
     else:
         print("%s - sum_mod=%d" % (stats, sum_mod))
         generated+=1
-
+"""
 
 center_x = 15
 center_y = 15
 
 battle = battle.Battle(30, 30)
 
-draw_cross(battle.grid, center_x, center_y, 5)
-draw_cross(battle.grid, center_x+1, center_y, 5)
+#draw_cross(battle.grid, center_x, center_y, 5)
+#draw_cross(battle.grid, center_x+1, center_y, 5)
 draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
 
 char1 = Character("Bob", brain=brain.StandAttackBrain(), model='type3')
@@ -58,7 +59,7 @@ char1.wear_item(dnd.weapon.longsword, ITEM_SLOT_OFFHAND)
 char1.add_class_level(classes.Fighter, 8)
 char1.add_feat(dnd.feats.TwoWeaponFighting())
 char1.add_feat(dnd.feats.ImprovedTwoWeaponFighting())
-char1.add_feat(dnd.feats.WeaponFocus(dnd.weapon.bastard_sword))
+char1.add_feat(dnd.feats.OversizedTwoWeaponFighting())
 char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
 
 '''
@@ -74,8 +75,7 @@ char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
 '''
 
 
-char2 = make_shield_fighter('Roy1')
-char2.model = 'type2'
+char2 = make_shield_fighter('Roy1', model='type2')
 #char3 = make_twf_fighter('Roy2')
 char4 = make_monk('Monky')
 
@@ -84,7 +84,7 @@ char4 = make_monk('Monky')
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
 battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
 
-battle.add_combatant(char2, center_x + 10, center_y, faction="team blue")
+#battle.add_combatant(char2, center_x + 10, center_y, faction="team blue")
 #battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
 battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
 """

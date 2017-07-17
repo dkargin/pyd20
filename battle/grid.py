@@ -53,6 +53,9 @@ class Point:
     def __str__(self):
         return "(%d;%d)" % (self.x, self.y)
 
+    def __repr__(self):
+        return "Point(%d;%d)" % (self.x, self.y)
+
 
 def get_line(start, end):
     """Bresenham's Line Algorithm

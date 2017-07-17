@@ -160,11 +160,12 @@ class PathFinder(object):
         path = Path(self.grid)
         # Building reversed path
         current_node = start
-        path.append(start)
+        path.append(Point(x=current_node.x, y=current_node.y))
         while current_node._predecessor is not None:
             current_node = current_node._predecessor
             if current_node != start:
                 path.append(Point(x=current_node.x, y=current_node.y))
+
         # Flipping back reversed path
         path.reverse()
         return path

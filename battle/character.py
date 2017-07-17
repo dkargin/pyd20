@@ -547,16 +547,17 @@ class Feat(object):
     """
     :type name: str
     :type prerequisites: list
-    :type benefit: str
+    :type _benefit: str
     """
     __ALL_FEATS = list()
 
+    # Feat requirements
     REQUIRE_FEATS = 1
     REQUIRE_BAB = 2
     REQUIRE_STAT = 3
     REQUIRE_SKILL = 4
 
-    def __init__(self, name=None, prerequisites=list(), benefit=None):
+    def __init__(self, name=None, prerequisites=list(), **kwargs):
         """
         Creates a Feat object
 
@@ -566,7 +567,12 @@ class Feat(object):
         """
         self.name = name
         self.prerequisites = prerequisites
-        self.benefit = benefit
+        self._benefit = kwargs.get('benefit', "")
+        self._priority = 100
+
+    @property
+    def priority(self):
+        return self._priority
 
     @staticmethod
     def available_feats():
@@ -647,6 +653,9 @@ class Feat(object):
         return character.has_feat(prequisite)
 
     def __repr__(self):
+        return "<" + self.name + ">"
+
+    def __str__(self):
         return "<" + self.name + ">"
 
     def apply(self, combatant: Combatant):

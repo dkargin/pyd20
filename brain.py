@@ -155,14 +155,13 @@ class Brain(object):
         if self.slave.opportunities_left() > 0 and state.attack_AoO is not None:
             print("%s uses opportunity to attack %s" % (self.slave.get_name(), target.get_name()))
             desc = self.slave.calculate_attack_of_opportunity(target)
-            yield from self.slave.do_action_strike(desc)
+            yield from self.slave.do_action_strike(battle, desc)
 
     def get_turn_state(self) -> TurnState:
         return self.slave.get_turn_state()
 
     # Estimate fight probabilities against specified enemy
     def estimate_battle(self, enemy: Combatant):
-        AC = enemy.get_armor_class()
         attacks = self.slave.generate_bab_chain(enemy)
         total_dmg = 0
         strikes = []
@@ -181,6 +180,10 @@ class Brain(object):
                 return True
         return False
 
+    def can_trip(self):
+        slave = self.slave
+        return slave.get_main_weapon().can_trip() or slave.has_status_flag(STATUS_HAS_IMPROVED_TRIP)
+
     def on_make_attack(self, desc):
         pass
 
@@ -198,31 +201,38 @@ class MoveAttackBrain(Brain):
             print("%s has no targets" % self.slave.get_name())
             return
 
-        if self.slave.has_status_flag(STATUS_PRONE):
-            yield StandUpAction(self.slave)
+        while not state.complete():
+            if self.slave.has_status_flag(STATUS_PRONE):
+                yield StandUpAction(self.slave)
 
-        # 2. If enemy is in range - full round attack
-        if self.slave.is_adjacent(self.target):
-            self.logger.debug("target is near, can attack")
-            # Use all the attacks
-            while state.can_attack():
+            # TODO: Can attack after movement
+
+            # 2. If enemy is in range - full round attack
+            if self.slave.is_adjacent(self.target):
+                self.logger.debug("target is near, can attack")
+                # Use all the attacks
                 if self.target.is_consciousness():
                     # Mark that we have used an action
                     desc = state.use_attack()
                     desc.update_target(self.target)
                     self.on_make_attack(desc)
-                    # TODO: update attack data according to selected target or custom attack
-                    yield AttackAction(self.slave, desc)
-                    #yield from battle.make_action_strike(self.slave, state, self.target, desc)
+
+                    if not self.target.has_status_flag(STATUS_PRONE) and self.can_trip():
+                        desc.method = 'trip'
+                        yield TripAttackAction(self.slave, desc)
+                    else:
+                        yield AttackAction(self.slave, desc)
                 else:
                     self.target = None
                     break
 
-        if state.can_move() and self.target is not None:
-            self.logger.debug("farget %s is away. Finding path" % self.target.name)
-            path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
-            self.logger.debug("found path of %d feet length" % path.length())
-            yield from battle.make_action_move_tiles(self.slave, state, path)
+            if state.can_move() and self.target is not None:
+                self.logger.debug("target %s is away. Finding path" % self.target.name)
+                path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
+                self.logger.debug("found path of %d feet length" % path.length())
+                yield from battle.make_action_move_tiles(self.slave, state, path)
+
+        self.logger.debug("%s has done thinking" % self.slave.name)
 
 
 # Brain that attacks only if enemy is adjacent

@@ -52,7 +52,7 @@ class BattleAction(object):
     """
     def __init__(self, combatant: Combatant, **kwargs):
         self._combatant = combatant
-        self._duration = kwargs.get('duration', DURATION_STANDARD)
+        self._duration = kwargs.get('duration', ACTION_TYPE_STANDARD)
 
     # Get duration of the action
     @property
@@ -118,13 +118,13 @@ class AttackAction(BattleAction):
     """
     Implements animation for a single attack
     """
-    def __init__(self, combatant, attack_desc: Combatant):
+    def __init__(self, combatant: Combatant, attack_desc: AttackDesc):
         super(AttackAction, self).__init__(combatant)
         self._desc = attack_desc
 
     def execute(self, battle: Battle):
         desc = self._desc
-        yield from self._combatant.do_action_strike(desc)
+        yield from self._combatant.do_action_strike(battle, desc)
 
     def text(self):
         return " attacks %s" % self._target
@@ -137,13 +137,14 @@ class AttackAction(BattleAction):
 
 
 class TripAttackAction(BattleAction):
-    def __init__(self, combatant, attack_desc: Combatant):
-        super(AttackAction, self).__init__(combatant)
+    def __init__(self, combatant: Combatant, attack_desc: AttackDesc):
+        super(TripAttackAction, self).__init__(combatant)
         self._desc = attack_desc
+        self._desc.method = 'trip'
 
     def execute(self, battle: Battle):
         desc = self._desc
-        yield from self._combatant.do_action_trip_attack(desc)
+        yield from self._combatant.do_action_trip_attack(battle, desc)
 
     def text(self):
         return " attacks %s" % self._target
@@ -153,6 +154,7 @@ class TripAttackAction(BattleAction):
 
     def is_move_action(self):
         return False
+
 
 # Stand up from prone position
 class StandUpAction(BattleAction):
@@ -168,10 +170,7 @@ class StandUpAction(BattleAction):
         combatant.remove_status_flag(STATUS_PRONE)
         success = True
         if self._provoke:
-            enemies = battle.get_threatening_enemies(combatant, self)
-            for enemy in enemies:
-                yield from enemy.respond_provocation(battle, self._combatant, self)
-                # TODO: roll AoO and check if it really interrupts
+            yield from battle.provoke_opportunity(combatant, self)
 
         if not success:
             return False
@@ -212,22 +211,19 @@ class MoveAction(BattleAction):
         return [tile for tile, cost in self._path]
 
     def duration(self):
-        return DURATION_MOVE
+        return ACTION_TYPE_MOVE
 
     def execute(self, battle: Battle):
         combatant = self._combatant
         state = self._get_turn_state()
 
-        print("moving %s from %s to %s, moves=%d, tiles=%d" % (str(combatant), str(combatant.get_coord()), str(self._finish), self.cost(), len(self._path)))
+        print("moving %s at %s from %s to %s, moves=%d, tiles=%d" % (str(combatant), str(combatant.get_coord()), str(combatant.get_coord()), str(self._finish), self.cost(), len(self._path)))
         # AoO can interupt movement
         # 5ft step still can provoke
         # Not moving still can provoke
         success = True
         if self._provoke:
-            enemies = battle.get_threatening_enemies(combatant, self)
-            for enemy in enemies:
-                yield from enemy.respond_provocation(battle, self._combatant, self)
-                # TODO: roll AoO and check if it really interrupts
+            yield from battle.provoke_opportunity(combatant, self)
 
         if not success:
             return False

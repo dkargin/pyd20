@@ -22,8 +22,8 @@ def draw_block(grid, type, x0, y0, width, height):
 
 
 # Create shield fighter
-def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
-    char = Character(name, brain=brain.MoveAttackBrain())
+def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10], **kwargs):
+    char = Character(name, brain=brain.MoveAttackBrain(), **kwargs)
     char.set_stats(*stats)
     char.wear_item(dnd.armor.full_plate, ITEM_SLOT_ARMOR)
     char.wear_item(dnd.armor.tower_shield, ITEM_SLOT_OFFHAND)
@@ -33,15 +33,21 @@ def make_shield_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
 
 
 # Create dual weapons fighter
-def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10]):
-    char = Character(name, brain=brain.MoveAttackBrain())
+def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10], **kwargs):
+    char = Character(name, brain=brain.MoveAttackBrain(), **kwargs)
     char.set_stats(*stats)
     char.wear_item(dnd.armor.full_plate, ITEM_SLOT_ARMOR)
-    char.wear_item(dnd.weapon.longsword, ITEM_SLOT_MAIN)
-    char.wear_item(dnd.weapon.shortsword, ITEM_SLOT_OFFHAND)
+    char.wear_item(dnd.weapon.bastard_sword, ITEM_SLOT_MAIN)
+    char.wear_item(dnd.weapon.longsword, ITEM_SLOT_OFFHAND)
     char.add_class_level(classes.Fighter, 6)
+    # 1,1,2,3,4,6,6
     char.add_feat(dnd.feats.TwoWeaponFighting())
     char.add_feat(dnd.feats.ImprovedTwoWeaponFighting())
+    char.add_feat(dnd.feats.OversizedTwoWeaponFighting())
+    #char.add_feat(dnd.feats.Dodge())
+    #char.add_feat(dnd.feats.Mobility())
+    #char.add_feat(dnd.feats.())
+
     return char
 
 # Create dual weapons fighter
@@ -50,7 +56,6 @@ def make_archer(name, stats=[13, 18, 16, 10, 10, 10]):
     char.set_stats(*stats)
     char.add_class_level(classes.Fighter, 6)
     char.add_feat(dnd.feats.WeaponFocus(dnd.weapon.longbow_composite))
-    char.add_feat(dnd.feats.ImprovedTwoWeaponFighting())
 
     char.wear_item(dnd.armor.banded_mail, ITEM_SLOT_ARMOR)
     char.wear_item(dnd.weapon.longbow_composite, ITEM_SLOT_MAIN)
@@ -67,7 +72,6 @@ def make_monk(name, stats=[14, 14, 16, 10, 16, 8]):
     char.add_class_level(classes.Monk, 6)
     char.add_feat(dnd.feats.CombatReflexes())
     char.add_feat(dnd.feats.DeftOpportunist())
-
-    char.allow_effect_activation(battle.combatant.StyleFlurryOfBlows())
+    char.add_feat(dnd.feats.ImprovedTrip())
 
     return char

@@ -13,16 +13,29 @@ LOW = 0
 MEDIUM = 1
 HIGH = 2
 
+STATUS_LAST = 0
+
+def new_status():
+    global STATUS_LAST
+    STATUS_LAST += 1
+    result = STATUS_LAST
+    return result
 
 # Some boolean statuses that character can have
-STATUS_PRONE = 1
-STATUS_HEAVY_ARMOR = 2
-STATUS_IGNORE_ARMOR_MOVE = 3
-STATUS_PARALYZED = 4
-STATUS_BLIND = 5        # Should it have simple status, or complex effect?
-STATUS_STUNNED = 6
-STATUS_FLATFOOTED = 7
+STATUS_PRONE = new_status()
+STATUS_HEAVY_ARMOR = new_status()
+STATUS_IGNORE_ARMOR_MOVE = new_status()
+STATUS_PARALYZED = new_status()
+STATUS_BLIND = new_status()        # Should it have simple status, or complex effect?
+STATUS_STUNNED = new_status()
+STATUS_FLATFOOTED = new_status()
 
+# Some feats
+STATUS_HAS_IMPROVED_TRIP = new_status()
+STATUS_HAS_IMPROVED_DISARM = new_status()
+STATUS_HAS_IMPROVED_SUNDER = new_status()
+STATUS_HAS_IMPROVED_GRAPPLE = new_status()
+STATUS_HAS_IMPROVED_UNARMED = new_status()
 
 ITEM_SLOT_ARMOR = 0
 ITEM_SLOT_MAIN = 1
@@ -77,14 +90,17 @@ SIZE_CATEGORIES = [
 
 
 # Action durations
-DURATION_STANDARD = 0
-DURATION_MOVE = 1
-DURATION_FULLROUND = 2
-DURATION_FREE = 3
-DURATION_SWIFT = 4
+ACTION_TYPE_STANDARD = 0
+ACTION_TYPE_MOVE = 1
+ACTION_TYPE_FULLROUND = 2
+ACTION_TYPE_FREE = 3
+ACTION_TYPE_SWIFT = 4
 # Expends attack action slot. Can be standard action,
 # one of full round attacks, or one of attacks of opportunity
-DURATION_ATTACK = 5
+ACTION_TYPE_ATTACK = 5
+
+ACTION_TYPE_NONE = 6
+
 
 GENDER_NONE = 0
 GENDER_FEMALE = 1
