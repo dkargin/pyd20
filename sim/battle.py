@@ -2,7 +2,8 @@ import types
 from .dice import *
 from sim.grid import Tile, Grid
 from sim.pathfinder import PathFinder
-from .combatant import Combatant, TurnState, AttackDesc
+from .combatant import Combatant, AttackDesc
+from .turnstate import TurnState
 
 import sim.actions
 import sim.events as events

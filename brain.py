@@ -256,7 +256,6 @@ class StandAttackBrain(Brain):
 
         if self.target is None:
             print("%s has no targets" % self.slave.get_name())
-            #yield WaitAction(self.slave)
             return
 
         if self.slave.has_status_flag(STATUS_PRONE):

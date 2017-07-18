@@ -1,10 +1,11 @@
+import copy
 import json
 import os
-import copy
 
+import dnd.styles as styles
+from .combatant import Combatant
 from .core import *
 from .dice import *
-from .combatant import Combatant
 
 
 def relative_path():
@@ -61,6 +62,8 @@ class Character(Combatant):
         self._items = {}
         self._skills = {}
         self._race = None
+
+        self.allow_effect_activation(styles.StyleDefenciveFight())
 
     def __repr__(self):
         return "<" + self._name + ">"

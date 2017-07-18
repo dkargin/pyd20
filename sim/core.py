@@ -15,6 +15,7 @@ HIGH = 2
 
 STATUS_LAST = 0
 
+
 def new_status():
     global STATUS_LAST
     STATUS_LAST += 1
@@ -88,17 +89,26 @@ SIZE_CATEGORIES = [
     SizeDesc(name='colossal',   tiles=5, height=[64, 9999], width=[125000, 999999999], ac_mod=-8),
 ]
 
+ACTION_TYPE_LAST = 0
+
+
+def gen_action_type():
+    global ACTION_TYPE_LAST
+    result = ACTION_TYPE_LAST
+    ACTION_TYPE_LAST += 1
+    return result
 
 # Action durations
-ACTION_TYPE_STANDARD = 0
-ACTION_TYPE_MOVE = 1
-ACTION_TYPE_FULLROUND = 2
-ACTION_TYPE_FREE = 3
-ACTION_TYPE_SWIFT = 4
+ACTION_TYPE_STANDARD = gen_action_type()            # Generic standard action
+ACTION_TYPE_MOVE = gen_action_type()                # Move action, when combatant actually changes its position
+ACTION_TYPE_MOVE_LIKE = gen_action_type()           # Action in place of move action, without actual movement
+ACTION_TYPE_FULL_ROUND = gen_action_type()          # Generic full round action
+ACTION_TYPE_FULL_ROUND_ATTACK = gen_action_type()   # Full round attack
+ACTION_TYPE_FREE = gen_action_type()
+ACTION_TYPE_SWIFT = gen_action_type()
 # Expends attack action slot. Can be standard action,
 # one of full round attacks, or one of attacks of opportunity
-ACTION_TYPE_ATTACK = 5
-
+ACTION_TYPE_ATTACK = gen_action_type()
 ACTION_TYPE_NONE = 6
 
 

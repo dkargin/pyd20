@@ -3,7 +3,7 @@ from sim.combatant import *
 from sim.item import *
 
 import dnd.weapon as weapons
-
+import dnd.styles as styles
 
 class TwoWeaponFighting(Feat):
     def __init__(self):
@@ -325,11 +325,11 @@ class SpinningHalberd(Feat):
                 c.add_bonus_strike(-5, weapon)
 
         def on_start_defence(c: Combatant, effect):
-            if isinstance(effect, StyleDefenciveFight):
+            if isinstance(effect, styles.StyleDefenciveFight):
                 c.modify_ac_dodge(1, self)
 
         def on_stop_defence(c: Combatant, effect):
-            if isinstance(effect, StyleDefenciveFight):
+            if isinstance(effect, styles.StyleDefenciveFight):
                 c.modify_ac_dodge(-1, self)
 
         events = combatant.event_manager()
@@ -343,7 +343,7 @@ class FlurryOfBlows(Feat):
         super(FlurryOfBlows, self).__init__("Flurry of blows")
 
     def apply(self, combatant: Combatant):
-        combatant.allow_effect_activation(StyleFlurryOfBlows(), self)
+        combatant.allow_effect_activation(styles.StyleFlurryOfBlows(), self)
 
 
 # Timed activation

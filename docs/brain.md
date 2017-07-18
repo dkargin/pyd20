@@ -19,3 +19,50 @@ Custom attacks
     - Stand up
 - Disarm
 - Sunder
+
+# A way towards smarter brain #
+
+Proposing another brain update loop:
+
+1. Generate possible actions for current turn state:
+2. If no actions available - end turn (or planning)
+3. Pick best actions and execute
+4. GoTo 1
+
+Goal example: survive and ...
+
+# Possible actions #
+
+
+## Move ##
+
+There are damn many variants for movement. Ideally we should provide here all cells within a reach
+
+## Standard action towards target ##
+
+We should find all adjacent enemies available for this action. We should prune this list by picking most dangerous targets
+
+## Use feat ##
+
+- Use skill
+
+## Run full attack action ##
+
+There can be 5ft step as well. Also there can be
+
+## Spring attack ##
+
+Generally speaking it is damn complex thing for planning, because it consists of two movements
+
+But the second movement can be 'reduced' to 'move to safest place' case
+
+
+I guess I should implement spells and abilities first before returning to this planning brain
+
+
+# General thoughts #
+
+1. move;attack1
+2. attack1; move
+3. (attack1; 5ft; attack2; attack3)
+4.
