@@ -1,11 +1,11 @@
 from .core import *
-from battle.dice import *
-import battle.item
+from sim.dice import *
+import sim.item
 from .entity import Entity
 import copy
 import animation
 
-from battle.events import AnimationEvent
+from sim.events import AnimationEvent
 
 
 class AttackDesc:
@@ -22,7 +22,7 @@ class AttackDesc:
     :type damage: Dice
     :type bonus_damage: Dice
     """
-    def __init__(self, weapon: battle.item.Weapon, **kwargs):
+    def __init__(self, weapon: sim.item.Weapon, **kwargs):
         self.attack = kwargs.get('attack', 0)
         self.damage = kwargs.get('damage', Dice())
         # Diced bonus damage, like sneak attack, elemental damage and so on
@@ -385,7 +385,7 @@ class Combatant(Entity):
     def get_armor_type(self):
         armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
         if armor is None:
-            return battle.item.Armor.ARMOR_TYPE_NONE
+            return sim.item.Armor.ARMOR_TYPE_NONE
         return armor.armor_type()
 
     def remove_stat_mod(self, stat, source):
@@ -630,10 +630,10 @@ class Combatant(Entity):
     def get_attack(self, target=None):
         return self._BAB + self.strength_modifier()
 
-    def get_main_weapon(self, default=None) -> battle.item.Weapon:
+    def get_main_weapon(self, default=None) -> sim.item.Weapon:
         return self._equipped.get(ITEM_SLOT_MAIN, default)
 
-    def get_offhand_weapon(self, default=None)-> battle.item.Weapon:
+    def get_offhand_weapon(self, default=None)-> sim.item.Weapon:
         return self._equipped.get(ITEM_SLOT_OFFHAND, default)
 
     # Fill in attack for specified weapon and wield
@@ -980,6 +980,7 @@ class TurnState(object):
     def __init__(self):
         self.moves_left = 0
         self.move_actions = 2
+        self.current_action = ACTION_TYPE_NONE
         self.standard_actions = 1
         self.move_5ft = 1
         self.swift_actions = 1
@@ -1005,10 +1006,12 @@ class TurnState(object):
         return None
 
     # Use move action
-    def use_move(self, real_move = True):
-        if real_move:
+    def use_duration(self, duration):
+        if duration == ACTION_TYPE_MOVE:
+            self.move_actions -= 1
             self.move_5ft = 0
-        self.move_actions -= 1
+        elif duration == ACTION_TYPE_STANDARD:
+            self.standard_actions -= 1
 
     # Returns true if character has attack actions
     def can_attack(self):

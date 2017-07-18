@@ -1,7 +1,7 @@
 import pygame
-from battle.grid import *
+from sim.grid import *
 import pygame.transform as transform
-from battle.entity import *
+from sim.entity import *
 
 
 class SpriteSheet:

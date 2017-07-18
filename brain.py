@@ -1,7 +1,7 @@
 import math
 import logging
-from battle.actions import *
-from battle.combatant import *
+from sim.actions import *
+from sim.combatant import *
 
 
 # Estimate fight probabilities against specified enemy
@@ -230,7 +230,14 @@ class MoveAttackBrain(Brain):
                 self.logger.debug("target %s is away. Finding path" % self.target.name)
                 path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
                 self.logger.debug("found path of %d feet length" % path.length())
+                duration = ACTION_TYPE_MOVE
+                if state.move_actions == 0:
+                    duration = ACTION_TYPE_STANDARD
+                    state.moves_left = self.slave.move_speed
+
                 yield from battle.make_action_move_tiles(self.slave, state, path)
+
+                state.use_duration(duration)
 
         self.logger.debug("%s has done thinking" % self.slave.name)
 

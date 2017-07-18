@@ -1,5 +1,5 @@
-from battle.core import *
-from battle.dice import *
+from sim.core import *
+from sim.dice import *
 
 
 class Item(object):

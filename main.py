@@ -4,9 +4,9 @@ import pygame
 
 from battle_utils import *
 from render.render import Renderer
-import battle.battle as battle
-import battle.events as events
-from battle.dice import d20
+import sim.battle as battle
+import sim.events as events
+from sim.dice import d20
 
 logger = logging.getLogger(__name__)
 
@@ -84,9 +84,9 @@ char4 = make_monk('Monky')
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
 battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
 
-#battle.add_combatant(char2, center_x + 10, center_y, faction="team blue")
+battle.add_combatant(char2, center_x+10, center_y+1, faction="team blue")
 #battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
-battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
+#battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
 """
 battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")
 """

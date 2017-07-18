@@ -1,6 +1,6 @@
-from battle.character import *
+from sim.character import *
 import dnd.feats
-import battle.progression as P
+import sim.progression as P
 
 Fighter = CharacterClass("fighter", P.Basic(bab=HIGH, hits=10, fort=HIGH, ref=LOW, will=LOW))
 

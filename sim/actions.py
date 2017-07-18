@@ -2,7 +2,7 @@
 from .battle import *
 from .core import *
 import animation
-import battle.events as events
+import sim.events as events
 
 ACTION_RESULT_SUCCESS = 0
 ACTION_RESULT_FAILED = 1

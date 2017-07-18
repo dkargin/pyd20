@@ -1,11 +1,11 @@
 import types
 from .dice import *
-from battle.grid import Tile, Grid
-from battle.pathfinder import PathFinder
+from sim.grid import Tile, Grid
+from sim.pathfinder import PathFinder
 from .combatant import Combatant, TurnState, AttackDesc
 
-import battle.actions
-import battle.events as events
+import sim.actions
+import sim.events as events
 
 
 class Battle(object):
@@ -223,7 +223,7 @@ class Battle(object):
             cost = 5
             tiles_moved.append((tile, cost))
             if self.position_threatened(combatant, tile.x, tile.y):
-                yield battle.actions.MoveAction(combatant, tiles_moved)
+                yield sim.actions.MoveAction(combatant, tiles_moved)
                 tiles_moved = []
 
             state.moves_left -= cost
@@ -232,6 +232,5 @@ class Battle(object):
 
         # One last step
         if len(tiles_moved) > 0 is not None:
-            yield battle.actions.MoveAction(combatant, tiles_moved)
+            yield sim.actions.MoveAction(combatant, tiles_moved)
 
-        state.use_move()

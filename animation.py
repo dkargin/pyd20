@@ -1,6 +1,6 @@
 import math
-from battle.entity import *
-from battle.grid import Point
+from sim.entity import *
+from sim.grid import Point
 
 
 class Animation(object):

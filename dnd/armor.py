@@ -1,4 +1,4 @@
-from battle.item import Armor
+from sim.item import Armor
 
 
 # No armor

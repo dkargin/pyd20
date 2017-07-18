@@ -1,7 +1,7 @@
 from unittest import TestCase
-from battle.character import Character, Feat
-from battle.core import *
-import battle.dice as dice
+from sim.character import Character, Feat
+from sim.core import *
+import sim.dice as dice
 import dnd
 import random
 import math

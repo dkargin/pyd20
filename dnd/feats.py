@@ -1,6 +1,6 @@
-from battle.character import Feat, Character
-from battle.combatant import *
-from battle.item import *
+from sim.character import Feat, Character
+from sim.combatant import *
+from sim.item import *
 
 import dnd.weapon as weapons
 

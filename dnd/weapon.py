@@ -1,4 +1,4 @@
-from battle.item import *
+from sim.item import *
 
 # Simple weapons
 dagger = Weapon(name='dagger', damage=d4,

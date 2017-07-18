@@ -1,5 +1,5 @@
 import pygame
-from battle.grid import *
+from sim.grid import *
 
 
 # Tile generation rules

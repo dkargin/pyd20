@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from battle.grid import Grid, PathFinder, OccupationTemplate
+from sim.grid import Grid, PathFinder, OccupationTemplate
 
 
 class TestGrid(TestCase):

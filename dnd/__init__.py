@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #from character import *
 
-from battle.character import Race
+from sim.character import Race
 
 '''
 Class.load("dnd/classes.json")

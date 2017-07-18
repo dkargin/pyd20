@@ -1,7 +1,7 @@
 import pygame
 import math
-from battle.combatant import Combatant
-from battle.grid import *
+from sim.combatant import Combatant
+from sim.grid import *
 from .tiler import Tiler
 from .model import ModelDrawer
 

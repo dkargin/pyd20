@@ -2,10 +2,10 @@ import brain
 import dnd.armor
 import dnd.feats
 import dnd.weapon
-from battle.character import Character
-from battle.core import *
-from battle.grid import *
-from battle.combatant import *
+from sim.character import Character
+from sim.core import *
+from sim.grid import *
+from sim.combatant import *
 from dnd import classes
 
 

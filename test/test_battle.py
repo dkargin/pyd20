@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from battle.actions import *
-from battle.grid import Grid
-import battle.events as events
+from sim.actions import *
+from sim.grid import Grid
+import sim.events as events
 
 class BattleTest(TestCase):
 
