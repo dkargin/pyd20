@@ -1,4 +1,3 @@
-#import core
 import random
 import math
 from .core import unit_length
@@ -132,7 +131,7 @@ class Grid(object):
         Creates a Grid object
         """
         self._size = 5.0
-        self.set_tilesize(5.0)
+        self.set_tile_size(5.0)
         self._width = width
         self._height = height
         self._revision = 0
@@ -143,13 +142,13 @@ class Grid(object):
 
         for y in range(0, height):
             for x in range(0, width):
-                self.__grid.append(Tile(x,y))
+                self.__grid.append(Tile(x, y))
 
-    def set_tilesize(self, size):
+    def set_tile_size(self, size):
         """
-        sets the tilesize in the current unit
+        sets the tile size in the current unit
 
-        :param float size: the new tilesize
+        :param float size: the new tile size
         """
         self._size = size / unit_length
 
@@ -161,7 +160,7 @@ class Grid(object):
 
     def get_tilesize(self):
         """
-        returns the tilesize in the current unit
+        returns size of a tile in the current unit
 
         :rtype: int
         """
@@ -246,11 +245,16 @@ class Grid(object):
     def revision(self):
         return self._revision
 
-    # Set terrain type for a tile
-    def set_terrain(self, x, y, type):
+    def set_terrain(self, x, y, t):
+        """
+        Set terrain type for a tile
+        :param x:int x coordinate of a tile
+        :param y:int y coordinate of a tile
+        :param t:int terrain type
+        """
         tile = self.get_tile(x, y)
 
-        if tile.set_terrain(type):
+        if tile.set_terrain(t):
             self._revision += 1
 
     # Get tile reference
@@ -337,10 +341,9 @@ class Tile(object):
 
     :type x: int
     :type y: int
-    :type _g: int Pathfinder stuff
-    :type _successor: Tile | None
-    :type _predecessor: Tile | None
-    :type _occupation: list
+    :type terrain: int
+    :type occupation: list
+    :type threaten: list
     """
     def __init__(self, x, y):
         """
@@ -389,16 +392,6 @@ class Tile(object):
     def __repr__(self):
         return "<Tile " + str(self.x) + "x" + str(self.y) + " " + str(self.occupation) + ">"
 
-    def reset_g(self):
-        """
-        auxiliary method used for pathfinding. resets calculated g value
-        """
-        self._g = 0
-
-    def __lt__(self, other):
-        if isinstance(other, self.__class__):
-            return self._g < other._g
-
     def __hash__(self):
         return id(self)
 
@@ -443,28 +436,28 @@ class OccupationTemplate:
         def threaten_near(x, y):
             return x in range(-reach, size + reach) and y in range(-reach, size + reach)
 
-        def threaten_far(x,y):
+        def threaten_far(x, y):
             return x in range(-far_reach, size + far_reach) and y in range(-far_reach, size + far_reach)
 
         self.block_size = 2 * far_reach + self.size
         self.offset = far_reach
         self.template = []
 
-        for x in range(-far_reach, size + far_reach):
-            for y in range(-far_reach, size + far_reach):
+        for cx in range(-far_reach, size + far_reach):
+            for cy in range(-far_reach, size + far_reach):
                 t = 0
-                if occupy(x,y):
+                if occupy(cx, cy):
                     t |= self.MARK_OCCUPY
-                    self.tiles_occupied.append((x, y))
-                elif threaten_near(x,y):
+                    self.tiles_occupied.append((cx, cy))
+                elif threaten_near(cx, cy):
                     if self.near:
                         t |= self.MARK_THREATEN_NEAR
-                        self.tiles_threatened.append((x,y))
-                elif self.far and threaten_far(x,y):
+                        self.tiles_threatened.append((cx, cy))
+                elif self.far and threaten_far(cx, cy):
                     t |= self.MARK_THREATEN_FAR
-                    self.tiles_threatened.append((x, y))
+                    self.tiles_threatened.append((cx, cy))
 
-                tile = (x, y, t)
+                tile = (cx, cy, t)
                 self.template.append(tile)
         pass
 
@@ -474,15 +467,15 @@ class OccupationTemplate:
             grid.append([' '] * self.block_size)
 
         for tile in self.template:
-            x,y,type = tile
+            x, y, t = tile
             x += self.offset
             y += self.offset
 
-            if type & self.MARK_THREATEN_NEAR:
+            if t & self.MARK_THREATEN_NEAR:
                 grid[x][y] = '+'
-            if type & self.MARK_THREATEN_FAR:
+            if t & self.MARK_THREATEN_FAR:
                 grid[x][y] = '*'
-            if type & self.MARK_OCCUPY:
+            if t & self.MARK_OCCUPY:
                 grid[x][y] = 'X'
         result = ""
         for row in grid:

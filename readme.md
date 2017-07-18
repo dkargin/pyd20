@@ -43,11 +43,12 @@ Look at main.py.
 # Plan #
 
 1. Fix pathfinder
-    - combatant moves less tiles than it should
-    - combatant moves to the same tile sometimes
+    - combatant moves less tiles than it should         OK
+    - combatant moves to the same tile sometimes        OK
 1. Fix brain action sequence:
-    - passive brain can attack nearest enemy, if preferred target is far away
-    - aggressive brain does not attack after move action
+    - passive brain can attack nearest enemy, if preferred target is far away   Fixed
+    - aggressive brain does not attack after move action                        Fixed
+    - Only single round attacks. Need moar!
 1. Custom attacks:
     1. Charge attack
         - draw a line

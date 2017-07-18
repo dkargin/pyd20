@@ -20,15 +20,15 @@ class PathFinder(object):
         def __init__(self, x, y):
             self.x = x
             self.y = y
-            self._g = 0
-            self._h = 0
+            self.g = 0
+            self.h = 0
             self._lh = 0
-            self._predecessor = None
-            self._pathstate = 0
-            self._target_mark = 0
+            self.predecessor = None
+            self.pathstate = 0
+            self.target_mark = 0
 
         def __lt__(self, other):
-            return self._g < other._g
+            return self.g < other.g
 
         def __hash__(self):
             return id(self)
@@ -95,7 +95,7 @@ class PathFinder(object):
         return cost
 
     def _get_node(self, x, y):
-        index = x + y*self._width;
+        index = x + y*self._width
         node = self._node_index[index]
         if node is None:
             self._node_index[index] = node = PathFinder.Node(x,y)
@@ -132,25 +132,25 @@ class PathFinder(object):
             if move is not None:
                 yield move
 
-    def expand_tile(self, tile, costfn = default_cost):
+    def expand_tile(self, tile, costfn=default_cost):
         """
         :param tile:
         :param costfn: function for calculating tile cost
         :return:
         """
         # Check diagonals
-        for next, cellcost in self._get_adjacent(tile, tile.x, tile.y):
+        for adjacent, cell_cost in self._get_adjacent(tile, tile.x, tile.y):
             # Skip nodes that are already visited
-            if next._pathstate == self.search_index:
+            if adjacent.pathstate == self.search_index:
                 continue
-            next._g = tile._g + costfn(tile, next) + cellcost
-            next._predecessor = tile
-            self.push_node(next)
+            adjacent.g = tile.g + costfn(tile, adjacent) + cell_cost
+            adjacent.predecessor = tile
+            self.push_node(adjacent)
         pass
 
     def push_node(self, node):
-        node._pathstate = self.get_wave_index()
-        heapq.heappush(self.open_list, (node._g, node))
+        node.pathstate = self.get_wave_index()
+        heapq.heappush(self.open_list, (node.g, node))
 
     def pop_node(self):
         return heapq.heappop(self.open_list)[1]
@@ -160,11 +160,9 @@ class PathFinder(object):
         path = Path(self.grid)
         # Building reversed path
         current_node = start
-        #path.append(Point(x=current_node.x, y=current_node.y))
-        while current_node._predecessor is not None:
-            #if current_node != start:
+        while current_node.predecessor is not None:
             path.append(Point(x=current_node.x, y=current_node.y))
-            current_node = current_node._predecessor
+            current_node = current_node.predecessor
 
         # Flipping back reversed path
         path.reverse()
@@ -177,8 +175,8 @@ class PathFinder(object):
         return self.search_index+1
 
     def run_wave(self, start_node, finish_check):
-        start_node._g = 0
-        start_node._predecessor = None
+        start_node.g = 0
+        start_node.predecessor = None
         self.open_list = []
         self.push_node(start_node)
 
@@ -217,11 +215,11 @@ class PathFinder(object):
                 continue
             node = self._get_node(*tile)
             if node is not None:
-                node._target_mark = self.get_target_index()
+                node.target_mark = self.get_target_index()
 
         start_node = self._get_node(start_pos.x, start_pos.y)
-
-        return self.run_wave(start_node, lambda x: x._target_mark == self.get_target_index())
+        # Run wave and compile the path
+        return self.run_wave(start_node, lambda x: x.target_mark == self.get_target_index())
 
     def path_between_tiles(self, start_tile, dest_tile):
         self.sync_grid(self.grid)
