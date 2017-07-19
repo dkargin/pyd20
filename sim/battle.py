@@ -1,5 +1,6 @@
 import types
 from .dice import *
+from .core import *
 from sim.grid import Tile, Grid
 from sim.pathfinder import PathFinder
 from .combatant import Combatant, AttackDesc
@@ -124,7 +125,7 @@ class Battle(object):
         while True:
             dead = []
             self.round += 1
-            print("Starting round %d" % self.round)
+            print("======================================\nStarting round %d" % self.round)
             for combatant in self._combatants:
                 if combatant.is_dead():
                     dead.append(combatant)
@@ -205,33 +206,10 @@ class Battle(object):
         return False
 
     ############## Action generators ################
-    def provoke_opportunity(self, combatant, action):
+    def provoke_opportunity(self, combatant, action, exclude=[]):
         enemies = self.get_threatening_enemies(combatant, action)
         for enemy in enemies:
-            yield from enemy.respond_provocation(self, combatant, action)
+            if enemy not in exclude:
+                yield from enemy.respond_provocation(self, combatant, action)
 
-    def make_action_move_tiles(self, combatant: Combatant, state: TurnState, path):
-        # We should iterate all the tiles
-        tiles_moved = []
-        combatant.path = path
-
-        # [0,1,2,3,4,5,6]
-        # [0,0,0,T,T,0,0]
-        # Moves: 0->3, 3->4, 4->6
-        waypoints = path.get_path()
-        while len(waypoints) > 0:
-            tile = waypoints.pop(0)
-            cost = 5
-            tiles_moved.append((tile, cost))
-            if self.position_threatened(combatant, tile.x, tile.y):
-                yield sim.actions.MoveAction(combatant, tiles_moved)
-                tiles_moved = []
-
-            state.moves_left -= cost
-            if state.moves_left <= 0:
-                break
-
-        # One last step
-        if len(tiles_moved) > 0 is not None:
-            yield sim.actions.MoveAction(combatant, tiles_moved)
 

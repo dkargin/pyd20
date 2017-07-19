@@ -16,27 +16,28 @@ HIGH = 2
 STATUS_LAST = 0
 
 
-def new_status():
+def __new_status():
     global STATUS_LAST
     STATUS_LAST += 1
     result = STATUS_LAST
     return result
 
 # Some boolean statuses that character can have
-STATUS_PRONE = new_status()
-STATUS_HEAVY_ARMOR = new_status()
-STATUS_IGNORE_ARMOR_MOVE = new_status()
-STATUS_PARALYZED = new_status()
-STATUS_BLIND = new_status()        # Should it have simple status, or complex effect?
-STATUS_STUNNED = new_status()
-STATUS_FLATFOOTED = new_status()
+STATUS_PRONE = __new_status()
+STATUS_HEAVY_ARMOR = __new_status()
+STATUS_IGNORE_ARMOR_MOVE = __new_status()
+STATUS_PARALYZED = __new_status()
+STATUS_BLIND = __new_status()        # Should it have simple status, or complex effect?
+STATUS_STUNNED = __new_status()
+STATUS_FLATFOOTED = __new_status()
+STATUS_DAZED = __new_status()
 
 # Some feats
-STATUS_HAS_IMPROVED_TRIP = new_status()
-STATUS_HAS_IMPROVED_DISARM = new_status()
-STATUS_HAS_IMPROVED_SUNDER = new_status()
-STATUS_HAS_IMPROVED_GRAPPLE = new_status()
-STATUS_HAS_IMPROVED_UNARMED = new_status()
+STATUS_HAS_IMPROVED_TRIP = __new_status()
+STATUS_HAS_IMPROVED_DISARM = __new_status()
+STATUS_HAS_IMPROVED_SUNDER = __new_status()
+STATUS_HAS_IMPROVED_GRAPPLE = __new_status()
+STATUS_HAS_IMPROVED_UNARMED = __new_status()
 
 ITEM_SLOT_ARMOR = 0
 ITEM_SLOT_MAIN = 1
@@ -57,9 +58,6 @@ ALIGNMENT_NEUTRAL = "Neutral"
 ALIGNMENT_EVIL = "Evil"
 ALIGNMENT_CHAOTIC = "Chaotic"
 ALIGNMENT_LAWFUL = "Lawful"
-
-GENDER_MALE = "male"
-GENDER_FEMALE = "female"
 
 
 class SizeDesc:
@@ -92,29 +90,37 @@ SIZE_CATEGORIES = [
 ACTION_TYPE_LAST = 0
 
 
-def gen_action_type():
+def __gen_action_type():
     global ACTION_TYPE_LAST
     result = ACTION_TYPE_LAST
     ACTION_TYPE_LAST += 1
     return result
 
 # Action durations
-ACTION_TYPE_STANDARD = gen_action_type()            # Generic standard action
-ACTION_TYPE_MOVE = gen_action_type()                # Move action, when combatant actually changes its position
-ACTION_TYPE_MOVE_LIKE = gen_action_type()           # Action in place of move action, without actual movement
-ACTION_TYPE_FULL_ROUND = gen_action_type()          # Generic full round action
-ACTION_TYPE_FULL_ROUND_ATTACK = gen_action_type()   # Full round attack
-ACTION_TYPE_FREE = gen_action_type()
-ACTION_TYPE_SWIFT = gen_action_type()
-# Expends attack action slot. Can be standard action,
-# one of full round attacks, or one of attacks of opportunity
-ACTION_TYPE_ATTACK = gen_action_type()
-ACTION_TYPE_NONE = 6
-
+ACTION_TYPE_NONE = __gen_action_type()
+# Generic standard action
+ACTION_TYPE_STANDARD = __gen_action_type()
+# Move action, when combatant actually changes its position
+ACTION_TYPE_MOVE = __gen_action_type()
+# Action in place of move action, without actual movement
+ACTION_TYPE_MOVE_LIKE = __gen_action_type()
+# Generic full round action
+ACTION_TYPE_FULL_ROUND = __gen_action_type()
+# Full round attack
+ACTION_TYPE_FULL_ROUND_ATTACK = __gen_action_type()
+# Free action
+ACTION_TYPE_FREE = __gen_action_type()
+# Swift action. Can take place in any turn state
+ACTION_TYPE_SWIFT = __gen_action_type()
+# Expends attack action slot. Can be standard action, one of full round attacks, or one of attacks of opportunity
+ACTION_TYPE_ATTACK = __gen_action_type()
 
 GENDER_NONE = 0
 GENDER_FEMALE = 1
 GENDER_MALE = 2
+
+GENDER_MALE_STR = "male"
+GENDER_FEMALE_STR = "female"
 
 
 def roll_hits(base, roll, dc):
@@ -124,10 +130,10 @@ def roll_hits(base, roll, dc):
         return True
     return base + roll >= dc
 
+
 def ability_modifier(value):
     """
     calculates the ability modifier
-
     :rtype: int
     """
     if value % 2 != 0:
@@ -137,23 +143,24 @@ def ability_modifier(value):
 
 def bonus_spells(value):
     """
-    calculates the bonues spells available per ability score
+    calculates the bonus spells available per ability score
 
     :rtype: int
     """
     modifier = ability_modifier(value)
-    bonus_spells = list()
+    # Contains a list that maps spell level -> bonus spells provided
+    result = list()
     level = 0
     while modifier >= level:
         if level == 0:
-            bonus_spells.append(0)
+            result.append(0)
             level += 1
             continue
         bonus = (modifier - level + 1) / 4
         bonus = math.ceil(bonus)
-        bonus_spells.append(bonus)
+        result.append(bonus)
         level += 1
-    return bonus_spells
+    return result
 
 
 def needed_xp(level):

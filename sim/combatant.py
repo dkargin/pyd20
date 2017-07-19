@@ -280,6 +280,7 @@ class Combatant(Entity):
                 self._temp_hp
 
     def get_turn_state(self):
+        # TODO: should refactor it ?
         strikes = self.generate_bab_chain()
         self._turn_state.set_attacks(strikes)
         # Use the first strike for AoO
@@ -307,15 +308,9 @@ class Combatant(Entity):
         if self.has_status_flag(STATUS_HEAVY_ARMOR):
             self._move_penalty = 10
 
-        state.moves_left = self.move_speed
+        state.start_turn(self)
 
-        state.move_actions = 1
-        state.standard_actions = 1
-        state.full_round_actions = 1
-        state.move_5ft = 1
-        state.swift_actions = 1
         self._opportunities_used = []
-        #self._ac_dodge = 0
         self._events.on_turn_start(self)
         if brain:
             self._brain.prepare_turn(battle)
@@ -732,11 +727,6 @@ class Combatant(Entity):
         """
         return d20.roll() + self.dexterity_modifier()
 
-    # Get generator
-    def gen_brain_actions(self, battle):
-        if self._brain is not None:
-            yield from self._brain.make_turn(battle)
-
     def _set_attack_target(self, desc, target):
         self._events.on_select_attack_target(self, desc)
 
@@ -753,6 +743,21 @@ class Combatant(Entity):
             desc.attack -= 4
 
         return armor_class
+
+    def expend_attack(self, desc):
+        if desc in self._turn_state.attacks:
+            self._turn_state.attacks.remove(desc)
+        if desc in self._additional_strikes:
+            self._additional_strikes.remove(desc)
+
+    # Turn generators #
+
+    # Get generator
+    def gen_brain_actions(self, battle):
+        if self._brain is not None:
+            yield from self._brain.make_turn(battle)
+
+    # Action generators #
 
     # Execute strike action
     # All data is already set. Attack can be resolved right now
@@ -854,9 +859,32 @@ class Combatant(Entity):
 
         yield AnimationEvent(animation.MeleeAttackFinish(self, target))
 
-    def expend_attack(self, desc):
-        if desc in self._turn_state.attacks:
-            self._turn_state.attacks.remove(desc)
-        if desc in self._additional_strikes:
-            self._additional_strikes.remove(desc)
+    # Using move action
+    def do_action_move_tiles(self, battle, state: TurnState, path):
+        # We should iterate all the tiles
+        tiles_moved = []
+        self.path = path
+        # Distance traveled
+        traveled = 0
+        # [0,1,2,3,4,5,6]
+        # [0,0,0,T,T,0,0]
+        # Moves: 0->3, 3->4, 4->6
+        waypoints = path.get_path()
+        while len(waypoints) > 0:
+            tile = waypoints.pop(0)
+            cost = 5
+            tiles_moved.append((tile, cost))
+            if battle.position_threatened(self, tile.x, tile.y):
+                yield sim.actions.MoveAction(self, state, tiles_moved)
+                tiles_moved = []
+                traveled = 0
+
+            traveled += cost
+            if traveled >= state.moves_left:
+                break
+
+        # One last step
+        if len(tiles_moved) > 0 is not None:
+            yield sim.actions.MoveAction(self, state, tiles_moved)
+        pass
 

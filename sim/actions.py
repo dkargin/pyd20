@@ -3,6 +3,7 @@ from .battle import *
 from .core import *
 import animation
 import sim.events as events
+from .turnstate import TurnState
 
 ACTION_RESULT_SUCCESS = 0
 ACTION_RESULT_FAILED = 1
@@ -49,9 +50,15 @@ class BattleAction(object):
     Models an action in a battle. This includes all actions that can
     possibly taken during a battle including, but not limited to:
     Moving, Attacking and using an Ability, Skill or Trait.
+
+    :type _combatant:Combatant
+    :type _state:TurnState combatant's turn state
+    :type _duration:int combatant's turn state
+
     """
-    def __init__(self, combatant: Combatant, **kwargs):
+    def __init__(self, combatant: Combatant, state:TurnState, **kwargs):
         self._combatant = combatant
+        self._state = state
         self._duration = kwargs.get('duration', ACTION_TYPE_STANDARD)
 
     # Get duration of the action
@@ -103,8 +110,8 @@ class EndTurnAction(BattleAction):
     An empty animation action. Returned when there are no other actions available
     """
 
-    def __init__(self, combatant):
-        super(EndTurnAction, self).__init__(combatant)
+    def __init__(self, combatant, state):
+        super(EndTurnAction, self).__init__(combatant, state)
 
     def execute(self, battle: Battle):
         pass
@@ -118,13 +125,16 @@ class AttackAction(BattleAction):
     """
     Implements animation for a single attack
     """
-    def __init__(self, combatant: Combatant, attack_desc: AttackDesc):
-        super(AttackAction, self).__init__(combatant)
-        self._desc = attack_desc
+    def __init__(self, combatant: Combatant, state:TurnState, target:Combatant):
+        super(AttackAction, self).__init__(combatant, state)
+        self._desc = state.next_attack(combatant)
+        self._desc.update_target(target)
+        self._target = target
 
     def execute(self, battle: Battle):
         desc = self._desc
         yield from self._combatant.do_action_strike(battle, desc)
+        self._state.use_action(self._combatant, ACTION_TYPE_ATTACK)
 
     def text(self):
         return " attacks %s" % self._target
@@ -137,14 +147,17 @@ class AttackAction(BattleAction):
 
 
 class TripAttackAction(BattleAction):
-    def __init__(self, combatant: Combatant, attack_desc: AttackDesc):
-        super(TripAttackAction, self).__init__(combatant)
-        self._desc = attack_desc
+    def __init__(self, combatant: Combatant, state:TurnState, target:Combatant):
+        super(TripAttackAction, self).__init__(combatant, state)
+        self._desc = state.next_attack(combatant)
+        self._desc.update_target(target)
+        self._target = target
         self._desc.method = 'trip'
 
     def execute(self, battle: Battle):
         desc = self._desc
         yield from self._combatant.do_action_trip_attack(battle, desc)
+        self._state.use_action(self._combatant, ACTION_TYPE_ATTACK)
 
     def text(self):
         return " attacks %s" % self._target
@@ -161,8 +174,8 @@ class StandUpAction(BattleAction):
     """
     Implements animation for a single attack
     """
-    def __init__(self, combatant):
-        super(StandUpAction, self).__init__(combatant)
+    def __init__(self, combatant, state):
+        super(StandUpAction, self).__init__(combatant, state)
         self._provoke = True
 
     def execute(self, battle: Battle):
@@ -174,6 +187,8 @@ class StandUpAction(BattleAction):
 
         if not success:
             return False
+
+        self._state.use_action(ACTION_TYPE_MOVE_LIKE)
 
     def text(self):
         return " attacks %s" % self._target
@@ -194,11 +209,12 @@ class MoveAction(BattleAction):
 
     #TODO: each movement should cause attack of opportunity
     """
-    def __init__(self, combatant, tiles, provoke = True, **kwargs):
-        super(MoveAction, self).__init__(combatant)
+    def __init__(self, combatant, state, tiles, provoke = True, **kwargs):
+        super(MoveAction, self).__init__(combatant, state)
         self._finish = tiles[len(tiles)-1][0]
         self._path = tiles
         self._provoke = provoke
+        self._duration = ACTION_TYPE_MOVE
 
     def cost(self):
         result = 0
@@ -216,8 +232,9 @@ class MoveAction(BattleAction):
     def execute(self, battle: Battle):
         combatant = self._combatant
         state = self._get_turn_state()
+        distance = self.cost()
 
-        print("moving %s at %s from %s to %s, moves=%d, tiles=%d" % (str(combatant), str(combatant.get_coord()), str(combatant.get_coord()), str(self._finish), self.cost(), len(self._path)))
+        print("moving %s at %s from %s to %s, moves=%d, tiles=%d" % (str(combatant), str(combatant.get_coord()), str(combatant.get_coord()), str(self._finish), distance, len(self._path)))
         # AoO can interupt movement
         # 5ft step still can provoke
         # Not moving still can provoke
@@ -236,6 +253,7 @@ class MoveAction(BattleAction):
         battle.grid.register_entity(combatant)
         yield events.AnimationEvent(animation.MovePath(combatant, self.regular_path))
         combatant.fix_visual()
+        self._state.use_action(combatant, ACTION_TYPE_MOVE, distance=distance)
 
     def text(self):
         return "moves to %s" % self._last_target

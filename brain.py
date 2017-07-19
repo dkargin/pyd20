@@ -112,7 +112,7 @@ def find_best_style(a: Combatant, b: Combatant):
         exchange = StrikeExchange(a,b, variation)
         score = exchange.score()
 
-        print("Checking style %s. Score=%s" % (str(variation), str(score)))
+        print("Checking style %s. Score=%s, survive=%s" % (str(variation), str(score[0]), str(score[1])))
 
         variation.deactivate(a)
         if best_style is None or score > best_score:
@@ -168,7 +168,7 @@ class Brain(object):
         for strike in attacks:
             dam, prob = strike.estimated_damage(self.slave, enemy)
             total_dmg += dam
-            strikes.append("prob=%d;dam=%0.3f"%(prob,dam))
+            strikes.append("prob=%d;dam=%0.3f"%(100*prob,dam))
         print("Estimated strikes=[%s]. Round damage=%.2f" % (str(strikes), total_dmg))
 
     def find_enemy_target(self, battle, force = False):
@@ -183,9 +183,6 @@ class Brain(object):
     def can_trip(self):
         slave = self.slave
         return slave.get_main_weapon().can_trip() or slave.has_status_flag(STATUS_HAS_IMPROVED_TRIP)
-
-    def on_make_attack(self, desc):
-        pass
 
 
 # Brain for simple movement and attacking
@@ -202,44 +199,31 @@ class MoveAttackBrain(Brain):
             return
 
         while not state.complete():
+            #print("Current turn state: %s" % str(state))
             if self.slave.has_status_flag(STATUS_PRONE):
                 yield StandUpAction(self.slave)
-
-            # TODO: Can attack after movement
 
             # 2. If enemy is in range - full round attack
             if self.slave.is_adjacent(self.target):
                 self.logger.debug("target is near, can attack")
                 # Use all the attacks
                 if self.target.is_consciousness():
-                    # Mark that we have used an action
-                    desc = state.use_attack()
-                    desc.update_target(self.target)
-                    self.on_make_attack(desc)
-
                     if not self.target.has_status_flag(STATUS_PRONE) and self.can_trip():
-                        desc.method = 'trip'
-                        yield TripAttackAction(self.slave, desc)
+                        yield TripAttackAction(self.slave, state, self.target)
                     else:
-                        yield AttackAction(self.slave, desc)
+                        yield AttackAction(self.slave, state, self.target)
                 else:
                     self.target = None
                     break
 
-            if state.can_move() and self.target is not None:
+            if state.can_move_distance() and self.target is not None:
                 self.logger.debug("target %s is away. Finding path" % self.target.name)
                 path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
                 self.logger.debug("found path of %d feet length" % path.length())
-                duration = ACTION_TYPE_MOVE
-                if state.move_actions == 0:
-                    duration = ACTION_TYPE_STANDARD
-                    state.moves_left = self.slave.move_speed
-
-                yield from battle.make_action_move_tiles(self.slave, state, path)
-
-                state.use_duration(duration)
+                yield from self.slave.do_action_move_tiles(battle, state, path)
 
         self.logger.debug("%s has done thinking" % self.slave.name)
+        #print("State for the end of the turn: %s" % str(state))
 
 
 # Brain that attacks only if enemy is adjacent
@@ -269,10 +253,7 @@ class StandAttackBrain(Brain):
         self.logger.debug("target is near, can attack")
         while state.can_attack():
             if self.target.is_consciousness():
-                # Mark that we have used an action
-                desc = state.use_attack()
-                desc.update_target(self.target)
-                yield AttackAction(self.slave, desc)
+                yield AttackAction(self.slave, state, self.target)
             else:
                 self.target = None
                 break
