@@ -5,6 +5,8 @@ from sim.grid import *
 from .tiler import Tiler
 from .model import ModelDrawer
 
+import animation
+
 # Pixel size for a tile
 TILESIZE=32
 
@@ -59,6 +61,14 @@ class Renderer:
         self._draw_threaten = False
         self.char_names = {}
         self._text_layer = []
+
+        animation.Drawers.projectile = self.draw_projectile
+
+    def draw_projectile(self, proj):
+        screen_start = self.grid_to_screen(proj.line(0))
+        screen_end = self.grid_to_screen(proj.line(0.8))
+        pygame.draw.line(self.surface, RED,
+                         screen_start, screen_end)
 
     # Convert grid coordinates to screen
     def grid_to_screen(self, pt):
@@ -199,5 +209,10 @@ class Renderer:
         self.draw_tiles(battle.grid)
         self.draw_grid(battle.grid)
         self.draw_combatants(battle.combatants)
+
+        for effect in animation.graphic_effects:
+            if effect.is_visible():
+                effect.draw()
+
         for text in self._text_layer:
             self.surface.blit(text.surface, text.coord)

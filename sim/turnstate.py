@@ -108,7 +108,6 @@ class TurnState(object):
         return self.moved_5ft == 0 and self._moved_distance == 0
 
     def use_action(self, combatant, action_type, **kwargs):
-        #print("%s is using action=%d, state=%s" % (combatant.name, action_type, TurnState.state_name(self._state)))
         """
         Finite state machine for making a turn.
         All actions should call it after being executed
@@ -116,6 +115,7 @@ class TurnState(object):
         :param action:int action type, as defined in core.py
         :return:bool Whether action is executed properly
         """
+        # print("%s is using action=%d, state=%s" % (combatant.name, action_type, TurnState.state_name(self._state)))
         while True:
             if self._state == TurnState.STATE_INITIAL:
                 if action_type == ACTION_TYPE_ATTACK:
@@ -201,7 +201,7 @@ class TurnState(object):
         return False
 
     def __str__(self):
-        result = "state=%s, std_actions=%d, move_actions=%d, moved_total=%d, moves_left=%d" % (
+        result = "state=%s, std=%d, move=%d, traveled=%dft, can_travel=%dft" % (
             TurnState.state_name(self._state),
             self.standard_actions, self.move_actions,
             self._moved_distance, self.moves_left,

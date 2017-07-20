@@ -180,8 +180,21 @@ class Brain(object):
                 return True
         return False
 
-    def can_trip(self):
+    def can_attack(self, target):
+        weapon = self.slave.get_main_weapon()
+        if weapon.is_ranged():
+            max_range = weapon.range()
+            center = self.slave.get_center()
+            distance = center.distance(target.get_center())
+            return max_range >= distance
+        else:
+            return self.slave.is_adjacent(target)
+
+    def can_trip(self, target):
         slave = self.slave
+        if not target.has_status_flag(STATUS_PRONE):
+            return False
+        # There are some ways to make ranged trip
         return slave.get_main_weapon().can_trip() or slave.has_status_flag(STATUS_HAS_IMPROVED_TRIP)
 
 
@@ -199,16 +212,15 @@ class MoveAttackBrain(Brain):
             return
 
         while not state.complete():
-            #print("Current turn state: %s" % str(state))
             if self.slave.has_status_flag(STATUS_PRONE):
                 yield StandUpAction(self.slave)
 
             # 2. If enemy is in range - full round attack
-            if self.slave.is_adjacent(self.target):
+            if self.can_attack(self.target):
                 self.logger.debug("target is near, can attack")
                 # Use all the attacks
                 if self.target.is_consciousness():
-                    if not self.target.has_status_flag(STATUS_PRONE) and self.can_trip():
+                    if self.can_trip(self.target):
                         yield TripAttackAction(self.slave, state, self.target)
                     else:
                         yield AttackAction(self.slave, state, self.target)
@@ -223,7 +235,6 @@ class MoveAttackBrain(Brain):
                 yield from self.slave.do_action_move_tiles(battle, state, path)
 
         self.logger.debug("%s has done thinking" % self.slave.name)
-        #print("State for the end of the turn: %s" % str(state))
 
 
 # Brain that attacks only if enemy is adjacent

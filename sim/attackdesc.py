@@ -33,7 +33,7 @@ class AttackDesc:
         self.target = None
         self.opportunity = False
         self.spell = False
-        self.ranged = False
+        self.ranged = kwargs.get('ranged', False)
         self.offhand = kwargs.get('offhand', False)
         self.range = 0
         # Should this attack provoke AoO, i.e unarmed or ranged attack in melee

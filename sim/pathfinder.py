@@ -13,13 +13,12 @@ def default_cost(src, dst):
 # Does pathfinding stuff
 class PathFinder(object):
 
-    class Node:
+    class Node(Point):
         """
         Node for search tree
         """
         def __init__(self, x, y):
-            self.x = x
-            self.y = y
+            super(PathFinder.Node, self).__init__(x=x, y=y)
             self.g = 0
             self.h = 0
             self._lh = 0
@@ -192,6 +191,25 @@ class PathFinder(object):
             self.expand_tile(current_tile)
             iteration += 1
         return None
+
+    def path_to_range(self, start_pos, dest, range):
+        self.sync_grid(self.grid)
+        """
+        :param start_pos:Point starting position
+        :param dest:Point
+        :param range:float desired range
+        :return:Path
+        """
+        pt = Point()
+
+        def in_range(node):
+            pt.x = node.x
+            pt.y = node.y
+            return node.distance(pt) <= range
+        start_node = self._get_node(start_pos.x, start_pos.y)
+
+        # Run wave and compile the path
+        return self.run_wave(start_node, in_range)
 
     def path_to_melee_range(self, start_pos, dest, range0, range1):
         self.sync_grid(self.grid)

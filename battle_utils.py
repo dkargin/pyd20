@@ -50,16 +50,17 @@ def make_twf_fighter(name, stats=[18, 13, 16, 10, 10, 10], **kwargs):
 
     return char
 
+
 # Create dual weapons fighter
 def make_archer(name, stats=[13, 18, 16, 10, 10, 10]):
     char = Character(name, brain=brain.MoveAttackBrain())
     char.set_stats(*stats)
     char.add_class_level(classes.Fighter, 6)
     char.add_feat(dnd.feats.WeaponFocus(dnd.weapon.longbow_composite))
-
+    char.add_feat(dnd.feats.PointBlankShot())
+    char.add_feat(dnd.feats.PreciseShot())
     char.wear_item(dnd.armor.banded_mail, ITEM_SLOT_ARMOR)
     char.wear_item(dnd.weapon.longbow_composite, ITEM_SLOT_MAIN)
-
     return char
 
 
@@ -73,5 +74,16 @@ def make_monk(name, stats=[14, 14, 16, 10, 16, 8]):
     char.add_feat(dnd.feats.CombatReflexes())
     char.add_feat(dnd.feats.DeftOpportunist())
     char.add_feat(dnd.feats.ImprovedTrip())
-
     return char
+
+
+'''
+Owlbear skeleton: CR 2; Large undead; HD 5d12; hp 32; Init +6; Spd 30 ft. (6 squares);
+AC 13 (-1 size, +2 dex, +2 natural), touch 11, flat-footed 11;
+Base Atk +2; Grp +11;
+Atk +6 melee (1d6+5, claw); Full Atk +6 melee (1d6+5, 2 claws) and +1 melee (1d8+2, bite);
+Space/Reach 10 ft./5 ft.; SA -; SQ Damage reduction 5/bludgeoning, darkvision 60 ft., immunity to cold, undead traits; AL NE;
+SV Fort +1, Ref +3, Will +4; Str 21, Dex 14, Con -, Int -, Wis 10, Cha 1
+
+Skills and Feats: ; Improved Initiative
+'''

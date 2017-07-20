@@ -46,8 +46,11 @@ class Point:
         return max(abs(self.x - b.x), abs(self.y - b.y))
 
     # Euclidian metric
-    def distance(self, b):
+    def distance_tiles(self, b):
         return math.sqrt((self.x - b.x)**2 + (self.y - b.y)**2)
+
+    def distance(self, b):
+        return self.distance_tiles(b)*5
 
     def __str__(self):
         return "(%d;%d)" % (self.x, self.y)

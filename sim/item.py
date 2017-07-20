@@ -1,15 +1,16 @@
 from sim.core import *
 from sim.dice import *
+from sim.entity import Entity
 
 
-class Item(object):
+class Item(Entity):
     """
     Represents base class for any item
     :type _name: str
     :type AC: int
     """
-    def __init__(self, base = None, **kwargs):
-        self._name = kwargs.get('name', 'noname')
+    def __init__(self, base=None, **kwargs):
+        super(Item, self).__init__(kwargs.get('name', 'noname'))
         self._weight = kwargs.get("weight", 10)
         self._hardiness = 10
         # Base item type
@@ -68,8 +69,8 @@ class Weapon(Item):
         self._reach = kwargs.get("reach", Weapon.REACH_NEAR)
         # Magic enchantment
         self._enchantment = kwargs.get("enchantment", 0)
-        # Throwing range increment
-        self._range = math.ceil(kwargs.get("range", 0)/5)
+        # Weapon range increment
+        self._range = math.ceil(kwargs.get("range", 0))
         self._finesse = kwargs.get("finesse", False)
         self._trip = kwargs.get("trip", False)
         # Clip size
@@ -83,6 +84,9 @@ class Weapon(Item):
 
     def is_unarmed(self):
         return False
+
+    def range(self):
+        return self._range
 
     def enchant(self, level):
         self._enchantment = level

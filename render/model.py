@@ -3,6 +3,13 @@ from sim.grid import *
 import pygame.transform as transform
 from sim.entity import *
 
+# Maps item name to icon path
+item_sprites = {
+    'longsword' : '',
+    'bastard_sword' : '',
+    'composite_bow' : '',
+}
+
 
 class SpriteSheet:
     def __init__(self, size, path):

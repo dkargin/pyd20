@@ -31,7 +31,7 @@ class ImprovedTwoWeaponFighting(Feat):
         def turn_event(c: Combatant):
             weapon = c.get_offhand_weapon()
             if weapon is not None:
-                c.add_bonus_strike(-5, weapon, offhand=True)
+                c.add_bonus_strike(weapon, bab=-5, offhand=True)
 
         events = combatant.event_manager()
         events.on_turn_start += turn_event
@@ -50,7 +50,7 @@ class GreaterTwoWeaponFighting(Feat):
         def turn_event(c: Combatant):
             weapon = c.get_offhand_weapon()
             if weapon is not None:
-                c.add_bonus_strike(-10, weapon, offhand=True)
+                c.add_bonus_strike(weapon, bab=-10, offhand=True)
 
         events = combatant.event_manager()
         events.on_turn_start += turn_event
@@ -216,11 +216,15 @@ class ImprovedTrip(Feat):
         super(ImprovedTrip, self).__init__("Improved feat")
 
     def apply(self, combatant: Combatant):
-        def event(c, desc: AttackDesc):
+        def event_attack(c, desc: AttackDesc):
             if desc.method == 'trip':
                 desc.check += 4
 
-        combatant.event_manager().on_select_attack_target += event
+        def event_succeded(c, desc:AttackDesc):
+            if desc.method == 'trip':
+                c.add_bonus_strike(desc.weapon, attack=desc.attack)
+
+        combatant.event_manager().on_select_attack_target += event_attack
         combatant.add_status_flag(STATUS_HAS_IMPROVED_TRIP)
 
 
@@ -292,20 +296,21 @@ class PointBlankShot(Feat):
         combatant.event_manager().on_select_attack_target += self.on_calculate_attack
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
-        if desc.ranged() and desc.range < 30:
+        if desc.is_ranged() and desc.range <= 30:
             desc.attack += 1
 
 
 class PreciseShot(Feat):
     def __init__(self):
-        super(PointBlankShot, self).__init__("Point blank shot")
+        super(PreciseShot, self).__init__("Precise shot")
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_select_attack_target += self.on_calculate_attack
+        #combatant.event_manager().on_select_attack_target += self.on_calculate_attack
+        pass
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
         # Fixing -4 penalty
-        if desc.ranged() and desc.range < 5:
+        if desc.is_ranged() and desc.range < 5:
             desc.attack += 4
 
 
@@ -322,7 +327,7 @@ class SpinningHalberd(Feat):
             weapon = c.get_main_weapon()
             if self._weapon == weapon.get_base_root():
                 # TODO: add proper haft strike
-                c.add_bonus_strike(-5, weapon)
+                c.add_bonus_strike(weapon, bab=-5)
 
         def on_start_defence(c: Combatant, effect):
             if isinstance(effect, styles.StyleDefenciveFight):

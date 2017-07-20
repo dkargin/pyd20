@@ -76,16 +76,15 @@ char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
 
 
 char2 = make_shield_fighter('Roy1', model='type2')
-#char3 = make_twf_fighter('Roy2')
+char3 = make_archer('Bowy')
 char4 = make_monk('Monky')
 
 
 #battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
 #battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
 battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
-
-battle.add_combatant(char2, center_x+10, center_y+1, faction="team blue")
-#battle.add_combatant(char3, center_x + 15, center_y-5, faction="team blue")
+#battle.add_combatant(char2, center_x+10, center_y+1, faction="team blue")
+battle.add_combatant(char3, center_x+10, center_y-5, faction="team blue")
 #battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
 """
 battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")
@@ -148,7 +147,9 @@ def main():
             animation.update(time)
             if animation.is_complete(time):
                 logging.info("%s is complete" % animation)
+                animation.on_stop(time)
                 animation = None
+
 
         if animation is None and ((wait_turn and make_turn) or not wait_turn):
             battle_event = next(turn_generator)
@@ -161,7 +162,7 @@ def main():
             elif isinstance(battle_event, events.AnimationEvent):
                 logger.info("Got animation: %s" % str(animation))
                 animation = battle_event.animation
-                animation.start(get_time())
+                animation.on_start(get_time())
 
         renderer.clear()
         renderer.draw_battle(battle)

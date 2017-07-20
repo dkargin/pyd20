@@ -501,8 +501,10 @@ class Combatant(Entity):
         return self._health_max
 
     # Add bonus attack, from feat, style or status effect
-    def add_bonus_strike(self, bab, weapon, source=None, **kwargs):
-        attack = self._BAB + bab + self._attack_bonus_style
+    def add_bonus_strike(self, weapon, source=None, **kwargs):
+        attack = kwargs.get('attack', 0)
+        if 'bab' in kwargs:
+            attack = self._BAB + kwargs['bab'] + self._attack_bonus_style
         desc = self.generate_attack(attack, weapon, target=None, **kwargs)
         self._additional_strikes.append(desc)
         return desc
@@ -531,6 +533,7 @@ class Combatant(Entity):
         str_mod = self.strength_modifier()
 
         two_handed = self._two_hand_wield
+        ranged = weapon.is_ranged()
 
         if weapon.is_light(self) and not two_handed:
             damage_mod += int(str_mod / 2)
@@ -551,7 +554,7 @@ class Combatant(Entity):
             attack += self.strength_modifier()
 
         # For all effects
-        desc = AttackDesc(weapon, attack=attack, damage=damage, two_handed=two_handed, **kwargs)
+        desc = AttackDesc(weapon, attack=attack, damage=damage, two_handed=two_handed, ranged=ranged, **kwargs)
         self._events.on_calc_attack(self, desc)
         return desc
 
@@ -595,7 +598,6 @@ class Combatant(Entity):
         Offhand is light: Main -4     Offhand -8    -> add +2 to both attacks
         Two-weapon fighting: Main -4    Offhand -4  -> add +2 to main and +6 to offhand
         """
-
         # Get attacks from main slot
         while bab >= 0:
             attack = bab + attack_bonus_style
@@ -659,51 +661,21 @@ class Combatant(Entity):
         return self._stats[STAT_WIS]  # + age_modifier
 
     def constitution_modifier(self):
-        """
-        returns the constitution modifier
-
-        :rtype: int
-        """
         return ability_modifier(self.constitution())
 
     def charisma_modifier(self):
-        """
-        returns the charisma modifier
-
-        :rtype: int
-        """
         return ability_modifier(self.charisma())
 
     def dexterity_modifier(self):
-        """
-        returns the dexterity modifier
-
-        :rtype: int
-        """
         return ability_modifier(self.dexterity())
 
     def intellect_modifier(self):
-        """
-        returns the intellect modifier
-
-        :rtype: int
-        """
         return ability_modifier(self.intellect())
 
     def strength_modifier(self):
-        """
-        returns the strength modifier
-
-        :rtype: int
-        """
         return ability_modifier(self.strength())
 
     def wisdom_modifier(self):
-        """
-        returns the wisdom modifier
-
-        :rtype: int
-        """
         return ability_modifier(self.wisdom())
 
     def reset_round(self):
@@ -759,9 +731,9 @@ class Combatant(Entity):
 
     # Action generators #
 
-    # Execute strike action
-    # All data is already set. Attack can be resolved right now
+    # Execute melee strike action
     def do_action_strike(self, battle, desc: AttackDesc):
+        # All data is already set. Attack can be resolved right now
         target = desc.get_target()
         armor_class = self._set_attack_target(desc, target)
 
@@ -776,7 +748,10 @@ class Combatant(Entity):
 
         hit = roll_hits(desc.attack, roll, armor_class)
 
-        yield AnimationEvent(animation.MeleeAttackStart(self, target))
+        if desc.is_melee():
+            yield AnimationEvent(animation.MeleeAttackStart(self, target))
+        elif desc.is_ranged():
+            yield AnimationEvent(animation.RangedAttack(self, target))
 
         attack_text = "misses"
         total_damage = 0
@@ -797,8 +772,8 @@ class Combatant(Entity):
             target.receive_damage(damage, self)
 
         self.expend_attack(desc)
-
-        yield AnimationEvent(animation.MeleeAttackFinish(self, target))
+        if desc.is_melee():
+            yield AnimationEvent(animation.MeleeAttackFinish(self, target))
 
     def _make_roll_d20(self, **kwargs):
         # Make d20 roll. There are some feats that allow to reroll result

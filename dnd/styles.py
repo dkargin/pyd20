@@ -32,7 +32,7 @@ class StyleFlurryOfBlows(Combatant.StatusEffect):
     def on_start(self, combatant, **kwargs):
         combatant._attack_bonus_style -= self.attack_pen
         for a in range(0, self.add_attacks):
-            self._attacks.append(combatant.add_bonus_strike(0, combatant.get_main_weapon()))
+            self._attacks.append(combatant.add_bonus_strike(combatant.get_main_weapon(), bab=0))
 
     # Called when effect has finished
     def on_finish(self, combatant, **kwargs):
