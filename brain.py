@@ -237,7 +237,7 @@ class Brain(object):
 
     def can_trip(self, target):
         slave = self.slave
-        if not target.has_status_flag(STATUS_PRONE):
+        if target.has_status_flag(STATUS_PRONE):
             return False
         # There are some ways to make ranged trip
         return slave.get_main_weapon().can_trip() or slave.has_status_flag(STATUS_HAS_IMPROVED_TRIP)

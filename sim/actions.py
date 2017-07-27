@@ -170,8 +170,8 @@ class StandUpAction(BattleAction):
     """
     Implements animation for a single attack
     """
-    def __init__(self, combatant, state):
-        super(StandUpAction, self).__init__(combatant, state)
+    def __init__(self, combatant):
+        super(StandUpAction, self).__init__(combatant)
         self._provoke = True
 
     def execute(self, battle: Battle, state: TurnState):
@@ -183,8 +183,7 @@ class StandUpAction(BattleAction):
 
         if not success:
             return False
-
-        self._state.use_action(ACTION_TYPE_MOVE_LIKE)
+        state.use_action(combatant, ACTION_TYPE_MOVE_LIKE)
 
     def text(self):
         return " attacks %s" % self._target
@@ -279,10 +278,12 @@ class UseSkillAction(BattleAction):
 # Action activates some sort of effect on self
 class PersonalEffectAction(BattleAction):
     def __init__(self, name, combatant, effect, **kwargs):
-        super(PersonalEffectAction, self).__init__(name, combatant, **kwargs)
+        super(PersonalEffectAction, self).__init__(combatant, **kwargs)
         self.effect = effect
         self.resource = kwargs.get('resource', [])
         self._spell = kwargs.get('spell', None)
+        self._name = name
 
     def execute(self, battle: Battle, state: TurnState):
         self._combatant.apply_effect(self.effect)
+

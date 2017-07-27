@@ -46,6 +46,7 @@ class AttackDesc:
         # - disarm
         # - sunder
         self.check = 0
+        self.check_success = False
 
     # Is melee attack
     def is_melee(self):

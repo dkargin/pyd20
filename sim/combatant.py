@@ -73,6 +73,8 @@ class Combatant(Entity):
             #self.on_calc_opportinity_attack = SubscriberList()
             # Called when picked attack target
             self.on_select_attack_target = SubscriberList()
+
+            self.on_attack_hit = SubscriberList()
             # Events that fired when combatant rolls critical hit
             # on_roll_crit(self, combatant: Combatant, target: Combatant, desc: AttackDesc):
             self.on_roll_crit = SubscriberList()
@@ -257,7 +259,7 @@ class Combatant(Entity):
     def armor_check_penalty(self):
         armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
         if armor is not None:
-            return armor.skill_penalty
+            return armor.check_penalty
         return 0
 
     # Get current level for selected skill
@@ -268,7 +270,7 @@ class Combatant(Entity):
         result = ability_modifier(self._stats[skill.ability])
         armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
 
-        if skill.armor_penalty and armor is not None:
+        if skill.armor and armor is not None:
             result -= self.armor_check_penalty()
 
         if skill in self._skills:
@@ -581,12 +583,15 @@ class Combatant(Entity):
         return self._health_max
 
     # Add bonus attack, from feat, style or status effect
-    def add_bonus_strike(self, weapon, source=None, **kwargs):
-        attack = kwargs.get('attack', 0)
+    def add_bonus_strike(self, weapon, immediate=False, **kwargs):
+        attack = kwargs.pop('attack', 0)
         if 'bab' in kwargs:
             attack = self._BAB + kwargs['bab'] + self._attack_bonus_style
         desc = self.generate_attack(attack, weapon, target=None, **kwargs)
-        self._additional_strikes.append(desc)
+        if immediate:
+            self._turn_state.attacks.insert(0, desc)
+        else:
+            self._additional_strikes.append(desc)
         return desc
 
     # Get current attack bonus
@@ -857,6 +862,7 @@ class Combatant(Entity):
             else:
                 attack_text = "hits"
             total_damage = damage + bonus_damage
+            self._on_attack_hit(desc)
 
         print("%s %s %s with roll %s" %
               (self.name, attack_text, target.get_name(), desc.attack_roll_info(roll, armor_class)))
@@ -866,6 +872,9 @@ class Combatant(Entity):
         self.expend_attack(desc)
         if desc.is_melee():
             yield AnimationEvent(animation.MeleeAttackFinish(self, target))
+
+    def _on_attack_hit(self, desc):
+        self._events.on_attack_hit(self, desc)
 
     def _make_roll_d20(self, **kwargs):
         # Make d20 roll. There are some feats that allow to reroll result
@@ -914,10 +923,13 @@ class Combatant(Entity):
             opposed_roll = target._make_roll_d20(source=self, attack=desc)
             if roll_trip + desc.check > opposed_roll:
                 attack_text = "trips"
+                desc.check_success = True
                 target.add_status_flag(STATUS_PRONE)
                 print("%s trips %s with roll %s" % (self.name, target.get_name(), roll_info))
             else:
                 print("%s fails to trip %s with roll %s" % (self.name, target.get_name(), roll_info))
+
+            self._on_attack_hit(desc)
             print("%s rolls %d, %s rolls %d" % (self.name, roll_trip+desc.check, target.get_name(), opposed_roll))
         else:
             print("%s misses its trip attack %s with roll %s" % (self.name, target.get_name(), roll_info))

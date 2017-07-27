@@ -238,10 +238,11 @@ class ImprovedTrip(Feat):
                 desc.check += 4
 
         def event_succeded(c, desc:AttackDesc):
-            if desc.method == 'trip':
-                c.add_bonus_strike(desc.weapon, attack=desc.attack)
+            if desc.method == 'trip' and desc.check_success:
+                c.add_bonus_strike(desc.weapon, True, attack=desc.attack)
 
         combatant.event_manager.on_select_attack_target += event_attack
+        combatant.event_manager.on_attack_hit += event_succeded
         combatant.add_status_flag(STATUS_HAS_IMPROVED_TRIP)
 
 

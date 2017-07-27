@@ -49,7 +49,7 @@ battle = battle.Battle(30, 30)
 
 draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
 
-char1 = Character("Bob", brain=brain.StandAttackBrain(), model='type3')
+char1 = Character("Bob", brain=brain.MoveAttackBrain(), model='type3')
 char1.set_stats(18, 18, 16, 10, 10, 10)
 char1.wear_item(dnd.armor.chain_shirt, ITEM_SLOT_ARMOR)
 char1.wear_item(dnd.weapon.bastard_sword, ITEM_SLOT_MAIN)
@@ -82,7 +82,7 @@ char_test = make_angry_guisarme('Goof', model='type3')
 
 # tile = grid.get_free_tile()
 battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
-battle.add_combatant(char2, center_x+10, center_y+1, faction="team blue")
+battle.add_combatant(char_test, center_x+10, center_y+1, faction="team blue")
 
 #battle.add_combatant(char3, center_x+10, center_y-5, faction="team blue")
 #battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")

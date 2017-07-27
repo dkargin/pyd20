@@ -186,9 +186,9 @@ class TurnState(object):
                     distance = kwargs.get('distance', 0)
                     if distance <= self.moves_left:
                         self._moved_distance += distance
-                        self.moves_left -= distance
+                        self._moves_left -= distance
                         if self.moves_left == 0:
-                            self.moves_left = combatant.move_speed
+                            self._moves_left = combatant.move_speed
                             self._state = TurnState.STATE_INITIAL
                         return True
                     else:

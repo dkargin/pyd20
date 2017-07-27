@@ -1,6 +1,7 @@
 import brain
 import dnd.armor
 import dnd.feats
+import dnd.skills
 import dnd.weapon
 from sim.character import Character
 from sim.core import *
@@ -77,11 +78,11 @@ def make_monk(name, stats=[14, 14, 16, 10, 16, 8]):
     return char
 
 
-def make_angry_guisarme(name, stats=[16, 14, 16, 10, 10, 10]):
-    char = Character(name, brain=brain.MoveAttackBrain())
+def make_angry_guisarme(name, stats=[16, 14, 16, 10, 10, 10], **kwargs):
+    char = Character(name, brain=brain.MoveAttackBrain(), **kwargs)
     char.set_stats(*stats)
     level = 6
-    char.wear_item(dnd.armor.chainmail, ITEM_SLOT_ARMOR)
+    char.wear_item(dnd.armor.full_plate, ITEM_SLOT_ARMOR)
     char.wear_item(dnd.weapon.guisarme, ITEM_SLOT_MAIN)
     char.add_class_level(classes.Barbarian, 6)
     # feats = {1, 1, 3, 6}
@@ -89,8 +90,8 @@ def make_angry_guisarme(name, stats=[16, 14, 16, 10, 10, 10]):
     char.add_feat(dnd.feats.DeftOpportunist())
     char.add_feat(dnd.feats.ImprovedTrip())
 
-    char.add_skill(dnd.feats.SkillTumble, 3+level)
-    char.add_skill(dnd.feats.SkillConcentration(), 3+level)
+    char.add_skill(dnd.skills.SkillTumble, 3+level)
+    char.add_skill(dnd.skills.SkillConcentration(), 3+level)
     return char
 
 
