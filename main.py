@@ -47,8 +47,6 @@ center_y = 15
 
 battle = battle.Battle(30, 30)
 
-#draw_cross(battle.grid, center_x, center_y, 5)
-#draw_cross(battle.grid, center_x+1, center_y, 5)
 draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
 
 char1 = Character("Bob", brain=brain.StandAttackBrain(), model='type3')
@@ -79,12 +77,14 @@ char2 = make_shield_fighter('Roy1', model='type2')
 char3 = make_archer('Bowy')
 char4 = make_monk('Monky')
 
+char_test = make_angry_guisarme('Goof', model='type3')
 
-#battle.add_combatant(char1, *grid.get_free_tile(), faction="team red")
-#battle.add_combatant(char2, *grid.get_free_tile(), faction="team blue")
+
+# tile = grid.get_free_tile()
 battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
-#battle.add_combatant(char2, center_x+10, center_y+1, faction="team blue")
-battle.add_combatant(char3, center_x+10, center_y-5, faction="team blue")
+battle.add_combatant(char2, center_x+10, center_y+1, faction="team blue")
+
+#battle.add_combatant(char3, center_x+10, center_y-5, faction="team blue")
 #battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
 """
 battle.add_combatant(char5, center_x + 15, center_y-3, faction="team blue")

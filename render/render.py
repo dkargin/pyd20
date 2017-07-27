@@ -141,7 +141,7 @@ class Renderer:
     # Draw tiled path
     def draw_path(self, path, color=GREEN):
         prev = None
-        for tile in path.get_path():
+        for tile in path:
             if prev is not None:
                 coord_prev = self.grid_to_screen((prev.x+0.5, prev.y+0.5))
                 coord_cur = self.grid_to_screen((tile.x+0.5, tile.y+0.5))

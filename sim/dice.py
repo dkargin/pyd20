@@ -175,3 +175,20 @@ d10 = Dice("d10")
 d20 = Dice("d20")
 d100 = Dice("d100")
 
+
+# RollResult class. It contains a result for a single d20 roll
+# There are some feats that can allow to reroll a dice
+# We invoke an event with this class instance, and event handlers (feats, effects, ...) can modify roll result somehow
+# TODO: There are even feats, that can allow to reroll d6 results.
+# We should implement them as well
+class RollResult:
+    def __init__(self, base, dice):
+        self._base = base
+        self._rolls = []
+        self._dice = dice
+
+    # Make a roll
+    def roll(self):
+        r = d20.roll()
+        self._rolls.append(r)
+        return r

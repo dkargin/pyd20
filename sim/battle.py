@@ -81,7 +81,7 @@ class Battle(object):
                 opportunity_attacks.append(attacker)
         return opportunity_attacks
 
-    def execute_combatant_action(self, action):
+    def execute_combatant_action(self, action, state):
         """
         Executes minimal game action
         :param action:
@@ -89,21 +89,21 @@ class Battle(object):
         """
         if action is None:
             return
-        ret = action.execute(self)
+        ret = action.execute(self, state)
         if isinstance(ret, types.GeneratorType):
-            yield from action.execute(self)
+            yield from action.execute(self, state)
 
     # Process turn for selected combatant
     def combatant_make_turn(self, combatant):
         # print(combatant, "'s turn")
-        combatant.on_turn_start(self)
+        state = combatant.on_turn_start(self)
 
         # Hard limit on action generator
         iteration_limit = 20
 
         # Iterate through all combatant actions during the turn
         for action in combatant.gen_brain_actions(self):
-            yield from self.execute_combatant_action(action)
+            yield from self.execute_combatant_action(action, state)
 
             iteration_limit -= 1
             if iteration_limit <= 0:

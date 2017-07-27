@@ -31,6 +31,8 @@ STATUS_BLIND = __new_status()        # Should it have simple status, or complex 
 STATUS_STUNNED = __new_status()
 STATUS_FLATFOOTED = __new_status()
 STATUS_DAZED = __new_status()
+STATUS_FLAG_TIRED = __new_status()
+STATUS_FLAG_EXHAUSTED = __new_status()
 
 # Some feats
 STATUS_HAS_IMPROVED_TRIP = __new_status()
@@ -114,6 +116,9 @@ ACTION_TYPE_FREE = __gen_action_type()
 ACTION_TYPE_SWIFT = __gen_action_type()
 # Expends attack action slot. Can be standard action, one of full round attacks, or one of attacks of opportunity
 ACTION_TYPE_ATTACK = __gen_action_type()
+ACTION_TYPE_MOVE_CHARGE = __gen_action_type()
+ACTION_TYPE_MOVE_SPRING = __gen_action_type()
+ACTION_TYPE_SET_STYLE = __gen_action_type()
 
 GENDER_NONE = 0
 GENDER_FEMALE = 1
@@ -121,6 +126,13 @@ GENDER_MALE = 2
 
 GENDER_MALE_STR = "male"
 GENDER_FEMALE_STR = "female"
+
+RESOURCE_RAGE = 1
+RESOURCE_TURN_UNDEAD = 2
+RESOURCE_SMITE = 3
+RESOURCE_ARCANE_1 = 4
+RESOURCE_ARCANE_2 = 5
+RESOURCE_ARCANE_3 = 6
 
 
 def roll_hits(base, roll, dc):

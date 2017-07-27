@@ -3,17 +3,22 @@ from sim.entity import *
 from sim.grid import Point
 
 
+# List of active graphical effects
+# Renderer iterates through all effects and draws them all
 graphic_effects = []
 
 
 # Contains a set of 'draw' functions
+# Renderer sets actual implementation for each drawer/type
 class Drawers:
     projectile = None
 
 
-class GraphicEffect():
+class GraphicEffect(object):
+    """
+    Any sort of graphical effects
+    """
     def __init__(self, **kwargs):
-        #super(GraphicEffect, self).__init__(**kwargs)
         self._coord = kwargs.get('coord', Point())
         self._visible = False
 
@@ -47,11 +52,15 @@ class Projectile(GraphicEffect):
         self._position += self._velocity * time
         self._coord = self._start + self._dir * self._position
 
-    def line(self, len = 1):
-        return (self._coord + self._dir*len).tuple()
+    def line(self, l=1):
+        return (self._coord + self._dir*l).tuple()
 
 
 class Animation(object):
+    """
+    Generic animation object
+    battle turn generator provides a sequence of animated actions
+    """
     def __init__(self, entity: Entity):
         self._time_start = 0
         self._entity = entity
@@ -65,7 +74,7 @@ class Animation(object):
     def update(self, time):
         pass
 
-    def on_stop(self):
+    def on_stop(self, time):
         pass
 
     def is_complete(self, time):

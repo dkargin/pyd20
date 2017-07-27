@@ -26,6 +26,8 @@ class TurnState(object):
     STATE_BEGAN_MOVEMENT = 4
     # Turn is complete, nothing to do here
     STATE_COMPLETE = 5
+    # Move as part of charge attack
+    STATE_CHARGE_MOVE = 6
 
     def __init__(self):
         self._moves_left = 0

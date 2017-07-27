@@ -46,18 +46,17 @@ Look at main.py.
     - draw a line
     - move a line
     - can be interrupted!
-1. Draw weapon tiles
 1. Ranged attack
     - move to range             OK?
     - bow them all              OK?
     - draw an arrow
     - reload action
     - crossbow reload
-1. Spring attack series. Because they are awesome!
-1. Test splitting targets during full attack action
-    - and use 5ft step as well
-1. Brain should switch weapons according to situation and distance to enemy
+1. Some skill checks: tumble, spot, search
 1. Manual brain
+1. Draw weapon sprites
+1. Spring attack series. Because they are awesome!
+1. Brain should switch weapons according to situation and distance to enemy
 1. Vision stuff.
     - Hide, Spot, listen
 1. Some spells (most interesting for me):

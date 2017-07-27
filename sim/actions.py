@@ -56,9 +56,8 @@ class BattleAction(object):
     :type _duration:int combatant's turn state
 
     """
-    def __init__(self, combatant: Combatant, state:TurnState, **kwargs):
+    def __init__(self, combatant: Combatant, **kwargs):
         self._combatant = combatant
-        self._state = state
         self._duration = kwargs.get('duration', ACTION_TYPE_STANDARD)
 
     # Get duration of the action
@@ -71,9 +70,6 @@ class BattleAction(object):
 
     def execute(self, battle: Battle, state: TurnState):
         yield
-
-    def _get_turn_state(self):
-        return self._combatant.get_turn_state()
 
     def text(self):
         return "generic action"
@@ -113,7 +109,7 @@ class EndTurnAction(BattleAction):
     def __init__(self, combatant, state):
         super(EndTurnAction, self).__init__(combatant, state)
 
-    def execute(self, battle: Battle):
+    def execute(self, battle: Battle, state: TurnState):
         pass
 
     def text(self):
@@ -125,16 +121,16 @@ class AttackAction(BattleAction):
     """
     Implements animation for a single attack
     """
-    def __init__(self, combatant: Combatant, state:TurnState, target:Combatant):
-        super(AttackAction, self).__init__(combatant, state)
-        self._desc = state.next_attack(combatant)
-        self._desc.update_target(target)
+    def __init__(self, combatant: Combatant, target: Combatant, **kwargs):
+        super(AttackAction, self).__init__(combatant)
         self._target = target
+        self._duration = kwargs.get('duration', ACTION_TYPE_ATTACK)
 
-    def execute(self, battle: Battle):
-        desc = self._desc
+    def execute(self, battle: Battle, state: TurnState):
+        desc = state.next_attack(self._combatant)
+        desc.update_target(self._target)
         yield from self._combatant.do_action_strike(battle, desc)
-        self._state.use_action(self._combatant, ACTION_TYPE_ATTACK)
+        state.use_action(self._combatant, ACTION_TYPE_ATTACK)
 
     def text(self):
         return " attacks %s" % self._target
@@ -147,17 +143,17 @@ class AttackAction(BattleAction):
 
 
 class TripAttackAction(BattleAction):
-    def __init__(self, combatant: Combatant, state:TurnState, target:Combatant):
-        super(TripAttackAction, self).__init__(combatant, state)
-        self._desc = state.next_attack(combatant)
-        self._desc.update_target(target)
+    def __init__(self, combatant: Combatant, target: Combatant, **kwargs):
+        super(TripAttackAction, self).__init__(combatant)
         self._target = target
-        self._desc.method = 'trip'
+        self._duration = kwargs.get('duration', ACTION_TYPE_ATTACK)
 
-    def execute(self, battle: Battle):
-        desc = self._desc
+    def execute(self, battle: Battle, state: TurnState):
+        desc = state.next_attack(self._combatant)
+        desc.update_target(self._target)
+        desc.method = 'trip'
         yield from self._combatant.do_action_trip_attack(battle, desc)
-        self._state.use_action(self._combatant, ACTION_TYPE_ATTACK)
+        state.use_action(self._combatant, ACTION_TYPE_ATTACK)
 
     def text(self):
         return " attacks %s" % self._target
@@ -178,7 +174,7 @@ class StandUpAction(BattleAction):
         super(StandUpAction, self).__init__(combatant, state)
         self._provoke = True
 
-    def execute(self, battle: Battle):
+    def execute(self, battle: Battle, state: TurnState):
         combatant = self._combatant
         combatant.remove_status_flag(STATUS_PRONE)
         success = True
@@ -209,12 +205,12 @@ class MoveAction(BattleAction):
 
     #TODO: each movement should cause attack of opportunity
     """
-    def __init__(self, combatant, state, tiles, provoke = True, **kwargs):
-        super(MoveAction, self).__init__(combatant, state)
+    def __init__(self, combatant, tiles, provoke = True, **kwargs):
+        super(MoveAction, self).__init__(combatant)
         self._finish = tiles[len(tiles)-1][0]
         self._path = tiles
         self._provoke = provoke
-        self._duration = ACTION_TYPE_MOVE
+        self._duration = kwargs.get('duration', ACTION_TYPE_MOVE)
 
     def cost(self):
         result = 0
@@ -229,9 +225,8 @@ class MoveAction(BattleAction):
     def duration(self):
         return ACTION_TYPE_MOVE
 
-    def execute(self, battle: Battle):
+    def execute(self, battle: Battle, state: TurnState):
         combatant = self._combatant
-        state = self._get_turn_state()
         distance = self.cost()
 
         print("moving %s at %s from %s to %s, moves=%d, tiles=%d" % (str(combatant), str(combatant.get_coord()), str(combatant.get_coord()), str(self._finish), distance, len(self._path)))
@@ -253,7 +248,7 @@ class MoveAction(BattleAction):
         battle.grid.register_entity(combatant)
         yield events.AnimationEvent(animation.MovePath(combatant, self.regular_path))
         combatant.fix_visual()
-        self._state.use_action(combatant, ACTION_TYPE_MOVE, distance=distance)
+        state.use_action(combatant, ACTION_TYPE_MOVE, distance=distance)
 
     def text(self):
         return "moves to %s" % self._last_target
@@ -277,5 +272,17 @@ class UseSkillAction(BattleAction):
         self._target = target
         self._skill_name = skill_name
 
-    def execute(self, battle: Battle):
+    def execute(self, battle: Battle, state: TurnState):
         self._combatant.use_skill(self._skill_name)
+
+
+# Action activates some sort of effect on self
+class PersonalEffectAction(BattleAction):
+    def __init__(self, name, combatant, effect, **kwargs):
+        super(PersonalEffectAction, self).__init__(name, combatant, **kwargs)
+        self.effect = effect
+        self.resource = kwargs.get('resource', [])
+        self._spell = kwargs.get('spell', None)
+
+    def execute(self, battle: Battle, state: TurnState):
+        self._combatant.apply_effect(self.effect)

@@ -77,6 +77,24 @@ def make_monk(name, stats=[14, 14, 16, 10, 16, 8]):
     return char
 
 
+def make_angry_guisarme(name, stats=[16, 14, 16, 10, 10, 10]):
+    char = Character(name, brain=brain.MoveAttackBrain())
+    char.set_stats(*stats)
+    level = 6
+    char.wear_item(dnd.armor.chainmail, ITEM_SLOT_ARMOR)
+    char.wear_item(dnd.weapon.guisarme, ITEM_SLOT_MAIN)
+    char.add_class_level(classes.Barbarian, 6)
+    # feats = {1, 1, 3, 6}
+    char.add_feat(dnd.feats.CombatReflexes())
+    char.add_feat(dnd.feats.DeftOpportunist())
+    char.add_feat(dnd.feats.ImprovedTrip())
+
+    char.add_skill(dnd.feats.SkillTumble, 3+level)
+    char.add_skill(dnd.feats.SkillConcentration(), 3+level)
+    return char
+
+
+
 '''
 Owlbear skeleton: CR 2; Large undead; HD 5d12; hp 32; Init +6; Spd 30 ft. (6 squares);
 AC 13 (-1 size, +2 dex, +2 natural), touch 11, flat-footed 11;

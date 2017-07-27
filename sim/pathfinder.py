@@ -88,8 +88,8 @@ class PathFinder(object):
     # TODO: should move costmap to cython
     def sum_obstacle(self, x0, y0):
         cost = 0
-        for adj in self._occupation:
-            index = x0 + adj[0] + (y0+adj[1])*self._width
+        for ax, ay in self._occupation:
+            index = x0 + ax + (y0 + ay)*self._width
             cost += self._costmap[index]
         return cost
 
@@ -211,6 +211,25 @@ class PathFinder(object):
         # Run wave and compile the path
         return self.run_wave(start_node, in_range)
 
+    # Drawing a straight path for charge attacks
+    def check_straight_path(self, start_pos, dest):
+        self.sync_grid(self.grid)
+        # There are obstacles that are created by the unit itself
+        # Pathfinder breaks into this obstacles
+        line_path = get_line(start_pos.tuple(), dest.tuple())
+        limit = 0
+        path = Path(self.grid)
+        sum_obstacles = 0
+        for x, y in line_path:
+            move_cost = self.sum_obstacle(x, y)
+            if move_cost > limit:
+                return None
+            path.append(Point(x=x,y=y))
+            sum_obstacles += move_cost
+        # Flipping back reversed path
+        path.reverse()
+        return path
+
     def path_to_melee_range(self, start_pos, dest, range0, range1):
         self.sync_grid(self.grid)
         """
@@ -327,22 +346,29 @@ class Path(object):
         """
         return len(self.__path)
 
+    class Iterator:
+        def __init__(self, path):
+            self._path = path
+            self._index = 0
+
+        def next(self):
+            return self.__next__()
+
+        def __next__(self):
+            if self._index >= len(self._path):
+                raise StopIteration
+            next_item = self._path[self._index]
+            self._index += 1
+            return next_item
+
     def __getitem__(self, index):
         return self.__path[index]
 
+    def __len__(self):
+        return len(self.__path)
+
     def __iter__(self):
-        self.__iter_current = 0
-        return self
-
-    def next(self):
-        return self.__next__()
-
-    def __next__(self):
-        if self.__iter_current >= len(self.__path):
-            raise StopIteration
-        next_item = self.__path[self.__iter_current]
-        self.__iter_current += 0
-        return next_item
+        return Path.Iterator(self)
 
     def __repr__(self):
         return self.__path.__repr__()

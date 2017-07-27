@@ -135,6 +135,10 @@ class Brain(object):
         self.target = None
         # Path to follow
         self.path = None
+        self.logger = logging.getLogger("brain")
+        self._allow_move = True
+        self._allow_attack = True
+        self._allow_spells = True
 
     # Prepare to start a turn
     # Used for selecting fighting styles, activating feats and so on
@@ -148,6 +152,38 @@ class Brain(object):
     # Brain make its turn right here
     def make_turn(self, battle):
         pass
+
+    # Return a list of available actions for current state
+    def what_can_i_do(self, battle: Battle, state: TurnState, **kwargs):
+        """
+        Returns a dict that maps DURATION -> list of actions to do in current turn state
+
+        Move:
+         - move to target
+         - move to safety
+         - move to any point in area (who needs it except manual player?)
+        Attack:
+         - attack a target
+         - custom attack target
+         ...
+        Activate a style
+        Custom actions:
+         - activate effect
+        """
+        result = {}
+
+        def add_result(act):
+            duration = act.duration
+            if duration not in result:
+                result[duration] = []
+            result[duration].append(act)
+
+        # Add relevant attack actions. Iterate through
+        # Add custom actions
+        for name, action in self._combatant._custom_actions.items():
+            add_result(action)
+
+        return result
 
     # Called when someone provokes attack of opportunity
     def respond_provocation(self, battle, target: Combatant, action=None):
@@ -190,6 +226,15 @@ class Brain(object):
         else:
             return self.slave.is_adjacent(target)
 
+    def in_charge_range(self, target:Entity):
+        if self.slave.has_status_flag(STATUS_FLAG_EXHAUSTED):
+            return False
+        distance_to_target = self.slave.distance_melee(target)*5
+        # 1. Check if target is within double move range
+        if distance_to_target > self.slave.move_speed*2:
+            return False
+        return True
+
     def can_trip(self, target):
         slave = self.slave
         if not target.has_status_flag(STATUS_PRONE):
@@ -202,7 +247,6 @@ class Brain(object):
 class MoveAttackBrain(Brain):
     def __init__(self):
         Brain.__init__(self)
-        self.logger = logging.getLogger("brain")
 
     def make_turn(self, battle):
         state = self.get_turn_state()
@@ -211,24 +255,39 @@ class MoveAttackBrain(Brain):
             print("%s has no targets" % self.slave.get_name())
             return
 
+        no_charge = False
+
         while not state.complete():
             if self.slave.has_status_flag(STATUS_PRONE):
                 yield StandUpAction(self.slave)
 
-            # 2. If enemy is in range - full round attack
-            if self.can_attack(self.target):
-                self.logger.debug("target is near, can attack")
-                # Use all the attacks
-                if self.target.is_consciousness():
-                    if self.can_trip(self.target):
-                        yield TripAttackAction(self.slave, state, self.target)
-                    else:
-                        yield AttackAction(self.slave, state, self.target)
-                else:
-                    self.target = None
-                    break
+            need_move = False
 
-            if state.can_move_distance() and self.target is not None:
+            # Use all the attacks
+            if self.target.is_consciousness():
+                if self.in_charge_range(self.target) and not no_charge:
+                    # Pick best tile for charging
+                    path = battle.pathfinder.check_straight_path(self.slave.get_coord(), self.target.get_coord())
+                    if path is not None:
+                        yield from self.slave.do_action_charge(battle, state, self.target, path)
+                        continue
+                    else:
+                        no_charge = True
+                # 2. If enemy is in range - full round attack
+                elif self.can_attack(self.target):
+                    self.logger.debug("target is near, can attack")
+
+                    if self.can_trip(self.target):
+                        yield TripAttackAction(self.slave, self.target)
+                    else:
+                        yield AttackAction(self.slave, self.target)
+                else:
+                    need_move = True
+            else:
+                self.target = None
+                break
+
+            if state.can_move_distance() and self.target is not None and need_move:
                 self.logger.debug("target %s is away. Finding path" % self.target.name)
                 path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
                 self.logger.debug("found path of %d feet length" % path.length())
@@ -264,7 +323,7 @@ class StandAttackBrain(Brain):
         self.logger.debug("target is near, can attack")
         while state.can_attack():
             if self.target.is_consciousness():
-                yield AttackAction(self.slave, state, self.target)
+                yield AttackAction(self.slave, self.target)
             else:
                 self.target = None
                 break

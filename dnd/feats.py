@@ -1,9 +1,27 @@
 from sim.character import Feat, Character
 from sim.combatant import *
 from sim.item import *
+from sim.actions import *
 
 import dnd.weapon as weapons
 import dnd.styles as styles
+
+"""
+=============================================================================
+Feats are here
+"""
+
+
+class BasicCombat(Feat):
+    """
+    Feat provides basic SRD combat bonuses and modifiers
+    """
+    def __init__(self):
+        Feat.__init__(self, "basic_combat", internal=True)
+
+    def apply(self, combatant):
+        combatant.allow_effect_activation(styles.StyleDefenciveFight())
+
 
 class TwoWeaponFighting(Feat):
     def __init__(self):
@@ -14,7 +32,7 @@ class TwoWeaponFighting(Feat):
             if c._many_weapon_wield:
                 desc.attack += 6 if desc.offhand else 2
 
-        combatant.event_manager().on_calc_attack += event
+        combatant.event_manager.on_calc_attack += event
 
 
 class ImprovedTwoWeaponFighting(Feat):
@@ -33,8 +51,7 @@ class ImprovedTwoWeaponFighting(Feat):
             if weapon is not None:
                 c.add_bonus_strike(weapon, bab=-5, offhand=True)
 
-        events = combatant.event_manager()
-        events.on_turn_start += turn_event
+        combatant.event_manager.on_turn_start += turn_event
 
 
 class GreaterTwoWeaponFighting(Feat):
@@ -52,8 +69,7 @@ class GreaterTwoWeaponFighting(Feat):
             if weapon is not None:
                 c.add_bonus_strike(weapon, bab=-10, offhand=True)
 
-        events = combatant.event_manager()
-        events.on_turn_start += turn_event
+        combatant.event_manager.on_turn_start += turn_event
 
 
 class OversizedTwoWeaponFighting(Feat):
@@ -69,13 +85,13 @@ class OversizedTwoWeaponFighting(Feat):
             if c._many_weapon_wield and not c.get_offhand_weapon().is_light(combatant):
                 desc.attack += 2
 
-        combatant.event_manager().on_calc_attack += event
+        combatant.event_manager.on_calc_attack += event
 
 
 class Rage(Feat):
-    class Effect(Combatant.StatusEffect):
-        def __init__(self, level):
-            super(Rage.Effect, self).__init__()
+    class RageEffect(Combatant.StatusEffect):
+        def __init__(self, name, level):
+            super(Rage.RageEffect, self).__init__(name)
             # Rage level
             self._level = level
             self._stat_bonus = 4
@@ -97,12 +113,14 @@ class Rage(Feat):
             combatant.modify_save_will(2)
             self.set_duration(2 + combatant.constitution_modifier())
 
-    def __init__(self):
+    def __init__(self, source='barbarian'):
         Feat.__init__(self, "b_rage")
+        self.effect = Rage.RageEffect('b_rage', 1)
+        self._source = source
 
     def apply(self, combatant: Character):
-        #combatant.add_feat_action(ActivateEffect(), DURATION_STANDARD)
-        pass
+        action = PersonalEffectAction(self.name, combatant, self.effect)
+        combatant.add_action(self.name, action, self)
 
 
 class MonkBonusAC(Feat):
@@ -114,9 +132,8 @@ class MonkBonusAC(Feat):
     def __init__(self):
         self._bonus = 0
 
-    def apply(self, combatant:Character):
-        events = combatant.event_manager()
-        events.on_turn_start += self.on_start
+    def apply(self, combatant: Character):
+        combatant.event_manager.on_turn_start += self.on_start
 
     # Called when effect has started
     def on_start(self, combatant, **kwargs):
@@ -144,8 +161,7 @@ class MonkMovement(Feat):
         self._bonus = 0
 
     def apply(self, combatant: Combatant):
-        events = combatant.event_manager()
-        events.on_turn_start += self.on_start
+        combatant.event_manager.on_turn_start += self.on_start
 
     # Called when effect has started
     def on_start(self, combatant, **kwargs):
@@ -173,16 +189,17 @@ class CombatReflexes(Feat):
         super(CombatReflexes, self).__init__("Combat Reflexes")
         self._bonus_attacks = 0
 
-    def apply(self, combatant:Character):
-        events = combatant.event_manager()
-        events.on_turn_start += self.on_start
-        events.on_change_dex += self.on_dex_changed
+    def apply(self, combatant: Character):
+        events = combatant.event_manager
 
-    def on_dex_changed(self, combatant, effect, old, new):
-        mod_new = ability_modifier(new)
-        mod_old = ability_modifier(old)
-        delta = mod_new - mod_old
-        combatant._opportunity_attacks += delta
+        def on_dex_changed(combatant, effect, old, new):
+            mod_new = ability_modifier(new)
+            mod_old = ability_modifier(old)
+            delta = mod_new - mod_old
+            combatant._opportunity_attacks += delta
+
+        events.on_turn_start += self.on_start
+        events.on_change_dex += on_dex_changed
 
     def on_start(self, combatant):
         self._bonus_attacks = max(combatant.dexterity_modifier(), 1)
@@ -205,7 +222,7 @@ class DeftOpportunist(Feat):
             if desc.opportunity:
                 desc.attack += 4
 
-        combatant.event_manager().on_select_attack_target += event
+        combatant.event_manager.on_select_attack_target += event
 
 
 class ImprovedTrip(Feat):
@@ -224,7 +241,7 @@ class ImprovedTrip(Feat):
             if desc.method == 'trip':
                 c.add_bonus_strike(desc.weapon, attack=desc.attack)
 
-        combatant.event_manager().on_select_attack_target += event_attack
+        combatant.event_manager.on_select_attack_target += event_attack
         combatant.add_status_flag(STATUS_HAS_IMPROVED_TRIP)
 
 
@@ -237,7 +254,7 @@ class InsightfulStrike(Feat):
             mod = c.intellect_modifier()
             if mod > 0:
                 desc.damage.add_die(1, mod)
-        combatant.event_manager().on_calc_attack += event
+        combatant.event_manager.on_calc_attack += event
 
 
 class WeaponFinesse(Feat):
@@ -257,7 +274,7 @@ class WeaponFinesse(Feat):
                 bonus = dex_mod - str_mod
                 desc.attack += bonus
 
-        combatant.event_manager().on_calc_attack += event
+        combatant.event_manager.on_calc_attack += event
 
 
 class WeaponFocus(Feat):
@@ -267,7 +284,7 @@ class WeaponFocus(Feat):
         self._weapon = weapon_root
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_calc_attack += self.on_calculate_attack
+        combatant.event_manager.on_calc_attack += self.on_calculate_attack
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
         if self._weapon == desc.weapon.get_base_root():
@@ -281,7 +298,7 @@ class PowerCritical(Feat):
         self._weapon = weapon_root
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_calc_attack += self.on_calculate_attack
+        combatant.event_manager.on_calc_attack += self.on_calculate_attack
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
         if self._weapon == desc.weapon.get_base_root():
@@ -293,7 +310,7 @@ class PointBlankShot(Feat):
         super(PointBlankShot, self).__init__("Point blank shot")
 
     def apply(self, combatant: Combatant):
-        combatant.event_manager().on_select_attack_target += self.on_calculate_attack
+        combatant.event_manager.on_select_attack_target += self.on_calculate_attack
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
         if desc.is_ranged() and desc.range <= 30:
@@ -305,7 +322,7 @@ class PreciseShot(Feat):
         super(PreciseShot, self).__init__("Precise shot")
 
     def apply(self, combatant: Combatant):
-        #combatant.event_manager().on_select_attack_target += self.on_calculate_attack
+        #combatant.event_manager.on_select_attack_target += self.on_calculate_attack
         pass
 
     def on_calculate_attack(self, combatant, desc: AttackDesc):
@@ -337,7 +354,7 @@ class SpinningHalberd(Feat):
             if isinstance(effect, styles.StyleDefenciveFight):
                 c.modify_ac_dodge(-1, self)
 
-        events = combatant.event_manager()
+        events = combatant.event_manager
         events.on_turn_start += turn_event
         events.on_effect_start += on_start_defence
         events.on_effect_stop += on_stop_defence
@@ -350,13 +367,3 @@ class FlurryOfBlows(Feat):
     def apply(self, combatant: Combatant):
         combatant.allow_effect_activation(styles.StyleFlurryOfBlows(), self)
 
-
-# Timed activation
-# Stops after a set of rounds
-class Rage(Feat):
-    def __init__(self):
-        super(Rage, self).__init__("Rage")
-
-    def apply(self, combatant: Combatant):
-        pass
-        #combatant.allow_effect_activation(StatusRage, self)

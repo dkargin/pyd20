@@ -10,6 +10,26 @@ from sim.events import AnimationEvent
 from .turnstate import TurnState
 
 
+class CustomAction(object):
+    def __init__(self, name, action_type, **kwargs):
+        self.name = name
+        self.action_type = action_type
+        self._provoke = kwargs.get('provoke', False)
+
+    # Called to activate an action
+    def activate(self, combatant, state):
+        pass
+
+    # If effect is spell casting
+    def is_spell(self):
+        return False
+
+    # Should this effect provoke AoO
+    def is_provoking(self):
+        return self._provoke
+
+
+
 # Utility class for storing event subscribers
 class SubscriberList:
     def __init__(self):
@@ -116,6 +136,10 @@ class Combatant(Entity):
         def on_finish(self, combatant, **kwargs):
             pass
 
+        # Called on every update, before combatant can take an actions
+        def update(self, combatant):
+            pass
+
         def __repr__(self):
             return str(self)
 
@@ -147,8 +171,6 @@ class Combatant(Entity):
 
         self._stats = [10, 10, 10, 10, 10, 10]
 
-        # List of current status effects, mapping effect->duration
-        self._status_effects = []
         self._status_flags = set()
         self._experience = 0
         self._alignment = 0
@@ -158,6 +180,7 @@ class Combatant(Entity):
         self._health_max = 0
         # Temporary HP, mappinf from effect to hp
         self._health_temporary = {}
+        self._resources = {}
         self._health = 0
         self._brain = None
 
@@ -203,11 +226,18 @@ class Combatant(Entity):
         self._opportunity_attacks_max = 1
         self._opportunities_used = []
         self._natural_reach = 1
-
         self._turn_state = TurnState()
-
         self._known_styles = set()
         self._active_styles = []
+        self._custom_actions = {}
+
+        # Skill ranks, maps skill_type -> ranks
+        self._skills = {}
+        # Skill bonuses, maps skill_type -> bonus ranks
+        self._skill_bonus = {}
+
+        # List of current status effects, mapping effect->duration
+        self._effects = {}
 
         self._feats = []
         self._events = Combatant.EventManager()
@@ -218,6 +248,39 @@ class Combatant(Entity):
         brain = kwargs.get('brain', None)
         self.set_brain(brain)
 
+    def add_skill(self, skill_class, levels=1):
+        if skill_class in self._skills:
+            self._skills[skill_class] += levels
+        else:
+            self._skills[skill_class] = levels
+
+    def armor_check_penalty(self):
+        armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
+        if armor is not None:
+            return armor.skill_penalty
+        return 0
+
+    # Get current level for selected skill
+    def skill_levels(self, skill):
+        if skill.trained and skill not in self._skills:
+            return 0
+
+        result = ability_modifier(self._stats[skill.ability])
+        armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
+
+        if skill.armor_penalty and armor is not None:
+            result -= self.armor_check_penalty()
+
+        if skill in self._skills:
+            result += self._skills[skill]
+
+        if skill in self._skill_bonus:
+            result += self._skill_bonus[skill]
+
+        # There can be some penalties for skill usage. Maybe we cut result by events?
+        return result
+
+    @property
     def event_manager(self):
         """
         Get access to event manager
@@ -265,9 +328,6 @@ class Combatant(Entity):
         if stat == STAT_CON:
             self._temp_hp[source] = self.level() * value
 
-    def add_persistent_effect(self, effect, effect_on, effect_off):
-        self._status_effects.append(effect)
-
     def get_armor_type(self):
         armor = self._equipped.get(ITEM_SLOT_ARMOR, None)
         if armor is None:
@@ -314,6 +374,8 @@ class Combatant(Entity):
         self._events.on_turn_start(self)
         if brain:
             self._brain.prepare_turn(battle)
+
+        return state
 
     # Called when combatant's turn is ended
     def on_turn_end(self):
@@ -387,6 +449,10 @@ class Combatant(Entity):
             print("%s is unconsciousness" % self.name)
         return self._health
 
+    def update_effects(self):
+        for effect in self._effects:
+            effect.update(self)
+
     # Link brain
     def set_brain(self, brain):
         if brain == self._brain:
@@ -453,6 +519,20 @@ class Combatant(Entity):
         if weapon is not None and weapon.has_reach():
             reach *= 2
         return reach
+
+    # Adds custom action to be performed
+    def add_action(self, name, action, source):
+        """
+        Adds new action to available action list
+        :param name: - internal action name
+        :param action: - action wrapper
+        :param source: - source that provides an action
+        :return:
+        """
+        self._custom_actions[name] = action
+
+    def remove_action(self, action):
+        raise NotImplemented
 
     # Set combatant faction
     def set_faction(self, faction):
@@ -699,6 +779,18 @@ class Combatant(Entity):
         """
         return d20.roll() + self.dexterity_modifier()
 
+    def resource_remaining(self, resource_type):
+        return self._resources.get(resource_type, 0)
+
+    def spend_resource(self, resource_type, amount=1):
+        if self.resource_remaining(resource_type) >= amount:
+            self._resources[resource_type] -= amount
+            if self._resources[resource_type] <= 0:
+                self._resources.remove(resource_type)
+            return True
+        return False
+
+
     def _set_attack_target(self, desc, target):
         self._events.on_select_attack_target(self, desc)
 
@@ -835,7 +927,8 @@ class Combatant(Entity):
         yield AnimationEvent(animation.MeleeAttackFinish(self, target))
 
     # Using move action
-    def do_action_move_tiles(self, battle, state: TurnState, path):
+    # TODO: maybe we should move this code to ActionMove ?
+    def do_action_move_tiles(self, battle, state: TurnState, path, **kwargs):
         # We should iterate all the tiles
         tiles_moved = []
         self.path = path
@@ -850,7 +943,7 @@ class Combatant(Entity):
             cost = 5
             tiles_moved.append((tile, cost))
             if battle.position_threatened(self, tile.x, tile.y):
-                yield sim.actions.MoveAction(self, state, tiles_moved)
+                yield sim.actions.MoveAction(self, tiles_moved)
                 tiles_moved = []
                 traveled = 0
 
@@ -860,6 +953,39 @@ class Combatant(Entity):
 
         # One last step
         if len(tiles_moved) > 0 is not None:
-            yield sim.actions.MoveAction(self, state, tiles_moved)
+            yield sim.actions.MoveAction(self, tiles_moved)
         pass
+
+    def do_action_charge(self, battle, state: TurnState, target: Entity, path, **kwargs):
+        # Spending up to 2 move actions and make an attack
+        # Two move actions should spend combatant's action pool, so we add one action later
+        #
+        # We should iterate all the tiles
+        tiles_moved = []
+        self.path = path
+        # Distance traveled
+        traveled = 0
+        # [0,1,2,3,4,5,6]
+        # [0,0,0,T,T,0,0]
+        # Moves: 0->3, 3->4, 4->6
+        waypoints = copy.copy(path)
+        while len(waypoints) > 0:
+            tile = waypoints.pop(0)
+            cost = 5
+            tiles_moved.append((tile, cost))
+            if battle.position_threatened(self, tile.x, tile.y):
+                yield sim.actions.MoveAction(self, tiles_moved)
+                tiles_moved = []
+                traveled = 0
+
+            traveled += cost
+            if traveled >= state.moves_left:
+                break
+
+        # One last step
+        if len(tiles_moved) > 0 is not None:
+            yield sim.actions.MoveAction(self, tiles_moved)
+        # Right now we are limited to executing only attack actions: strike, disarm, trip, sunder, stunning fist,
+        # We should let brain pick proper attack actions
+
 

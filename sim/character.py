@@ -2,7 +2,7 @@ import copy
 import json
 import os
 
-import dnd.styles as styles
+#import dnd.styles as styles
 from .combatant import Combatant
 from .core import *
 from .dice import *
@@ -62,8 +62,6 @@ class Character(Combatant):
         self._items = {}
         self._skills = {}
         self._race = None
-
-        self.allow_effect_activation(styles.StyleDefenciveFight())
 
     def __repr__(self):
         return "<" + self._name + ">"
@@ -675,7 +673,7 @@ class Skill(object):
 
     __ALL_SKILLS = list()
 
-    def __init__(self, name=None, level=0, ability=None, untrained=False):
+    def __init__(self, name="noskill", **kwargs):
         """
         Creates a Skill instance
 
@@ -684,13 +682,28 @@ class Skill(object):
         :param str ability: The ability of the skill
         :param bool untrained: Whether the skill can be used untrained
         """
-        self.name = name
-        self.level = level
-        self.ability = ability
-        self.untrained = untrained
+        self._name = name
+        self.ability = kwargs.get('ability', STAT_CHA)
+        self.trained = kwargs.get('trained', False)
+        self.armor_penalty = kwargs.get('armor', False)
 
     def __repr__(self):
-        return "<" + self.name + " Level " + str(self.level) + ">"
+        return "<" + self._name + ">"
+
+    @property
+    def name(self):
+        return self._name
+
+    def __hash__(self):
+        return hash(self._name)
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __ne__(self, other):
+        # Not strictly necessary, but to avoid having both x==y and x!=y
+        # True at the same time
+        return not (self == other)
 
     @staticmethod
     def available_skills():
@@ -716,17 +729,3 @@ class Skill(object):
             if skill.name.lower() == skill_name.lower():
                 return copy.deepcopy(skill)
         return None
-
-    @staticmethod
-    def load(data_path):
-        """
-        Loads skills from a data file. This method should be called when initializing a package that contains
-        game specific skill data.
-
-        :param str data_path: The path to the data file in json format, relative to the root package
-        """
-        data_file = relative_path() + "/" + data_path
-        skills = json.loads(open(data_file, encoding="utf-8").read())["skills"]
-        Skill.__ALL_SKILLS = list()
-        for skill in skills:
-            Skill.__ALL_SKILLS.append(Skill(skill["name"], 0, skill["ability"], skill["untrained"]))
