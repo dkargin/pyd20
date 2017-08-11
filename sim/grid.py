@@ -52,6 +52,9 @@ class Point:
     def distance(self, b):
         return self.distance_tiles(b)*5
 
+    def distance_xy(self, x, y):
+        return math.sqrt((self.x - x)**2 + (self.y - y)**2) * 5
+
     def __str__(self):
         return "(%d;%d)" % (self.x, self.y)
 
@@ -154,6 +157,14 @@ class Grid(object):
         :param float size: the new tile size
         """
         self._size = size / unit_length
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
 
     def get_width(self):
         return self._width

@@ -168,7 +168,6 @@ class Combatant(Entity):
 
         self._size_type = size_type
         self._size_cat = SIZE_CATEGORIES[size_type]
-        self._current_initiative = 0
         self._faction = "none"
 
         self._stats = [10, 10, 10, 10, 10, 10]
@@ -182,8 +181,8 @@ class Combatant(Entity):
         self._health_max = 0
         # Temporary HP, mappinf from effect to hp
         self._health_temporary = {}
+        # Innate expendable resources, like spell slots, feat usages and so on
         self._resources = {}
-        self._health = 0
         self._brain = None
 
         # Save value from classes
@@ -203,27 +202,34 @@ class Combatant(Entity):
         self._ac_dodge = 0
         self._ac_natural = 0
         self._ac_deflection = 0
+        # Armor class limit from armor
+        self._max_dex_ac = 100
+        self._health = 0
+        self._current_initiative = 0
         self._move_speed = 30
         self._move_speed_bonus = 0
         # Penalty to move speed
         self._move_penalty = 0
         # Attack bonus for chosen maneuver/style
         self._attack_bonus_style = 0
+        # Damage bonus for chosen maneuver/style
+        # Note: Damage bonus can differ for weapon in each hand
+        self._damage_bonus_style = 0
         self._two_hand_wield = False
         self._many_weapon_wield = False
-        # Damage bonus can differ for each weapon
-        self._damage_bonus_style = 0
         # Full round attack set
         self._weapon_strikes = []
+        # Attack sequence for natural weapons
         self._natural_strikes = {}
         self._additional_strikes = []
 
+        self._range_vision = 60
+        self._range_blindsense = 0
+        self._range_darkvision = 0
         self._carry_weight = 0
         self._carry_weight_limit = 0
         self._equipped = {}
-        self._spell_failure = 0
-        self._armor_check_penalty = 0
-        self._max_dex_ac = 100
+        self._inventory = {}
         self._opportunity_attacks = 1
         self._opportunity_attacks_max = 1
         self._opportunities_used = []
@@ -249,6 +255,9 @@ class Combatant(Entity):
 
         brain = kwargs.get('brain', None)
         self.set_brain(brain)
+
+    def on_attach_to_grid(self, grid):
+        self._brain.on_attach_to_grid(grid)
 
     def add_skill(self, skill_class, levels=1):
         if skill_class in self._skills:
@@ -464,7 +473,7 @@ class Combatant(Entity):
             self._brain.slave = None
         # Attach new brain
         if brain is not None:
-            brain.slave = self
+            brain._slave = self
         self._brain = brain
 
     # Check if combatant has near reach
@@ -818,6 +827,10 @@ class Combatant(Entity):
             self._turn_state.attacks.remove(desc)
         if desc in self._additional_strikes:
             self._additional_strikes.remove(desc)
+
+    # Returns max sense range
+    def max_sense_range(self):
+        return max(self._range_vision, self._range_blindsense, self._range_darkvision)
 
     # Turn generators #
 

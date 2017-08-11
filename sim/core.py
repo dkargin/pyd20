@@ -1,4 +1,5 @@
 import math
+import os
 
 UNIT_LENGTH_FEET = 1.0
 UNIT_LENGTH_METER = 0.3048
@@ -264,3 +265,17 @@ def ac_size_modifier(height):
     :return: int
     """
     return size_category(height)["ac_modifier"]
+
+
+def relative_path():
+    """
+    auxiliary function to retrieve the relative path to the current script
+    :rtype: str
+    """
+    path = os.path.realpath(__file__)
+    if "nt" in os.name:
+        parts = path.split("\\")
+    else:
+        parts = path.split("/")
+    parts = parts[:len(parts) - 1]
+    return "/".join(parts)

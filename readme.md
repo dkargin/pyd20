@@ -1,10 +1,17 @@
 # What is this #
 
-This is D&D 3.5 battle ground, implemented in python
+This is D&D 3.5 battle ground, implemented in python 3.5
 
 # Installation #
 
 p20dnd requires pygame to render battlescape
+
+web game requires:
+
+- eventlet
+- flask
+- wtforms
+- flask_socketio
 
 ```
 pip install pygame
@@ -43,9 +50,11 @@ Look at main.py.
 # Plan #
 
 1. Charge attack
-    - draw a line
-    - move a line
+    - draw a line               OK
+    - move a line               OK
     - can be interrupted!
+    - pathfinding problems: stumbled by its own occupancy.
+    Character should remove itself from the map every turn start
 1. Ranged attack
     - move to range             OK?
     - bow them all              OK?
@@ -54,6 +63,8 @@ Look at main.py.
     - crossbow reload
 1. Some skill checks: tumble, spot, search
 1. Manual brain
+    - generate available actions
+    - implement UI to pick another action
 1. Draw weapon sprites
 1. Spring attack series. Because they are awesome!
 1. Brain should switch weapons according to situation and distance to enemy

@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 #from character import *
 
-from sim.character import Race
+from sim.race import Race
+
+Race.load("../dnd/races.json")
 
 '''
 Class.load("dnd/classes.json")
 Skill.load("dnd/skills.json")
-Race.load("dnd/races.json")
 Feat.load("dnd/feats.json")
 
 # Classes

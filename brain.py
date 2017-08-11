@@ -130,7 +130,7 @@ class Brain(object):
     :type target: Combatant | None
     """
     def __init__(self):
-        self.slave = None
+        self._slave = None
         # Attack target
         self.target = None
         # Path to follow
@@ -139,6 +139,17 @@ class Brain(object):
         self._allow_move = True
         self._allow_attack = True
         self._allow_spells = True
+        self._pathfinder = None
+
+    @property
+    def slave(self):
+        return self._slave
+
+    def on_attach_to_grid(self, grid):
+        if self._pathfinder is None:
+            self._pathfinder = PathFinder(grid)
+        else:
+            self._pathfinder.sync_grid(grid)
 
     # Prepare to start a turn
     # Used for selecting fighting styles, activating feats and so on
@@ -242,6 +253,25 @@ class Brain(object):
         # There are some ways to make ranged trip
         return slave.get_main_weapon().can_trip() or slave.has_status_flag(STATUS_HAS_IMPROVED_TRIP)
 
+    def check_straight_path(self, start_pos, dest):
+        self._pathfinder.check_straight_path(start_pos, dest)
+
+    def sync_pathfinder(self, combatant, battle):
+        additional_range = 2
+        distance = combatant.max_sense_range()/5 + additional_range
+        left = combatant.x - distance
+        top = combatant.y - distance
+        right = combatant.x + distance
+        bottom = combatant.y + distance
+
+        self._pathfinder.attach_grid(battle.grid, left, top, right, bottom)
+
+    def path_to_melee_range(self, target, attack_range):
+        near = target.get_size() * 0.5
+        far = target.get_size() * 0.5 + attack_range
+        path = self._pathfinder.path_to_melee_range(self.slave.get_coord(), target.get_center(), near, far)
+        return path
+
 
 # Brain for simple movement and attacking
 class MoveAttackBrain(Brain):
@@ -258,6 +288,7 @@ class MoveAttackBrain(Brain):
         no_charge = False
 
         while not state.complete():
+            self.sync_pathfinder(self.slave, battle)
             if self.slave.has_status_flag(STATUS_PRONE):
                 yield StandUpAction(self.slave)
 
@@ -267,7 +298,8 @@ class MoveAttackBrain(Brain):
             if self.target.is_consciousness():
                 if self.in_charge_range(self.target) and not no_charge:
                     # Pick best tile for charging
-                    path = battle.pathfinder.check_straight_path(self.slave.get_coord(), self.target.get_coord())
+                    self.sync_pathfinder(self.slave, battle)
+                    path = self.check_straight_path(self.slave.get_coord(), self.target.get_coord())
                     if path is not None:
                         yield from self.slave.do_action_charge(battle, state, self.target, path)
                         continue
@@ -289,7 +321,7 @@ class MoveAttackBrain(Brain):
 
             if state.can_move_distance() and self.target is not None and need_move:
                 self.logger.debug("target %s is away. Finding path" % self.target.name)
-                path = battle.path_to_melee_range(self.slave, self.target, self.slave.total_reach())
+                path = self.path_to_melee_range(self.target, self.slave.total_reach())
                 self.logger.debug("found path of %d feet length" % path.length())
                 yield from self.slave.do_action_move_tiles(battle, state, path)
 

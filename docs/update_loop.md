@@ -24,6 +24,18 @@ Each character is updated according to its initiative position
 - combatant.on_turn_end()
     - run character events on_turn_end
 
+
+## Bonuses ##
+
+Values reset every turn:
+
+- attacks
+- _attack_bonus_style
+- _damage_bonus_style
+- _max_dex_ac
+- _dodge_ac
+
 ## Battle update loop ##
 
-Battle used generator-based approach. It has infinite loop, that picks every character and yields all update events from picked character
+Battle used generator-based approach. 
+It has infinite loop, that picks every character and yields all update events from picked character

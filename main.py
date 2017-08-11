@@ -7,6 +7,7 @@ from render.render import Renderer
 import sim.battle as battle
 import sim.events as events
 from sim.dice import d20
+import dnd
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,8 @@ char1.add_class_level(classes.Fighter, 8)
 char1.add_feat(dnd.feats.TwoWeaponFighting())
 char1.add_feat(dnd.feats.ImprovedTwoWeaponFighting())
 char1.add_feat(dnd.feats.OversizedTwoWeaponFighting())
-char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
+#char1.add_feat(dnd.feats.PowerCritical(dnd.weapon.glaive))
+char1.set_race(dnd.half_orc)
 
 '''
 char1 = Character("Bob", csize=SIZE_LARGE, brain=brain.StandAttackBrain(), model='type3')

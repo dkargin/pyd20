@@ -24,7 +24,7 @@ class Battle(object):
         Creates an instance of a battle.
         """
         self._grid = Grid(grid_width, grid_height)
-        self.pathfinder = PathFinder(self.grid)
+        #self.pathfinder = PathFinder(self.grid)
         self._combatants = []
         self.round = 0
 
@@ -56,6 +56,7 @@ class Battle(object):
         combatant.recalculate()
         self._combatants.append(combatant)
         self.grid.register_entity(combatant)
+        combatant.on_attach_to_grid(self.grid)
         combatant.on_turn_start(self, False)
 
         combatant.fix_visual()
@@ -154,13 +155,6 @@ class Battle(object):
     def is_faction_enemy(self, faction_a, faction_b):
         return faction_a != faction_b
 
-    def path_to_melee_range(self, src: Combatant, target, attack_range):
-        start = self.tile_for_combatant(src)
-        near = target.get_size()*0.5
-        far = target.get_size()*0.5 + attack_range
-        path = self.pathfinder.path_to_melee_range(src.get_coord(), target.get_center(), near, far)
-        return path
-
     # Find best enemy
     def find_enemy(self, char):
         enemies = []
@@ -183,11 +177,11 @@ class Battle(object):
             self._combatants.update_priority(combatant, initiative)
 
     # TODO: Get rid of it
-    def tile_for_combatant(self, combatant) -> Tile:
-        return self.tile_for_position(combatant.x, combatant.y)
+    #def tile_for_combatant(self, combatant) -> Tile:
+    #    return self.tile_for_position(combatant.x, combatant.y)
 
-    def tile_for_position(self, x, y):
-        return self.grid.get_tile(x, y)
+    #def tile_for_position(self, x, y):
+    #    return self.grid.get_tile(x, y)
 
     def tile_threatened(self, tile, combatant):
         if tile is None:
@@ -201,7 +195,8 @@ class Battle(object):
         dx = x - combatant.x
         dy = y - combatant.y
         for tile in combatant.occupied_tiles:
-            if self.tile_threatened(self.tile_for_position(tile.x + dx, tile.y + dy), combatant):
+            tile = self._grid.get_tile(tile.x + dx, tile.y + dy)
+            if self.tile_threatened(tile, combatant):
                 return True
         return False
 
