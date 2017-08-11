@@ -269,7 +269,9 @@ class Brain(object):
     def path_to_melee_range(self, target, attack_range):
         near = target.get_size() * 0.5
         far = target.get_size() * 0.5 + attack_range
-        path = self._pathfinder.path_to_melee_range(self.slave.get_coord(), target.get_center(), near, far)
+        pos_src = self.slave.get_coord()
+        pos_target = target.get_center()
+        path = self._pathfinder.path_to_melee_range(pos_src, pos_target, near, far)
         return path
 
 
@@ -322,8 +324,11 @@ class MoveAttackBrain(Brain):
             if state.can_move_distance() and self.target is not None and need_move:
                 self.logger.debug("target %s is away. Finding path" % self.target.name)
                 path = self.path_to_melee_range(self.target, self.slave.total_reach())
-                self.logger.debug("found path of %d feet length" % path.length())
-                yield from self.slave.do_action_move_tiles(battle, state, path)
+                if path is not None:
+                    self.logger.debug("found path of %d feet length" % path.length())
+                    yield from self.slave.do_action_move_tiles(battle, state, path)
+                else:
+                    print("No path is found")
 
         self.logger.debug("%s has done thinking" % self.slave.name)
 

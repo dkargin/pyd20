@@ -11,6 +11,9 @@ from dnd import classes
 
 
 def draw_cross(grid, x, y, size):
+    x = math.floor(x)
+    y = math.floor(y)
+    size = math.ceil(size)
     for i in range(-size, size+1):
         grid.set_terrain(x, y + i, TERRAIN_WALL)
         grid.set_terrain(x+ i, y, TERRAIN_WALL)

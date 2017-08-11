@@ -140,6 +140,8 @@ class PathFinder(object):
         return cost
 
     def _get_node(self, x, y):
+        if not self.is_inside(x, y):
+            return None
         index = x + y*self._width
         node = self._node_index[index]
         if node is None:

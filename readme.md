@@ -55,6 +55,9 @@ Look at main.py.
     - can be interrupted!
     - pathfinding problems: stumbled by its own occupancy.
     Character should remove itself from the map every turn start
+1. Fix pathfinder:
+    - combatant has its own local pathfinder
+    - battle contains 'generic' pathfinder for far routes
 1. Ranged attack
     - move to range             OK?
     - bow them all              OK?

@@ -1,20 +1,59 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!doctype html>
 <html>
 <head>
     <title>Tile rendering demo</title>
-    <link rel="stylesheet" media="screen" href ="static/bootstrap.min.css">
-    <link rel="stylesheet" href="static/bootstrap-theme.min.css">
-    <meta name="viewport" content = "width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.0.0.min.js" type = "text/javascript"> </script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script src="rectangle.js" type = "text/javascript"></script>
+    <script src="spritesheet.js" type = "text/javascript"></script>
+    <script src="sprite.js" type = "text/javascript"></script>
+    <script src="world.js" type = "text/javascript"></script>
+    <script src="canvas.js" type = "text/javascript"></script>
 
-    <script src="canvas.js" />
-    <script src="sprite.js" />
-    <script src="world.js" />
-    <script language="javascript">
+    <script type = "text/javascript" charset="utf-8">
 
+        var Context = null;
+
+        var BLOCK_W = 32
+        var BLOCK_H = 32
+
+        var tileset = new Sprite("peasanttiles02.png")
+        $(document).ready(function() {
+            Context = new HTML("game", 640, 480);
+        });
+
+        $(window).on( "load", function() {
+            tileset.draw(0,0)
+        });
+    </script>
+
+    <script type="text/javascript" charset="utf-8">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
     </script>
 </head>
 <body>
+    <div>First line</div>
+    <canvas id = "game" >Level context using canvas</canvas>
+    <div>Last line</div>
+    <script>
+            var example = document.getElementById("game"),
+			ctx     = example.getContext('2d');
+			example.width  = 640;
+            example.height = 480;
+            ctx.strokeRect(15, 15, 266, 266);
+            ctx.strokeRect(18, 18, 260, 260);
+            ctx.fillRect(20, 20, 256, 256);
+            for (i = 0; i < 8; i += 2)
+            {
+                for (j = 0; j < 8; j += 2) {
+                    ctx.clearRect(20 + i * 32, 20 + j * 32, 32, 32);
+                    ctx.clearRect(20 + (i + 1) * 32, 20 + (j + 1) * 32, 32, 32);
+                }
 
-
+            }
+	</script>
 </body>
 </html>

@@ -43,12 +43,20 @@ while generated < 3:
         generated+=1
 """
 
-center_x = 15
-center_y = 15
+battle_size = 16
 
-battle = battle.Battle(30, 30)
+center_x = int(battle_size / 2)
+center_y = int(battle_size / 2)
 
-draw_block(battle.grid, TERRAIN_WALL, 3, 3, 2, 8)
+battle = battle.Battle(battle_size, battle_size)
+
+block_width = 2
+draw_block(battle.grid, TERRAIN_WALL, 3, 3, block_width, block_width)
+draw_block(battle.grid, TERRAIN_WALL, battle_size-block_width-3, 3, block_width, block_width)
+draw_block(battle.grid, TERRAIN_WALL, 3, battle_size-block_width-3, block_width, block_width)
+draw_block(battle.grid, TERRAIN_WALL, battle_size-block_width-3, battle_size-block_width-3, block_width, block_width)
+
+draw_cross(battle.grid, center_x, center_y, 4)
 
 char1 = Character("Bob", brain=brain.MoveAttackBrain(), model='type3')
 char1.set_stats(18, 18, 16, 10, 10, 10)
@@ -81,10 +89,9 @@ char4 = make_monk('Monky')
 
 char_test = make_angry_guisarme('Goof', model='type3')
 
-
 # tile = grid.get_free_tile()
-battle.add_combatant(char1, center_x-2, center_y+1, faction="team red")
-battle.add_combatant(char_test, center_x+10, center_y+1, faction="team blue")
+battle.add_combatant(char1, 2, 2, faction="team red")
+battle.add_combatant(char_test, battle_size-2, battle_size-2, faction="team blue")
 
 #battle.add_combatant(char3, center_x+10, center_y-5, faction="team blue")
 #battle.add_combatant(char4, center_x + 10, center_y-4, faction="team blue")
